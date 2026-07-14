@@ -10,18 +10,20 @@ public class TokenService
                             Path.Combine(AppContext.BaseDirectory, "ERPData", "TokenService.json");
     //public static TokenServiceDTO _tokenService { get; set; } = new TokenServiceDTO();
 
-    public static bool ValidateToken(string token)
+    public static Tenant ValidateToken(string token)
     {
         TokenServiceDTO tokenService = GetTokenServiceFromFile();
-        if (tokenService.TokenList.Any(t => t.Token == token))
+        if (tokenService.TokenList.FirstOrDefault(t => t.Token == token) is Tenant tenant)
         {
-            return true;
-        }
-        else
-        {
+            if(!tenant.Active)
+                throw new UnauthorizedAccessException(
+                $"Tenant '{tenant.Name}' is currently deactivated. Access denied.");
 
+            return tenant;
         }
-        return false;
+
+        throw new UnauthorizedAccessException(
+        "Invalid API token: the provided token does not match any registered tenant.");
     }
 
     /// <summary>

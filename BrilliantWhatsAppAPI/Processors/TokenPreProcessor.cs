@@ -15,33 +15,34 @@ public class TokenPreProcessor : IGlobalPreProcessor
         //        "Authentication:ApiKey is not configured.");
     }
 
-    public async Task PreProcessAsync(IPreProcessorContext ctx, CancellationToken ct)
+    public async Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
-        if (TryExtractToken(ctx, out var token) /*|| token != _apiKey*/)
+        if (TryExtractToken(context, out var token) /*|| token != _apiKey*/)
         {
-            if(!TokenService.ValidateToken(token))
+            if(TokenService.ValidateToken(token) is Tenant tenant)
             {
-                await WriteUnauthorized(ctx, ct, "Invalid or missing API key");
-            }
-            else
-            {
-
+                // Store the authenticated tenant in HttpContext.Items for downstream endpoints
+                context.HttpContext.Items["Tenant"] = tenant;
             }
         }
         else
-        {
-            await WriteUnauthorized(ctx , ct , "token not exist");
+        {            
+            throw new UnauthorizedAccessException("Authentication required. The request must include a valid Bearer token in the Authorization header.");
         }
     }
 
-    // --------------------------------------------------------
-    // Extracts the Bearer token, or falls back to raw header.
-    // --------------------------------------------------------
-    private static bool TryExtractToken(IPreProcessorContext ctx, out string token)
+    /// <summary>
+    /// Extracts the bearer token from the Authorization header of the incoming HTTP request.
+    /// Supports both "Bearer &lt;token&gt;" and raw token formats.
+    /// </summary>
+    /// <param name="context">The global pre-processor context containing the HTTP request.</param>
+    /// <param name="token">When this method returns <c>true</c>, contains the extracted token string; otherwise, <c>null</c> or empty.</param>
+    /// <returns><c>true</c> if a non-empty token was successfully extracted; otherwise, <c>false</c>.</returns>
+    private static bool TryExtractToken(IPreProcessorContext context, out string token)
     {
         token = string.Empty;
 
-        if (!ctx.HttpContext.Request.Headers.TryGetValue(
+        if (!context.HttpContext.Request.Headers.TryGetValue(
                 "Authorization", out var header))
             return false;
 
@@ -53,21 +54,5 @@ public class TokenPreProcessor : IGlobalPreProcessor
             token = value; // tolerate raw key for flexibility
 
         return !string.IsNullOrWhiteSpace(token);
-    }
-
-    // --------------------------------------------------------
-    // Writes a JSON 401 and halts the pipeline.
-    // --------------------------------------------------------
-    private static async Task WriteUnauthorized(
-        IPreProcessorContext ctx, CancellationToken ct, string message)
-    {
-        var response = ctx.HttpContext.Response;
-
-        response.StatusCode  = StatusCodes.Status401Unauthorized;
-        response.ContentType = "application/json";
-
-        var body = JsonSerializer.Serialize(new { error = message });
-
-        await response.WriteAsync(body, ct);
     }
 }

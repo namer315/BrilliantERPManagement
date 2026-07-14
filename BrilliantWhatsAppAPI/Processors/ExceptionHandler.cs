@@ -7,7 +7,7 @@ using FastEndpoints;
 using FluentValidation.Results;
 using System.Text.Json;
 
-namespace BrilliantWhatsAppAPI.Processor
+namespace BrilliantWhatsAppAPI.Processors
 {
     // handle the Exceptions of the Endpoints
     public class ExceptionHandler : IGlobalPostProcessor
@@ -34,6 +34,30 @@ namespace BrilliantWhatsAppAPI.Processor
 
                     return;
                 }
+                case UnauthorizedAccessException ex:
+                {
+                    //Writes a JSON 401 and halts the pipeline.
+                    context.MarkExceptionAsHandled();
+
+                    /*List<ValidationFailure> validationFailures = new List<ValidationFailure>
+                    {
+                        new ValidationFailure("Authorization", ex.Message),
+                        new ValidationFailure("Endpoint URL", context.HttpContext.Request.Path)
+                    };
+
+                    if (!context.HttpContext.ResponseStarted())
+                        await context.HttpContext.Response.SendErrorsAsync(validationFailures, StatusCodes.Status401Unauthorized);*/
+
+                    var response = context.HttpContext.Response;
+
+                    response.StatusCode = StatusCodes.Status401Unauthorized;
+                    response.ContentType = "application/json";
+
+                    var body = JsonSerializer.Serialize(new { error = ex.Message });
+
+                    await response.WriteAsync(body , ct);
+                }
+                break;
                 case ArgumentNullException ex:
 
                 {
@@ -76,7 +100,8 @@ namespace BrilliantWhatsAppAPI.Processor
                     break;
             }
 
-            context.ExceptionDispatchInfo.Throw();
+            if (!context.HttpContext.ResponseStarted())
+                context.ExceptionDispatchInfo.Throw();
         }
     }
 }

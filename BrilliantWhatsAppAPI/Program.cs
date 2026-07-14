@@ -23,7 +23,7 @@ public partial class Program
             c.Endpoints.Configurator = ep =>
             {
                 ep.PreProcessor<TokenPreProcessor>(Order.Before);
-                //ep.PostProcessor<ExceptionHandler>(Order.After);
+                ep.PostProcessor<ExceptionHandler>(Order.After);
             };
             c.Endpoints.RoutePrefix = "WhatsAppAPI";
         });
