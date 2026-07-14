@@ -18,7 +18,7 @@ public class testTemplateEP : Endpoint<tTemplateDTO , dynamic>
         return await _whatsAppHelper.SendTemplateMessageAsync(req.PhoneNumber , req.TemplateName , req.ParameterList, req.LanguageCode);
     }
 }
-public class GetTemplatesEP : EndpointWithoutRequest<object>
+public class GetTemplatesEP : EndpointWithoutRequest<WhatsAppTemplateResponse>
 {
     WhatsAppHelper _whatsAppHelper = new WhatsAppHelper();
     public override void Configure()
@@ -27,7 +27,7 @@ public class GetTemplatesEP : EndpointWithoutRequest<object>
         AllowAnonymous();
     }
 
-    public async override Task<object> ExecuteAsync(CancellationToken ct)
+    public async override Task<WhatsAppTemplateResponse> ExecuteAsync(CancellationToken ct)
     {
         return await _whatsAppHelper.GetAllTemplatesAsync();
     }

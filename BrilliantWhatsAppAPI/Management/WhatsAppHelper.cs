@@ -1,4 +1,5 @@
-﻿using BrilliantWhatsAppAPI.DTO;
+﻿using System.Text.Json;
+using BrilliantWhatsAppAPI.DTO;
 
 namespace BrilliantWhatsAppAPI.Management;
 
@@ -41,11 +42,6 @@ public class WhatsAppHelper
         return await _httpClientHelper.PostAsync(url , payload);
     }
 
-    //public async Task<string> GetAllTemplatesAsync()
-    //{
-    //    var url = $"https://graph.facebook.com/v17.0/{_phoneNumberId}/message_templates";
-    //    return await _httpClientHelper.GetAsync(url);
-    //}
 
     /// <summary>
     /// Fetches every message template provisioned under the configured WhatsApp Business Account.
@@ -75,7 +71,7 @@ public class WhatsAppHelper
     /// <exception cref="TaskCanceledException">
     /// Thrown when the request times out or the caller cancels via <paramref name="ct"/>.
     /// </exception>
-    public async Task<object> GetAllTemplatesAsync(
+    public async Task<WhatsAppTemplateResponse> GetAllTemplatesAsync(
         string fields = "name,status,category,language,components" ,
         int limit = 50 ,
         CancellationToken ct = default)
@@ -91,8 +87,12 @@ public class WhatsAppHelper
         var url = $"https://graph.facebook.com/v22.0/{_WhatsAppBusinessAccountId}/message_templates"
                 + $"?fields={Uri.EscapeDataString(fields)}"
                 + $"&limit={limit}";
+       
+        string respond = await _httpClientHelper.GetAsync(url);
+        
+        var templates = JsonSerializer.Deserialize<WhatsAppTemplateResponse>(respond)
+            ?? throw new InvalidOperationException("Failed to deserialize WhatsApp template response.");
 
-        return await _httpClientHelper.GetAsync(url);
-
+        return templates;
     }
 }
