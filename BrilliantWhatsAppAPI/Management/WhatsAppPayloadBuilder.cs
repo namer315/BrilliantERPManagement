@@ -3,7 +3,7 @@ using BrilliantWhatsAppAPI.DTO;
 
 namespace BrilliantWhatsAppAPI.Management;
 
-public class WhatsAppManager
+public class WhatsAppPayloadBuilder
 {
     public string BuildTextMessagePayload(string to , string message)
     {

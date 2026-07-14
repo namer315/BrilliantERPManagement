@@ -11,7 +11,7 @@ public class WhatsAppHelper
     private readonly string _phoneNumberId = "1124475747418242";
     private readonly string _accessToken = "EAARC64ekrboBRvMRrQ2gF3MZC1hopZCdrPoHiptdpr9TTq10ugRMX9ZAgzzolhs3kSqdAIAHojZA6Pog3lkwxHjKKmEkNZCLbWAzHpoJCH0QFvlttYPZCUeJVRuTygGdi3NgTJcTvxzX4JRkL3iBsCr5A0QbUZAaPrG7EvCayZBZA2X1znRe54pQsSZAhz7ZBB4nwZDZD";
 
-    private readonly WhatsAppManager _payloadBuilder = new();
+    private readonly WhatsAppPayloadBuilder _payloadBuilder = new();
     private readonly WhatsAppHTTPClientManager _httpClientHelper;
 
     public WhatsAppHelper()
