@@ -30,7 +30,11 @@ public class WhatsAppPayloadBuilder
         string languageCode = "en_US")
     {
         var parameters = parameterList is { Count: > 0 }
-           ? parameterList.Select(p => new { type = p.Type , text = p.Text }).ToArray()
+           ? parameterList.Select(p => new { 
+               type = p.Type ,
+               parameter_name = p.Name ,
+               text = p.Text  
+           }).ToArray()
            : null;
 
         var payload = new
