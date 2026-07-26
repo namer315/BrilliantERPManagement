@@ -103,7 +103,7 @@ public class TokenService
     public static string GenerateApiToken()
     {
         var bytes = RandomNumberGenerator.GetBytes(48);
-        return "sk-" + Convert.ToBase64String(bytes)
+        return "Brilliant-sk-" + Convert.ToBase64String(bytes)
             .Replace("+" , "")
             .Replace("/" , "")
             .Replace("=" , "");
