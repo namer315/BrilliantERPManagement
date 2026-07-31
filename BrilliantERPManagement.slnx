@@ -4,8 +4,11 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Common/">
+    <Project Path="CommonBusiness/CommonBusiness.csproj" Id="82b2afa6-bdc8-4a95-bd04-20fbcf87958e">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="CommonData/CommonData.csproj" Id="68a903d2-a161-43a6-87c7-35371e88db09">
-      <Platform Solution="Release|x64" Project="x64" />
+      <Platform Solution="*|x64" Project="x64" />
     </Project>
   </Folder>
   <Project Path="BrilliantWhatsAppAPI/BrilliantWhatsAppAPI.csproj">
