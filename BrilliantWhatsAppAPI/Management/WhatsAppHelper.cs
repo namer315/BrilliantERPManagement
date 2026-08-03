@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using BrilliantWhatsAppAPI.DTO;
+﻿using BrilliantWhatsAppAPI.DTO;
+using System.Text.Json;
 
 namespace BrilliantWhatsAppAPI.Management;
 
@@ -20,15 +20,97 @@ public class WhatsAppHelper
         _httpClientHelper = new WhatsAppHTTPClientManager(_accessToken);
     }
 
-    public async Task<string> SendMessage(string to , string message)
+    /*public async Task<string> SendTextMessageAsync(tTextMessageDTO req)
     {
-        Console.WriteLine($"Sending message to {to}: {message}");
+        Console.WriteLine($"Sending message to {req.PhoneNumber}: {req.Message}");
 
         var url = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/messages";
-        var payload = _payloadBuilder.BuildTextMessagePayload(to , message);
+        //var payload = _payloadBuilder.BuildTextMessagePayload(req);
+        var payload = _payloadBuilder.BuildInteractiveButtonPayload(req);
 
         return await _httpClientHelper.PostAsync(url , payload);
     }
+    public async Task<string> SendImageMessageAsync(tTextMessageDTO req)
+    {
+        // 1) Upload the photo to get a media ID
+        var mediaUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/media";
+        var mimeType = "image/jpeg"; // adjust to the actual image format
+
+        req.Photo = File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
+        var uploadResult = await _httpClientHelper.UploadMediaAsync(mediaUrl , req.Photo , "photo.jpg" , mimeType);
+
+        // Parse the media id from the upload response: { "id": "..." }
+        using var doc = JsonDocument.Parse(uploadResult);
+        var mediaId = doc.RootElement.GetProperty("id").GetString();
+
+        // 2) Send the image message using that media id
+        var messagesUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/messages";
+        var payload = _payloadBuilder.BuildImageMessagePayload(req , mediaId);
+        return await _httpClientHelper.PostAsync(messagesUrl , payload);
+    }*/
+
+    /// <summary>
+    /// Sends a message based on the data present in the DTO:
+    /// - Has Photo        → sends an image (uploads then sends by media ID)
+    /// - Has ButtonList   → sends an interactive button message
+    /// - Otherwise        → sends a text message (honors PreviewURL)
+    /// </summary>
+    public async Task<string> SendMessageAsync(tTextMessageDTO req)
+    {
+        var messagesUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/messages";
+
+        string mediaId = null;
+
+        //req.Photo ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
+        //req.ButtonList ??= new List<tButtonDTO>()
+        //{
+        //    new tButtonDTO()
+        //    {
+        //        Type = tButtonDTO.ButtonType.Reply,
+        //        Reply = new tReplyButtonDTO()
+        //        {
+        //            Id = "test_Id_1",
+        //            Title = "hard coded button"
+        //        }
+        //    }
+        //};
+        // Upload the image first if present (used by both image and interactive paths)
+        if (req.Photo is { Length: > 0 })
+        {
+            var mediaUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/media";
+            var mimeType = "image/jpeg"; // set the correct MIME for your image
+            var uploadResult = await _httpClientHelper.UploadMediaAsync(mediaUrl , req.Photo , "photo.jpg" , mimeType);
+
+            using var doc = JsonDocument.Parse(uploadResult);
+            mediaId = doc.RootElement.GetProperty("id").GetString();
+        }
+
+        // image + text + buttons  → interactive with image header
+        if (mediaId != null && req.ButtonList is { Count: > 0 })
+        {
+            var payload = _payloadBuilder.BuildInteractiveMessagePayload(req , mediaId);
+            return await _httpClientHelper.PostAsync(messagesUrl , payload);
+        }
+
+        // image + text → image message with caption
+        if (mediaId != null)
+        {
+            var payload = _payloadBuilder.BuildImageMessagePayload(req , mediaId);
+            return await _httpClientHelper.PostAsync(messagesUrl , payload);
+        }
+
+        // text + buttons → interactive (no header)
+        if (req.ButtonList is { Count: > 0 })
+        {
+            var payload = _payloadBuilder.BuildInteractiveMessagePayload(req);
+            return await _httpClientHelper.PostAsync(messagesUrl , payload);
+        }
+
+        // plain text
+        var textPayload = _payloadBuilder.BuildTextMessagePayload(req);
+        return await _httpClientHelper.PostAsync(messagesUrl , textPayload);
+    }
+
 
     public async Task<string> SendTemplateMessageAsync(
         string to ,
@@ -87,9 +169,9 @@ public class WhatsAppHelper
         var url = $"https://graph.facebook.com/v22.0/{_WhatsAppBusinessAccountId}/message_templates"
                 + $"?fields={Uri.EscapeDataString(fields)}"
                 + $"&limit={limit}";
-       
+
         string respond = await _httpClientHelper.GetAsync(url);
-        
+
         var templates = JsonSerializer.Deserialize<WhatsAppTemplateResponse>(respond)
             ?? throw new InvalidOperationException("Failed to deserialize WhatsApp template response.");
 
