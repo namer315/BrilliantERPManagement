@@ -12,4 +12,8 @@
     <PackageReference Include="FastEndpoints.Swagger" Version="8.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CommonData\CommonData.csproj" />
+  </ItemGroup>
+
 </Project>

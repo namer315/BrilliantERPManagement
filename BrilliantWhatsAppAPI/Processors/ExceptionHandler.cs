@@ -79,6 +79,21 @@ namespace BrilliantWhatsAppAPI.Processors
                     Console.WriteLine($"Failed to parse response: {ex.Message}");
                 }
                 break;
+                case CommonData.Exceptions.DataAccessException ex:
+                {
+                    context.MarkExceptionAsHandled();
+                    Console.WriteLine($"Data access error: {ex.Message} | Entity={ex.EntityType}, Op={ex.Operation}");
+
+                    if (!context.HttpContext.ResponseStarted())
+                    {
+                        var response = context.HttpContext.Response;
+                        response.StatusCode = StatusCodes.Status500InternalServerError;
+                        response.ContentType = "application/json";
+                        var body = JsonSerializer.Serialize(new { error = "An internal data error occurred." });
+                        await response.WriteAsync(body, ct);
+                    }
+                }
+                break;
                 /*catch (ArgumentNullException ex)
         {
                     await SendErrorsAsync(400 , ct); // Missing WABA ID or token

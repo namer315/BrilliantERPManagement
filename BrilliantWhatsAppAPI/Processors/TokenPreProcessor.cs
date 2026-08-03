@@ -1,28 +1,36 @@
 ﻿using System.Text.Json;
 using FastEndpoints;
 using BrilliantWhatsAppAPI.Services;
+using CommonData.Session;
 
 namespace BrilliantWhatsAppAPI.Processors;
 
 public class TokenPreProcessor : IGlobalPreProcessor
 {
-    //private readonly string _apiKey;
+    private readonly ITenantContextAccessor _tenantAccessor;
 
-    public TokenPreProcessor(IConfiguration configuration)
+    public TokenPreProcessor(IConfiguration configuration, ITenantContextAccessor tenantAccessor)
     {
-        //_apiKey = configuration["Authentication:ApiKey"]
-        //    ?? throw new InvalidOperationException(
-        //        "Authentication:ApiKey is not configured.");
+        _tenantAccessor = tenantAccessor;
     }
 
     public async Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
-        if (TryExtractToken(context, out var token) /*|| token != _apiKey*/)
+        if (TryExtractToken(context, out var token))
         {
             if(TokenService.ValidateToken(token) is Tenant tenant)
             {
-                // Store the authenticated tenant in HttpContext.Items for downstream endpoints
+                // Map legacy Tenant POCO to CommonData TenantVO
+                var tenantVO = new CommonData.VO.TenantVO
+                {
+                    Name = tenant.Name,
+                    Token = tenant.Token,
+                    Active = tenant.Active
+                };
+
+                // Store in both HttpContext.Items (backward compat) and tenant accessor (DAL)
                 context.HttpContext.Items["Tenant"] = tenant;
+                _tenantAccessor.CurrentTenant = tenantVO;
             }
         }
         else

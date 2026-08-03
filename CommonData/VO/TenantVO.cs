@@ -1,0 +1,42 @@
+using FluentNHibernate.Mapping;
+
+namespace CommonData.VO;
+
+/// <summary>
+/// Tenant entity representing a multi-tenant ERP subscriber.
+/// Table: ERP_Tenant
+/// </summary>
+[NHibernate.Envers.Configuration.Attributes.Audited]
+public class TenantVO : AppBaseEntity
+{
+    public virtual string Name { get; set; } = string.Empty;
+    public virtual string Token { get; set; } = string.Empty;
+    public virtual bool Active { get; set; }
+}
+
+/// <summary>
+/// Embedded Fluent NHibernate mapping for TenantVO.
+/// </summary>
+public class TenantVOMap : SubclassMap<TenantVO>
+{
+    public TenantVOMap()
+    {
+        Table("ERP_Tenant");
+
+        KeyColumn("Id");
+
+        Map(x => x.Name)
+            .Not.Nullable()
+            .Length(200)
+            .UniqueKey("UK_ERP_Tenant_Name");
+
+        Map(x => x.Token)
+            .Not.Nullable()
+            .Length(500)
+            .UniqueKey("UK_ERP_Tenant_Token");
+
+        Map(x => x.Active)
+            .Not.Nullable()
+            .Default("1");
+    }
+}
