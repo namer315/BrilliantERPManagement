@@ -7,11 +7,11 @@ namespace BrilliantWhatsAppAPI.Processors;
 
 public class TokenPreProcessor : IGlobalPreProcessor
 {
-    private readonly ITenantContextAccessor _tenantAccessor;
-
-    public TokenPreProcessor(IConfiguration configuration, ITenantContextAccessor tenantAccessor)
+    public TokenPreProcessor(IConfiguration configuration)
     {
-        _tenantAccessor = tenantAccessor;
+        // IConfiguration is a singleton — safe for constructor injection.
+        // Scoped dependencies (ITenantContextAccessor) are resolved
+        // from HttpContext.RequestServices at runtime.
     }
 
     public async Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
@@ -30,7 +30,9 @@ public class TokenPreProcessor : IGlobalPreProcessor
 
                 // Store in both HttpContext.Items (backward compat) and tenant accessor (DAL)
                 context.HttpContext.Items["Tenant"] = tenant;
-                _tenantAccessor.CurrentTenant = tenantVO;
+                var tenantAccessor = context.HttpContext.RequestServices
+                    .GetRequiredService<ITenantContextAccessor>();
+                tenantAccessor.CurrentTenant = tenantVO;
             }
         }
         else

@@ -10,30 +10,31 @@ namespace BrilliantWhatsAppAPI.Processors;
 /// </summary>
 public class TenantPreProcessor : IGlobalPreProcessor, IGlobalPostProcessor
 {
-    private readonly NHibernateUnitOfWork _uow;
-
-    public TenantPreProcessor(NHibernateUnitOfWork uow)
-    {
-        _uow = uow;
-    }
+    // No constructor injection of scoped services — FastEndpoints creates
+    // global processors as singletons. Scoped NHibernateUnitOfWork is
+    // resolved per-request from HttpContext.RequestServices.
 
     public async Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
-        _uow.Begin();
+        var uow = context.HttpContext.RequestServices
+            .GetRequiredService<NHibernateUnitOfWork>();
+        uow.Begin();
         await Task.CompletedTask;
     }
 
     public async Task PostProcessAsync(IPostProcessorContext context, CancellationToken ct)
     {
+        var uow = context.HttpContext.RequestServices
+            .GetRequiredService<NHibernateUnitOfWork>();
         if (context.HasExceptionOccurred)
         {
             // Dispose triggers rollback since we never committed
-            _uow.Dispose();
+            uow.Dispose();
         }
         else
         {
-            _uow.Commit();
-            _uow.Dispose();
+            uow.Commit();
+            uow.Dispose();
         }
         await Task.CompletedTask;
     }
