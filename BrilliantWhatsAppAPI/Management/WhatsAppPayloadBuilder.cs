@@ -342,11 +342,13 @@ public class WhatsAppPayloadBuilder
 
     // Builds the JSON body for an interactive LOCATION request message.
     // Displays a "send location" button that opens the user's location picker.
+    // NOTE: interactive.type must be "location_request_message" per the WhatsApp
+    // schema enum (the action.name remains "send_location").
     public string BuildInteractiveLocationPayload(tTextMessageDTO req)
     {
         var interactive = new Dictionary<string , object?>
         {
-            ["type"] = "location" ,
+            ["type"] = "location_request_message" ,
             ["body"] = new { text = req.Message }
         };
 

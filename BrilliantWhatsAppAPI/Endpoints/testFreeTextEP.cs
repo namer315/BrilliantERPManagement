@@ -16,12 +16,15 @@ public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
     }
     public async override Task<dynamic> ExecuteAsync(tTextMessageDTO req , CancellationToken ct)
     {
-        //return await _whatsAppHelper.SendMessageAsync(req);
+        return await _whatsAppHelper.SendMessageAsync(req);
+        /*//string phoneNumber = "27613009425";
+        string phoneNumber = "0742420893";
+        req.PhoneNumber = phoneNumber;
+        await _whatsAppHelper.SendMessageAsync(req);
         //return await _whatsAppHelper.SendImageMessageAsync(req);
-
         await _whatsAppHelper.SendMessageAsync(new tTextMessageDTO
         {
-            PhoneNumber = "27613009425" ,
+            PhoneNumber = phoneNumber ,
             Message = "Choose shipping" ,
             InteractiveType = "list" ,
             HeaderText = "Shipping Options" ,
@@ -42,7 +45,7 @@ public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
         });
         await _whatsAppHelper.SendMessageAsync(new tTextMessageDTO
         {
-            PhoneNumber = "27613009425" ,
+            PhoneNumber = phoneNumber ,
             Message = "Tap for dates" ,
             InteractiveType = "cta_url" ,
             CtaDisplayText = "See Dates" ,
@@ -51,9 +54,9 @@ public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
 
         return await _whatsAppHelper.SendMessageAsync(new tTextMessageDTO
         {
-            PhoneNumber = "27613009425" ,
+            PhoneNumber = phoneNumber ,
             Message = "Share your location" ,
             InteractiveType = "location"
-        });
+        });*/
     }
 }
