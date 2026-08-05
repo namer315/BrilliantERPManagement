@@ -132,6 +132,19 @@ public class WhatsAppHelper
             photoId = await UploadAsync(req.Photo , photoName , mimeType);
         }
 
+        // Explicit interactive layouts — list / cta_url / location
+        // (handled before the legacy button fallbacks below)
+        if (!string.IsNullOrWhiteSpace(req.InteractiveType))
+        {
+            return req.InteractiveType.ToLowerInvariant() switch
+            {
+                "list" => await _httpClientHelper.PostAsync(messagesUrl , _payloadBuilder.BuildInteractiveListPayload(req)) ,
+                "cta_url" => await _httpClientHelper.PostAsync(messagesUrl , _payloadBuilder.BuildInteractiveCtaUrlPayload(req)) ,
+                "location" => await _httpClientHelper.PostAsync(messagesUrl , _payloadBuilder.BuildInteractiveLocationPayload(req)) ,
+                _ => throw new NotSupportedException($"Unsupported InteractiveType '{req.InteractiveType}'.")
+            };
+        }
+
         // image + text + buttons  → interactive with image header
         if (photoId != null && req.ButtonList is { Count: > 0 })
         {

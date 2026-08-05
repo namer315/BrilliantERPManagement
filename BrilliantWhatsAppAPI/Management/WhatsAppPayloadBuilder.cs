@@ -267,17 +267,121 @@ public class WhatsAppPayloadBuilder
 
         interactive["action"] = new { buttons };
 
-        var payload = new
+        return SerializeInteractive(req , interactive);
+    }
+
+    // Builds the JSON body for an interactive LIST message. Presents a menu of
+    // sections/rows the user can tap; supports optional text header and footer.
+    public string BuildInteractiveListPayload(tTextMessageDTO req)
+    {
+        var interactive = new Dictionary<string , object?>
+        {
+            ["type"] = "list" ,
+            ["body"] = new { text = req.Message }
+        };
+
+        if (!string.IsNullOrWhiteSpace(req.HeaderText))
+        {
+            GuardLength(req.HeaderText , 60 , nameof(req.HeaderText));
+            interactive["header"] = new { type = "text" , text = req.HeaderText };
+        }
+
+        AddFooter(req , interactive);
+
+        var sections = (req.ListSections ?? new List<tListSectionDTO>())
+            .Select(s => new
+            {
+                title = s.Title ,
+                rows = (s.Rows ?? new List<tListRowDTO>()).Select(r => new
+                {
+                    id = r.Id ,
+                    title = r.Title ,
+                    description = r.Description
+                }).ToArray()
+            }).ToArray();
+
+        interactive["action"] = new
+        {
+            button = req.ListButtonText ,
+            sections
+        };
+
+        return SerializeInteractive(req , interactive);
+    }
+
+    // Builds the JSON body for an interactive CTA URL message. Maps a button to a URL
+    // so the raw URL doesn't clutter the message body.
+    public string BuildInteractiveCtaUrlPayload(tTextMessageDTO req)
+    {
+        var interactive = new Dictionary<string , object?>
+        {
+            ["type"] = "cta_url" ,
+            ["body"] = new { text = req.Message }
+        };
+
+        if (!string.IsNullOrWhiteSpace(req.HeaderText))
+        {
+            GuardLength(req.HeaderText , 60 , nameof(req.HeaderText));
+            interactive["header"] = new { type = "text" , text = req.HeaderText };
+        }
+
+        AddFooter(req , interactive);
+
+        interactive["action"] = new
+        {
+            name = "cta_url" ,
+            parameters = new
+            {
+                display_text = req.CtaDisplayText ,
+                url = req.CtaUrl
+            }
+        };
+
+        return SerializeInteractive(req , interactive);
+    }
+
+    // Builds the JSON body for an interactive LOCATION request message.
+    // Displays a "send location" button that opens the user's location picker.
+    public string BuildInteractiveLocationPayload(tTextMessageDTO req)
+    {
+        var interactive = new Dictionary<string , object?>
+        {
+            ["type"] = "location" ,
+            ["body"] = new { text = req.Message }
+        };
+
+        AddFooter(req , interactive);
+
+        interactive["action"] = new { name = "send_location" };
+
+        return SerializeInteractive(req , interactive);
+    }
+
+    private static void AddFooter(tTextMessageDTO req , Dictionary<string , object?> interactive)
+    {
+        if (!string.IsNullOrWhiteSpace(req.Footer))
+        {
+            GuardLength(req.Footer , 60 , nameof(req.Footer));
+            interactive["footer"] = new { text = req.Footer };
+        }
+    }
+
+    private static void GuardLength(string value , int max , string name)
+    {
+        if (value.Length > max)
+            throw new ArgumentException($"{name} must be {max} characters or fewer." , name);
+    }
+
+    private static string SerializeInteractive(tTextMessageDTO req , Dictionary<string , object?> interactive)
+        => JsonSerializer.Serialize(new
         {
             messaging_product = "whatsapp" ,
             recipient_type = "individual" ,
             to = req.PhoneNumber ,
             type = "interactive" ,
             interactive
-        };
+        });
 
-        return JsonSerializer.Serialize(payload);
-    }
     public string BuildTemplateMessagePayload(
         string to ,
         string templateName ,
