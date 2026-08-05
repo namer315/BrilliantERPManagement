@@ -128,6 +128,26 @@ public class WhatsAppPayloadBuilder
         return ext is ".ogg" or ".oga";
     }
 
+    // Builds the JSON body for sending a video message by media ID.
+    // Video supports an optional caption (max 1024 chars); req.Message is used as the caption.
+    public string BuildVideoMessagePayload(tTextMessageDTO req , string mediaId)
+    {
+        var payload = new
+        {
+            messaging_product = "whatsapp" ,
+            recipient_type = "individual" ,
+            to = req.PhoneNumber ,
+            type = "video" ,
+            video = new
+            {
+                id = mediaId ,
+                caption = req.Message   // optional caption
+            }
+        };
+
+        return JsonSerializer.Serialize(payload);
+    }
+
     // Builds the JSON body for sending a document message by media ID.
     // Document requires a filename for display in the WhatsApp client.
     public string BuildDocumentMessagePayload(tTextMessageDTO req , string mediaId)
@@ -187,6 +207,8 @@ public class WhatsAppPayloadBuilder
 
         return ext switch
         {
+            ".mp4" => "video/mp4" ,
+            ".3gp" => "video/3gpp" ,
             ".mp3" => "audio/mpeg" ,
             ".ogg" or ".oga" => "audio/ogg" ,
             ".m4a" => "audio/mp4" ,

@@ -5,6 +5,7 @@ public class tTextMessageDTO
     public string PhoneNumber { get; set; }
     public string Message { get; set; }
     public byte[] Photo { get; set; }
+    public byte[] Video { get; set; }
     public byte[] Audio { get; set; }
     public byte[] Document { get; set; }
     public string FileName { get; set; }

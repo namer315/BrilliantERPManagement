@@ -61,22 +61,23 @@ public class WhatsAppHelper
         var mediaUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/media";
 
 #if DEBUG
-        req.Photo ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
-        req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Sheikh Muhammad Al Luhaidan emotional recitation of the Quran  #quran #quranrecitation #luhaidan.mp3");
+        //req.Photo ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
+        //req.Video ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Sheikh Muhammad Al Luhaidan emotional recitation of the Quran  #quran #quranrecitation #luhaidan.mp4");
+        //req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Sheikh Muhammad Al Luhaidan emotional recitation of the Quran  #quran #quranrecitation #luhaidan.mp3");
         //req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\WhatsApp Ptt 2026-07-28 at 7.39.09 PM.ogg");
         //req.Document ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Tech Ventures - E-Invoicing API Documentation v3.pdf");
-        req.ButtonList ??= new List<tButtonDTO>()
-        {
-            new tButtonDTO()
-            {
-                Type = tButtonDTO.ButtonType.Reply,
-                Reply = new tReplyButtonDTO()
-                {
-                    Id = "test_Id_1",
-                    Title = "hard coded button"
-                }
-            }
-        };
+        //req.ButtonList ??= new List<tButtonDTO>()
+        //{
+        //    new tButtonDTO()
+        //    {
+        //        Type = tButtonDTO.ButtonType.Reply,
+        //        Reply = new tReplyButtonDTO()
+        //        {
+        //            Id = "test_Id_1",
+        //            Title = "hard coded button"
+        //        }
+        //    }
+        //};
 
 #endif
         // Local helper: upload raw bytes to WhatsApp and return the media ID.
@@ -99,6 +100,15 @@ public class WhatsAppHelper
                 var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , req.FileName , isDocument: true);
                 var mediaId = await UploadAsync(req.Document , req.FileName , mimeType);
                 var payload = _payloadBuilder.BuildDocumentMessagePayload(req , mediaId);
+                return await _httpClientHelper.PostAsync(messagesUrl , payload);
+            }
+
+            // Video — route by uploaded bytes
+            if (req.Video is { Length: > 0 })
+            {
+                var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , req.FileName , isDocument: false);
+                var mediaId = await UploadAsync(req.Video , req.FileName , mimeType);
+                var payload = _payloadBuilder.BuildVideoMessagePayload(req , mediaId);
                 return await _httpClientHelper.PostAsync(messagesUrl , payload);
             }
 
