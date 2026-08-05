@@ -87,6 +87,91 @@ public class WhatsAppPayloadBuilder
         return JsonSerializer.Serialize(payload);
     }
 
+    // Builds the JSON body for sending an audio message by media ID.
+    // NOTE: WhatsApp audio messages do NOT support a caption field — the audio
+    // object accepts only id / link / voice. If you need text alongside audio,
+    // send a separate text message.
+    public string BuildAudioMessagePayload(tTextMessageDTO req , string mediaId)
+    {
+        var payload = new
+        {
+            messaging_product = "whatsapp" ,
+            recipient_type = "individual" ,
+            to = req.PhoneNumber ,
+            type = "audio" ,
+            audio = new
+            {
+                id = mediaId
+            }
+        };
+
+        return JsonSerializer.Serialize(payload);
+    }
+
+    // Builds the JSON body for sending a document message by media ID.
+    // Document requires a filename for display in the WhatsApp client.
+    public string BuildDocumentMessagePayload(tTextMessageDTO req , string mediaId)
+    {
+        var payload = new
+        {
+            messaging_product = "whatsapp" ,
+            recipient_type = "individual" ,
+            to = req.PhoneNumber ,
+            type = "document" ,
+            document = new
+            {
+                id = mediaId ,
+                filename = string.IsNullOrWhiteSpace(req.FileName) ? "document" : req.FileName ,
+                caption = req.Message   // optional caption text
+            }
+        };
+
+        return JsonSerializer.Serialize(payload);
+    }
+
+    // Pick a sensible MIME type when the caller did not supply one.
+    // Falls back to image/jpeg only as a last resort; otherwise is inferred
+    // from the file extension, or defaults per media type.
+    public static string ResolveMimeType(string mimeType , string fileName , bool isDocument)
+    {
+        if (!string.IsNullOrWhiteSpace(mimeType))
+            return mimeType;
+
+        var ext = System.IO.Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
+
+        if (isDocument)
+        {
+            return ext switch
+            {
+                ".pdf" => "application/pdf" ,
+                ".doc" => "application/msword" ,
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ,
+                ".xls" => "application/vnd.ms-excel" ,
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ,
+                ".ppt" => "application/vnd.ms-powerpoint" ,
+                ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation" ,
+                ".txt" => "text/plain" ,
+                ".csv" => "text/csv" ,
+                ".zip" => "application/zip" ,
+                _ => "application/octet-stream"
+            };
+        }
+
+        return ext switch
+        {
+            ".mp3" => "audio/mpeg" ,
+            ".ogg" or ".oga" => "audio/ogg" ,
+            ".m4a" => "audio/mp4" ,
+            ".aac" => "audio/aac" ,
+            ".amr" => "audio/amr" ,
+            ".wav" => "audio/wav" ,
+            ".jpg" or ".jpeg" => "image/jpeg" ,
+            ".png" => "image/png" ,
+            ".gif" => "image/gif" ,
+            _ => "application/octet-stream"
+        };
+    }
+
     // Interactive — supports any combination of header(image) + body(text) + buttons
     public string BuildInteractiveMessagePayload(tTextMessageDTO req , string mediaId = null)
     {

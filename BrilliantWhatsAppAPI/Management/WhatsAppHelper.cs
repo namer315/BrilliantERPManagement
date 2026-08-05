@@ -58,44 +58,80 @@ public class WhatsAppHelper
     public async Task<string> SendMessageAsync(tTextMessageDTO req)
     {
         var messagesUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/messages";
+        var mediaUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/media";
 
-        string mediaId = null;
+#if DEBUG
+        req.Photo ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
+        //req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Sheikh Muhammad Al Luhaidan emotional recitation of the Quran  #quran #quranrecitation #luhaidan.mp3");
+        req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\WhatsApp Ptt 2026-07-28 at 7.39.09 PM.ogg");
+        //req.Document ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Tech Ventures - E-Invoicing API Documentation v3.pdf");
+        req.ButtonList ??= new List<tButtonDTO>()
+        {
+            new tButtonDTO()
+            {
+                Type = tButtonDTO.ButtonType.Reply,
+                Reply = new tReplyButtonDTO()
+                {
+                    Id = "test_Id_1",
+                    Title = "hard coded button"
+                }
+            }
+        };
 
-        //req.Photo ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
-        //req.ButtonList ??= new List<tButtonDTO>()
-        //{
-        //    new tButtonDTO()
-        //    {
-        //        Type = tButtonDTO.ButtonType.Reply,
-        //        Reply = new tReplyButtonDTO()
-        //        {
-        //            Id = "test_Id_1",
-        //            Title = "hard coded button"
-        //        }
-        //    }
-        //};
-        // Upload the image first if present (used by both image and interactive paths)
+#endif
+        // Local helper: upload raw bytes to WhatsApp and return the media ID.
+        async Task<string> UploadAsync(byte[] fileBytes , string fileName , string mimeType)
+        {
+            var uploadResult = await _httpClientHelper.UploadMediaAsync(mediaUrl , fileBytes , fileName , mimeType);
+            using var doc = JsonDocument.Parse(uploadResult);
+            return doc.RootElement.GetProperty("id").GetString();
+        }
+
+        // Media types need a FileName so the MIME type resolves correctly.
+        // Without it, ResolveMimeType falls back to application/octet-stream,
+        // which WhatsApp rejects (e.g. error 131053 for a mismatched MIME type).
+        if (!string.IsNullOrWhiteSpace(req.FileName))
+        {
+            // Document (requires a filename) — highest precedence
+            if (req.Document is { Length: > 0 })
+            {
+                var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , req.FileName , isDocument: true);
+                var mediaId = await UploadAsync(req.Document , req.FileName , mimeType);
+                var payload = _payloadBuilder.BuildDocumentMessagePayload(req , mediaId);
+                return await _httpClientHelper.PostAsync(messagesUrl , payload);
+            }
+
+            // Audio — route by uploaded bytes
+            if (req.Audio is { Length: > 0 })
+            {
+                var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , req.FileName , isDocument: false);
+                var mediaId = await UploadAsync(req.Audio , req.FileName , mimeType);
+                var payload = _payloadBuilder.BuildAudioMessagePayload(req , mediaId);
+                return await _httpClientHelper.PostAsync(messagesUrl , payload);
+            }
+        }
+
+        string photoId = null;
+        // Upload the image first if present (used by both image and interactive paths).
+        // MIME is inferred from the file name when present, else defaults to image/jpeg.
         if (req.Photo is { Length: > 0 })
         {
-            var mediaUrl = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/media";
-            var mimeType = "image/jpeg"; // set the correct MIME for your image
-            var uploadResult = await _httpClientHelper.UploadMediaAsync(mediaUrl , req.Photo , "photo.jpg" , mimeType);
-
-            using var doc = JsonDocument.Parse(uploadResult);
-            mediaId = doc.RootElement.GetProperty("id").GetString();
+            var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , req.FileName , isDocument: false);
+            var photoName = !string.IsNullOrWhiteSpace(req.FileName) ? req.FileName : "photo.jpg";
+            photoId = await UploadAsync(req.Photo , photoName , mimeType);
         }
 
         // image + text + buttons  → interactive with image header
-        if (mediaId != null && req.ButtonList is { Count: > 0 })
+        if (photoId != null && req.ButtonList is { Count: > 0 })
         {
-            var payload = _payloadBuilder.BuildInteractiveMessagePayload(req , mediaId);
+            var payload = _payloadBuilder.BuildInteractiveMessagePayload(req , photoId);
             return await _httpClientHelper.PostAsync(messagesUrl , payload);
         }
 
         // image + text → image message with caption
-        if (mediaId != null)
+        if (photoId != null)
         {
-            var payload = _payloadBuilder.BuildImageMessagePayload(req , mediaId);
+            var payload = _payloadBuilder.BuildImageMessagePayload(req , photoId);
             return await _httpClientHelper.PostAsync(messagesUrl , payload);
         }
 
