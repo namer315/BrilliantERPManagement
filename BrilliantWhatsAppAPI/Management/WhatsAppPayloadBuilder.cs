@@ -255,6 +255,16 @@ public class WhatsAppPayloadBuilder
             };
         }
 
+        // Optional footer (interactive messages only, max 60 chars)
+        if (!string.IsNullOrWhiteSpace(req.Footer))
+        {
+            if (req.Footer.Length > 60)
+                throw new ArgumentException(
+                    "Footer text must be 60 characters or fewer.", nameof(req.Footer));
+
+            interactive["footer"] = new { text = req.Footer };
+        }
+
         interactive["action"] = new { buttons };
 
         var payload = new
