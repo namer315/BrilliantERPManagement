@@ -93,19 +93,39 @@ public class WhatsAppPayloadBuilder
     // send a separate text message.
     public string BuildAudioMessagePayload(tTextMessageDTO req , string mediaId)
     {
+        var audio = new Dictionary<string , object?>
+        {
+            ["id"] = mediaId
+        };
+
+        // voice:true renders as a voice note (microphone icon) — but ONLY OGG/OPUS
+        // files support it. Per WhatsApp docs: "Voice messages require .ogg files
+        // encoded with the OPUS codec." For other formats (mp3, aac, amr, m4a...)
+        // omit voice so it sends as a basic audio message.
+        if (SupportsVoice(req.FileName , req.MimeType))
+            audio["voice"] = true;
+
         var payload = new
         {
             messaging_product = "whatsapp" ,
             recipient_type = "individual" ,
             to = req.PhoneNumber ,
             type = "audio" ,
-            audio = new
-            {
-                id = mediaId
-            }
+            audio
         };
 
         return JsonSerializer.Serialize(payload);
+    }
+
+    // A voice message is only supported for OGG audio files (OPUS codec).
+    // The MIME type is checked first; otherwise the file extension decides.
+    private static bool SupportsVoice(string fileName , string mimeType)
+    {
+        if (!string.IsNullOrWhiteSpace(mimeType))
+            return mimeType.StartsWith("audio/ogg" , StringComparison.OrdinalIgnoreCase);
+
+        var ext = System.IO.Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
+        return ext is ".ogg" or ".oga";
     }
 
     // Builds the JSON body for sending a document message by media ID.
@@ -130,14 +150,21 @@ public class WhatsAppPayloadBuilder
     }
 
     // Pick a sensible MIME type when the caller did not supply one.
-    // Falls back to image/jpeg only as a last resort; otherwise is inferred
-    // from the file extension, or defaults per media type.
+    // The MIME is inferred from the file extension. If it can't be determined,
+    // an exception is thrown so the mismatch fails loudly *before* hitting the
+    // WhatsApp API (which would reject it with error 131053 with a confusing
+    // "application/octet-stream" type), instead of silently sending a bad type.
     public static string ResolveMimeType(string mimeType , string fileName , bool isDocument)
     {
         if (!string.IsNullOrWhiteSpace(mimeType))
             return mimeType;
 
         var ext = System.IO.Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(ext))
+            throw new ArgumentException(
+                $"Cannot resolve a MIME type: no file extension found in '{fileName}'. " +
+                "Provide a matching FileName (and/or MimeType) so the media upload type is correct.");
 
         if (isDocument)
         {
@@ -153,7 +180,8 @@ public class WhatsAppPayloadBuilder
                 ".txt" => "text/plain" ,
                 ".csv" => "text/csv" ,
                 ".zip" => "application/zip" ,
-                _ => "application/octet-stream"
+                _ => throw new NotSupportedException(
+                    $"Unsupported document extension '{ext}'. Add it to ResolveMimeType or supply MimeType explicitly.")
             };
         }
 
@@ -168,7 +196,8 @@ public class WhatsAppPayloadBuilder
             ".jpg" or ".jpeg" => "image/jpeg" ,
             ".png" => "image/png" ,
             ".gif" => "image/gif" ,
-            _ => "application/octet-stream"
+            _ => throw new NotSupportedException(
+                $"Unsupported media extension '{ext}'. Add it to ResolveMimeType or supply MimeType explicitly.")
         };
     }
 

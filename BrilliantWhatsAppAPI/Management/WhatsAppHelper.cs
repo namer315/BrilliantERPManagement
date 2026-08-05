@@ -62,8 +62,8 @@ public class WhatsAppHelper
 
 #if DEBUG
         req.Photo ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\photo_1.jpg");
-        //req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Sheikh Muhammad Al Luhaidan emotional recitation of the Quran  #quran #quranrecitation #luhaidan.mp3");
-        req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\WhatsApp Ptt 2026-07-28 at 7.39.09 PM.ogg");
+        req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Sheikh Muhammad Al Luhaidan emotional recitation of the Quran  #quran #quranrecitation #luhaidan.mp3");
+        //req.Audio ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\WhatsApp Ptt 2026-07-28 at 7.39.09 PM.ogg");
         //req.Document ??= File.ReadAllBytes("C:\\Users\\User\\Downloads\\Tech Ventures - E-Invoicing API Documentation v3.pdf");
         req.ButtonList ??= new List<tButtonDTO>()
         {
@@ -88,8 +88,9 @@ public class WhatsAppHelper
         }
 
         // Media types need a FileName so the MIME type resolves correctly.
-        // Without it, ResolveMimeType falls back to application/octet-stream,
-        // which WhatsApp rejects (e.g. error 131053 for a mismatched MIME type).
+        // ResolveMimeType throws a clear error if it can't determine the type,
+        // rather than silently sending application/octet-stream (which WhatsApp
+        // would reject with error 131053 for a mismatched MIME type).
         if (!string.IsNullOrWhiteSpace(req.FileName))
         {
             // Document (requires a filename) — highest precedence
@@ -113,11 +114,11 @@ public class WhatsAppHelper
 
         string photoId = null;
         // Upload the image first if present (used by both image and interactive paths).
-        // MIME is inferred from the file name when present, else defaults to image/jpeg.
+        // Defaults to photo.jpg when no FileName is supplied.
         if (req.Photo is { Length: > 0 })
         {
-            var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , req.FileName , isDocument: false);
             var photoName = !string.IsNullOrWhiteSpace(req.FileName) ? req.FileName : "photo.jpg";
+            var mimeType = WhatsAppPayloadBuilder.ResolveMimeType(req.MimeType , photoName , isDocument: false);
             photoId = await UploadAsync(req.Photo , photoName , mimeType);
         }
 
