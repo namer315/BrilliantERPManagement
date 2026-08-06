@@ -16,7 +16,7 @@ public class NHibernateUnitOfWork : IDisposable
 {
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-    private readonly SessionFactoryManager _sfm;
+    private readonly SessionFactoryGenerator _sfm;
     private readonly ITenantContextAccessor _tenantAccessor;
 
     private ISession? _session;
@@ -32,7 +32,7 @@ public class NHibernateUnitOfWork : IDisposable
             "Session not open. Call Begin() before accessing Session.");
 
     public NHibernateUnitOfWork(
-        SessionFactoryManager sfm,
+        SessionFactoryGenerator sfm,
         ITenantContextAccessor tenantAccessor)
     {
         _sfm = sfm;
@@ -46,16 +46,16 @@ public class NHibernateUnitOfWork : IDisposable
     {
         if (_session is not null) return;
 
-        _session = _sfm.OpenSession();
+        _session = SessionFactoryGenerator.SessionFactory.OpenSession();
         _transaction = _session.BeginTransaction();
 
-        GlobalConditionFilter.EnableSoftDelete(_session);
+        //GlobalConditionFilter.EnableSoftDelete(_session);
 
         var tenant = _tenantAccessor.CurrentTenant;
-        if (tenant is not null)
-        {
-            GlobalConditionFilter.EnableTenantFilter(_session, tenant.Id);
-        }
+        //if (tenant is not null)
+        //{
+        //    GlobalConditionFilter.EnableTenantFilter(_session, tenant.Id);
+        //}
 
         _log.Debug("UoW Begin | SessionId={0}", _session.GetHashCode());
     }

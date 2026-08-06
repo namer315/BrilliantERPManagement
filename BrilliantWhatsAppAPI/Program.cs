@@ -8,7 +8,7 @@ using CommonData.Services;
 
 public partial class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -21,23 +21,19 @@ public partial class Program
 
         // ── CommonData DAL registrations ───────────────────────────
         builder.Services.AddScoped<ITenantContextAccessor, HttpTenantContextAccessor>();
-        builder.Services.AddSingleton<SessionFactoryManager>(sp =>
-        {
-            var sfm = SessionFactoryManager.Instance;
-            var connStr = builder.Configuration.GetConnectionString("ERP")
-                ?? throw new InvalidOperationException(
-                    "ConnectionStrings:ERP is not configured.");
-            sfm.Initialize(connStr);
-            return sfm;
-        });
+
         builder.Services.AddScoped<NHibernateUnitOfWork>();
         builder.Services.AddScoped<TenantDAO>();
 
         // ── In-memory tenant cache (token -> tenant, DB fallback) ──
         builder.Services.AddSingleton<TenantCacheService>();
 
+        //connect to the database before starting the application
+        await DataBaseConnect();
+
         var app = builder.Build();
 
+        // ── Initialize NHibernate eagerlly (before any DB access) ──
         app.UseSwaggerGen();
 
         // Wrap the endpoint pipeline so the ambient TenantContext is always
@@ -66,5 +62,21 @@ public partial class Program
         });
 
         app.Run();
+    }
+
+    private static async Task DataBaseConnect()
+    {
+
+        Connection connection = new Connection()
+        {
+            Server = "DESKTOP-PJCEMGK" ,
+            DataBaseName = "BrilliantWhatsApp" ,
+            User = "sa" ,
+            Password = "123456" ,
+            DataBaseKind = Connection.DataBaseKinds.SQLServer ,
+        };
+        connection.SessionConnect_Login();
+        await connection.SessionConnect();
+        await Connection.DataBaseUpdate(connection);
     }
 }

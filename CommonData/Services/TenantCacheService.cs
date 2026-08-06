@@ -31,14 +31,14 @@ public class TenantCacheService
     /// <summary>Warm the cache with all active tenants at startup.</summary>
     public void Warmup()
     {
-        using var session = SessionFactoryManager.Instance.OpenSession();
+        using var session = SessionFactoryGenerator.SessionFactory.OpenSession();
         foreach (var t in session.QueryOver<TenantVO>().Where(t => t.Active).List())
             _byToken[t.Token] = t;
     }
 
     private static TenantVO? LoadFromDb(string token)
     {
-        using var session = SessionFactoryManager.Instance.OpenSession();
+        using var session = SessionFactoryGenerator.SessionFactory.OpenSession();
         return session.QueryOver<TenantVO>()
             .Where(t => t.Token == token)
             .SingleOrDefault();

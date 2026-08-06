@@ -1,5 +1,5 @@
+using FluentNHibernate.Mapping;
 using NHibernate;
-using NHibernate.Engine;
 
 namespace CommonData.Session;
 
@@ -10,48 +10,11 @@ namespace CommonData.Session;
 ///
 /// Filters are enabled on the ISession by NHibernateUnitOfWork.
 /// </summary>
-public static class GlobalConditionFilter
+public class GlobalConditionFilter : FilterDefinition
 {
-    public const string SoftDeleteFilterName = "SoftDeleteFilter";
-    public const string TenantFilterName = "TenantFilter";
-
-    /// <summary>
-    /// Registers filter definitions into the NHibernate Configuration.
-    /// Call during SessionFactoryManager initialization.
-    /// </summary>
-    public static void RegisterFilterDefinitions(NHibernate.Cfg.Configuration cfg)
+    public GlobalConditionFilter()
     {
-        cfg.AddFilterDefinition(new NHibernate.Engine.FilterDefinition(
-            SoftDeleteFilterName,
-            defaultCondition: ":IsDeleted = 0",
-            parameterTypes: new Dictionary<string, NHibernate.Type.IType>(),
-            useManyToOne: false));
-
-        cfg.AddFilterDefinition(new NHibernate.Engine.FilterDefinition(
-            TenantFilterName,
-            defaultCondition: ":TenantId = TenantId",
-            parameterTypes: new Dictionary<string, NHibernate.Type.IType>
-            {
-                { "TenantId", NHibernateUtil.Guid }
-            },
-            useManyToOne: false));
-    }
-
-    /// <summary>
-    /// Enables the soft-delete filter on the given session.
-    /// </summary>
-    public static void EnableSoftDelete(ISession session)
-    {
-        session.EnableFilter(SoftDeleteFilterName);
-    }
-
-    /// <summary>
-    /// Enables the tenant isolation filter for the given tenant.
-    /// No-op if tenant is null (no filtering applied).
-    /// </summary>
-    public static void EnableTenantFilter(ISession session, Guid tenantId)
-    {
-        session.EnableFilter(TenantFilterName)
-               .SetParameter("TenantId", tenantId);
+        WithName("GlobalFilter").AddParameter("name" , NHibernate.NHibernateUtil.String);
     }
 }
+
