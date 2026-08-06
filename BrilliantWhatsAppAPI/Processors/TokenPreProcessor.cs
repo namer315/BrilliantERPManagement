@@ -1,8 +1,11 @@
 ﻿using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using BrilliantWhatsAppAPI.Services;
 using CommonData.Session;
+using CommonData.Services;
+using CommonData.VO;
 
 namespace BrilliantWhatsAppAPI.Processors;
 
@@ -30,21 +33,23 @@ public class TokenPreProcessor : IGlobalPreProcessor
 
         if (TryExtractToken(context, out var token))
         {
-            if(TokenService.ValidateToken(token) is Tenant tenant)
-            {
-                // Map legacy Tenant POCO to CommonData TenantVO
-                var tenantVO = new CommonData.VO.TenantVO
-                {
-                    Name = tenant.Name,
-                    Token = tenant.Token,
-                    Active = tenant.Active
-                };
+            // Resolve the tenant from the in-memory cache, falling back to the
+            // DB on a cache miss (TenantCacheService). Returns the full TenantVO
+            // including Id so the DAL tenant filter receives a real tenant id.
+            var cache = context.HttpContext.RequestServices
+                .GetRequiredService<TenantCacheService>();
 
-                // Store in both HttpContext.Items (backward compat) and tenant accessor (DAL)
-                context.HttpContext.Items["Tenant"] = tenant;
-                var tenantAccessor = context.HttpContext.RequestServices
-                    .GetRequiredService<ITenantContextAccessor>();
-                tenantAccessor.CurrentTenant = tenantVO;
+            if (cache.ResolveByToken(token) is TenantVO tenantVO)
+            {
+                // Store in HttpContext.Items (backward compat) and the ambient
+                // TenantContext so it is readable from any method in the solution.
+                context.HttpContext.Items["Tenant"] = tenantVO;
+                TenantContext.CurrentTenant = tenantVO;
+            }
+            else
+            {
+                throw new UnauthorizedAccessException(
+                    "Invalid API token: the provided token does not match any registered tenant, or the tenant is deactivated.");
             }
         }
         else

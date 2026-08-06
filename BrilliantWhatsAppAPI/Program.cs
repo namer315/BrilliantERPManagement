@@ -4,6 +4,7 @@ using BrilliantWhatsAppAPI.Processors;
 using BrilliantWhatsAppAPI.Infrastructure;
 using CommonData.Session;
 using CommonData.DAO;
+using CommonData.Services;
 
 public partial class Program
 {
@@ -32,9 +33,16 @@ public partial class Program
         builder.Services.AddScoped<NHibernateUnitOfWork>();
         builder.Services.AddScoped<TenantDAO>();
 
+        // ── In-memory tenant cache (token -> tenant, DB fallback) ──
+        builder.Services.AddSingleton<TenantCacheService>();
+
         var app = builder.Build();
 
         app.UseSwaggerGen();
+
+        // Wrap the endpoint pipeline so the ambient TenantContext is always
+        // cleared when the request ends (must run BEFORE UseFastEndpoints).
+        app.UseMiddleware<TenantScopeCleaner>();
 
         app.UseFastEndpoints(c =>
         {
@@ -47,6 +55,9 @@ public partial class Program
             };
             c.Endpoints.RoutePrefix = "WhatsAppAPI";
         });
+
+        // Seed the in-memory tenant cache from the DB at startup.
+        app.Services.GetRequiredService<TenantCacheService>().Warmup();
 
         app.MapGet("/" , async context =>
         {
