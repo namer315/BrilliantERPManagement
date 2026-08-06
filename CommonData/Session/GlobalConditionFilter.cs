@@ -32,7 +32,7 @@ public static class GlobalConditionFilter
             defaultCondition: ":TenantId = TenantId",
             parameterTypes: new Dictionary<string, NHibernate.Type.IType>
             {
-                { "TenantId", NHibernateUtil.Int64 }
+                { "TenantId", NHibernateUtil.Guid }
             },
             useManyToOne: false));
     }
@@ -49,7 +49,7 @@ public static class GlobalConditionFilter
     /// Enables the tenant isolation filter for the given tenant.
     /// No-op if tenant is null (no filtering applied).
     /// </summary>
-    public static void EnableTenantFilter(ISession session, long tenantId)
+    public static void EnableTenantFilter(ISession session, Guid tenantId)
     {
         session.EnableFilter(TenantFilterName)
                .SetParameter("TenantId", tenantId);

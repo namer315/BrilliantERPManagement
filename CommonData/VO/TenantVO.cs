@@ -4,7 +4,6 @@ namespace CommonData.VO;
 
 /// <summary>
 /// Tenant entity representing a multi-tenant ERP subscriber.
-/// Table: ERP_Tenant
 /// </summary>
 [NHibernate.Envers.Configuration.Attributes.Audited]
 public class TenantVO : AppBaseEntity
@@ -17,14 +16,10 @@ public class TenantVO : AppBaseEntity
 /// <summary>
 /// Embedded Fluent NHibernate mapping for TenantVO.
 /// </summary>
-public class TenantVOMap : SubclassMap<TenantVO>
+public class TenantMap : EntityWithIdMapping<TenantVO>
 {
-    public TenantVOMap()
+    public TenantMap()
     {
-        Table("ERP_Tenant");
-
-        KeyColumn("Id");
-
         Map(x => x.Name)
             .Not.Nullable()
             .Length(200)

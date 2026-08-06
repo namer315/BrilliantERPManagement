@@ -48,7 +48,7 @@ public class TenantDAO
     /// <summary>
     /// Retrieves a tenant by its primary key.
     /// </summary>
-    public TenantVO? GetById(long id)
+    public TenantVO? GetById(Guid id)
     {
         try
         {
@@ -178,7 +178,7 @@ public class TenantDAO
     /// <summary>
     /// Soft-deletes a tenant by setting IsDeleted=true.
     /// </summary>
-    public void Delete(long id)
+    public void Delete(Guid id)
     {
         try
         {

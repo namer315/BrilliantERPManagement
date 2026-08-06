@@ -1,15 +1,14 @@
-using FluentNHibernate.Mapping;
+﻿using FluentNHibernate.Mapping;
 
 namespace CommonData.VO;
 
 /// <summary>
 /// Base entity with audit fields. All persistent entities inherit from this.
-/// Uses union-subclass mapping strategy — each concrete entity gets its own table
-/// with all base columns included.
+/// Concrete entities map their own tables via <see cref="EntityWithIdMapping{T}"/>.
 /// </summary>
 public abstract class AppBaseEntity
 {
-    public virtual long Id { get; set; }
+    public virtual Guid Id { get; set; }
     public virtual DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public virtual DateTime? UpdatedAt { get; set; }
     public virtual string CreatedBy { get; set; } = "system";
@@ -18,37 +17,43 @@ public abstract class AppBaseEntity
 }
 
 /// <summary>
-/// NHibernate mapping for AppBaseEntity via union-subclass strategy.
-/// Subclass mappings use SubclassMap&lt;T&gt; in their own VO files.
+/// Reusable base mapping for entities deriving from <see cref="AppBaseEntity"/>.
+/// Maps the Guid primary key (GuidComb), audit columns and the optimistic-lock
+/// Version column. Concrete entities derive from this and map their own columns
+/// plus their Table in their own mapping class.
 /// </summary>
-public class AppBaseEntityMap : ClassMap<AppBaseEntity>
+/// <typeparam name="T">A concrete entity type deriving from AppBaseEntity.</typeparam>
+public class EntityWithIdMapping<T> : ClassMap<T> where T : AppBaseEntity
 {
-    public AppBaseEntityMap()
+    public EntityWithIdMapping()
     {
-        UseUnionSubclassForInheritanceMapping();
+        base.Cache.NonStrictReadWrite();
 
-        Id(x => x.Id)
-            .GeneratedBy.HiLo("1000");
+        Id(e => e.Id)
+            .GeneratedBy.GuidComb();
 
-        Map(x => x.CreatedAt)
-            .Not.Nullable()
-            .Default("CURRENT_TIMESTAMP");
+        OptimisticLock.Version().DynamicUpdate();
+    }
+}
 
-        Map(x => x.UpdatedAt)
-            .Nullable();
+/// <summary>
+/// Base mapping for entities deriving from <see cref="AppBaseEntity"/> that also
+/// expose the CreatedAt / UpdatedAt audit columns on their table. Maps the Guid
+/// primary key (GuidComb), optimistic-lock Version strategy and the two date
+/// columns.
+/// </summary>
+/// <typeparam name="T">A concrete entity type deriving from AppBaseEntity.</typeparam>
+public class EntityWithDatesMapping<T> : ClassMap<T> where T : AppBaseEntity
+{
+    public EntityWithDatesMapping()
+    {
+        base.Cache.NonStrictReadWrite();
 
-        Map(x => x.CreatedBy)
-            .Not.Nullable()
-            .Length(100)
-            .Default("'system'");
+        Id(e => e.Id).GeneratedBy.GuidComb();
 
-        Map(x => x.UpdatedBy)
-            .Not.Nullable()
-            .Length(100)
-            .Default("'system'");
+        Map(e => e.CreatedAt).Not.Nullable().Default("CURRENT_TIMESTAMP");
+        Map(e => e.UpdatedAt).Nullable();
 
-        Map(x => x.IsDeleted)
-            .Not.Nullable()
-            .Default("0");
+        OptimisticLock.Version().DynamicUpdate();
     }
 }
