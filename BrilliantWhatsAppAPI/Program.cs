@@ -22,9 +22,6 @@ public partial class Program
         // ── CommonData DAL registrations ───────────────────────────
         builder.Services.AddScoped<ITenantContextAccessor, HttpTenantContextAccessor>();
 
-        builder.Services.AddScoped<NHibernateUnitOfWork>();
-        builder.Services.AddScoped<TenantDAO>();
-
         // ── In-memory tenant cache (token -> tenant, DB fallback) ──
         builder.Services.AddSingleton<TenantCacheService>();
 
