@@ -3,8 +3,8 @@ using FastEndpoints.Swagger;
 using BrilliantWhatsAppAPI.Processors;
 using BrilliantWhatsAppAPI.Infrastructure;
 using CommonData.Session;
-using CommonData.DAO;
 using CommonData.Services;
+using NSwag;
 
 public partial class Program
 {
@@ -14,7 +14,23 @@ public partial class Program
 
         // ── FastEndpoints ──────────────────────────────────────────
         builder.Services.AddFastEndpoints();
-        builder.Services.SwaggerDocument();
+        builder.Services.SwaggerDocument(o =>
+        {
+            o.DocumentSettings = s =>
+            {
+                // Adds an Authorize button and applies it as a GLOBAL security requirement
+                // so the Authorization header is sent on every request.
+                s.AddAuth("Bearer", new OpenApiSecurityScheme
+                {
+                    Type = OpenApiSecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = OpenApiSecurityApiKeyLocation.Header,
+                    Name = "Authorization",
+                    Description = "Enter your API token as: Bearer <token>"
+                }, new[] { "" });
+            };
+        });
 
         // ── HTTP context accessor (needed for tenant resolution) ──
         builder.Services.AddHttpContextAccessor();

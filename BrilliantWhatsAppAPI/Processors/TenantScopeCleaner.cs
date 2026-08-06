@@ -27,7 +27,7 @@ public class TenantScopeCleaner
         }
         finally
         {
-            TenantContext.Clear();
+            //TenantContext.Clear();
         }
     }
 }
