@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="FluentNHibernate" Version="3.4.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.11" />
     <PackageReference Include="NHibernate" Version="5.7.0" />
     <PackageReference Include="NHibernate.Envers" Version="5.7.0" />
     <PackageReference Include="MySql.Data" Version="26.7.0" />

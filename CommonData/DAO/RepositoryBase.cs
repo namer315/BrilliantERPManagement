@@ -11,7 +11,7 @@ using System.Text;
 
 namespace CommonData.DAO;
 
-internal class RepositoryBase
+public class RepositoryBase
 { // Thread-safe session storage using AsyncLocal
     private static readonly AsyncLocal<ISession> _session = new AsyncLocal<ISession>();
 

@@ -1,16 +1,14 @@
-﻿using System.Text.Json;
-using FastEndpoints;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using BrilliantWhatsAppAPI.Services;
+﻿using CommonData.Services;
 using CommonData.Session;
-using CommonData.Services;
 using CommonData.VO;
+using CommonFDM;
+using FastEndpoints;
 
 namespace BrilliantWhatsAppAPI.Processors;
 
 public class TokenPreProcessor : IGlobalPreProcessor
 {
+    TenantFDM _fdm = new TenantFDM();
     public TokenPreProcessor(IConfiguration configuration)
     {
         // IConfiguration is a singleton — safe for constructor injection.
@@ -38,6 +36,8 @@ public class TokenPreProcessor : IGlobalPreProcessor
             // including Id so the DAL tenant filter receives a real tenant id.
             var cache = context.HttpContext.RequestServices
                 .GetRequiredService<TenantCacheService>();
+
+            _fdm.ResolveTenantByToken(token);
 
             if (cache.ResolveByToken(token) is TenantVO tenantVO)
             {
