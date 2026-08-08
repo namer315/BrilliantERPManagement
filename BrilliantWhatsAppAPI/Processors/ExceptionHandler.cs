@@ -94,23 +94,29 @@ namespace BrilliantWhatsAppAPI.Processors
                     }
                 }
                 break;
-                /*catch (ArgumentNullException ex)
-        {
-                    await SendErrorsAsync(400 , ct); // Missing WABA ID or token
-                }
-        catch (HttpRequestException ex) when(ex.Message.Contains("401"))
-        {
-                    await SendErrorsAsync(401 , ct); // Invalid/expired token
-                }
-        catch (HttpRequestException ex) when(ex.Message.Contains("404"))
-        {
-                    await SendErrorsAsync(404 , ct); // Wrong WABA ID
-                }
-        catch (TaskCanceledException)
-        {
-                    await SendErrorsAsync(504 , ct); // Timeout
-                }*/
+                case Exception ex:
+                {
+                    context.MarkExceptionAsHandled();
 
+                    /*List<ValidationFailure> validationFailures = new List<ValidationFailure>
+                    {
+                        new ValidationFailure("Authorization", ex.Message),
+                        new ValidationFailure("Endpoint URL", context.HttpContext.Request.Path)
+                    };
+
+                    if (!context.HttpContext.ResponseStarted())
+                        await context.HttpContext.Response.SendErrorsAsync(validationFailures, StatusCodes.Status401Unauthorized);*/
+
+                    var response = context.HttpContext.Response;
+
+                    response.StatusCode = StatusCodes.Status401Unauthorized;
+                    response.ContentType = "application/json";
+
+                    var body = JsonSerializer.Serialize(new { error = ex.Message });
+
+                    await response.WriteAsync(body , ct);
+                }
+                break;
                 default:
                     break;
             }
