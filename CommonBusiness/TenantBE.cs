@@ -1,4 +1,5 @@
 ﻿using CommonData.DAO;
+using CommonData.Managers;
 using CommonData.VO;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,17 @@ public class TenantBE
 
     public TenantVO TenantVO { get; set; }
 
-    public TenantVO ResolveTenantByToken(string token)
+    public async Task<TenantVO> ResolveTenantByToken(string token)
     {
-        TenantVO tenant = null;
         // Implementation for resolving tenant by token
+        TenantVO tenant =  await TenantManager.GetTenantByToken(token);
+
+        if (tenant == null)
+        {
+            // Handle the case where the tenant is not found
+            throw new Exception($"Tenant with token '{token}' not found.");
+        }
+
         return tenant;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CommonBusiness;
 using CommonData.VO;
+using System.Threading.Tasks;
 
 namespace CommonFDM;
 
@@ -7,8 +8,6 @@ public class TenantFDM
 {
     TenantBE _be = new TenantBE();
 
-    public TenantVO ResolveTenantByToken(string token)
-    {
-        return _be.ResolveTenantByToken(token);
-    }
+    public async Task<TenantVO> ResolveTenantByToken(string token) =>  await _be.ResolveTenantByToken(token);
+        
 }

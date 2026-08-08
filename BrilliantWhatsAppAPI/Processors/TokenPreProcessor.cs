@@ -37,20 +37,32 @@ public class TokenPreProcessor : IGlobalPreProcessor
             var cache = context.HttpContext.RequestServices
                 .GetRequiredService<TenantCacheService>();
 
-            _fdm.ResolveTenantByToken(token);
-
-            if (cache.ResolveByToken(token) is TenantVO tenantVO)
+            
+            if (await _fdm.ResolveTenantByToken(token) is TenantVO tenantVO)
             {
                 // Store in HttpContext.Items (backward compat) and the ambient
                 // TenantContext so it is readable from any method in the solution.
                 context.HttpContext.Items["Tenant"] = tenantVO;
-                TenantContext.CurrentTenant = tenantVO;
+                TenantContext.CurrentTenant = tenantVO; 
             }
             else
             {
                 throw new UnauthorizedAccessException(
                     "Invalid API token: the provided token does not match any registered tenant, or the tenant is deactivated.");
             }
+
+            //if (cache.ResolveByToken(token) is TenantVO tenantVO)
+            //{
+            //    // Store in HttpContext.Items (backward compat) and the ambient
+            //    // TenantContext so it is readable from any method in the solution.
+            //    context.HttpContext.Items["Tenant"] = tenantVO;
+            //    TenantContext.CurrentTenant = tenantVO;
+            //}
+            //else
+            //{
+            //    throw new UnauthorizedAccessException(
+            //        "Invalid API token: the provided token does not match any registered tenant, or the tenant is deactivated.");
+            //}
         }
         else
         {            
