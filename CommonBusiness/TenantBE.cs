@@ -29,9 +29,10 @@ public class TenantBE
 
         // Handle the case where the tenant is not found
         if (tenant == null)
-            throw new Exception($"Tenant with token '{token}' not found.");
-        if (!tenant.Active)
-            throw new Exception($"Tenant with token '{token}' is not active.");
+            throw new Exception("The specified tenant could not be located. Please verify your credentials and try again.");
+
+        if (!tenant.Active) 
+            throw new Exception($"The tenant {tenant.Name} is not active. Please contact the system administrator.");
 
         return tenant;
     }
