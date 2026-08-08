@@ -23,6 +23,18 @@ public class TokenPreProcessor : IGlobalPreProcessor
         // parameters — there is NO Authorization header. Global pre-processors run
         // on every endpoint regardless of AllowAnonymous(), so this request must be
         // explicitly exempted from bearer-token enforcement here.
+        var httpContext = context.HttpContext;
+
+        // Enable buffering so we can read multiple times
+        httpContext.Request.EnableBuffering();
+
+        // Reset stream position before reading
+        httpContext.Request.Body.Position = 0;
+
+        using var reader = new StreamReader(httpContext.Request.Body , leaveOpen: true);
+        var rawBody = await reader.ReadToEndAsync();
+        httpContext.Request.Body.Position = 0; // reset again for model binding
+
         if (IsWebhookVerifyRequest(context.HttpContext))
         {
             //await Task.CompletedTask;

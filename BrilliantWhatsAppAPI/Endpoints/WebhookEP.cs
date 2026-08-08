@@ -1,74 +1,130 @@
 ﻿using FastEndpoints;
-using Microsoft.AspNetCore.Http;
-using FluentNHibernate.Conventions.Helpers;
 using System.Text.Json;
+using WhatsAppDTO.Models.Webhooks;
+using WhatsAppDTO.Management.Webhooks;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
-public class WebhookEP : Endpoint<WhatsAppWebhookRequest , WhatsAppWebhookResponse>
+public class WebhookEP : Endpoint<WhatsAppWebhookRequest, WebhookResponse>
 {
+    private WebhooksManager _webhooksManager = new WebhooksManager();
     public override void Configure()
     {
-        Post("/webhook/whatsapp");   // WhatsApp will POST here
-        AllowAnonymous();            // must be public for WhatsApp
+        Post("/webhook/whatsapp");
+        AllowAnonymous();
     }
 
-    public override async Task<WhatsAppWebhookResponse> ExecuteAsync(WhatsAppWebhookRequest req , CancellationToken ct)
+    public override async Task<WebhookResponse> ExecuteAsync(WhatsAppWebhookRequest req, CancellationToken ct)
     {
-        // Log or process the webhook payload
+        WriteRequestInFile();
         Console.WriteLine($"Webhook received: {req.Object}");
 
-        // var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
-        // var filePath = Path.Combine("wwwroot" , "webhooks" , $"{timestamp}.json");
-        // await File.WriteAllTextAsync(filePath , JsonSerializer.Serialize(req.Entry));
-
-        /*var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
-        var webhookFolder = Path.Combine(AppContext.BaseDirectory, "webhooks");
-        Directory.CreateDirectory(webhookFolder); // ensure the folder exists
-        var filePath = Path.Combine(webhookFolder , $"{timestamp}.json");
-        await File.WriteAllTextAsync(filePath , JsonSerializer.Serialize(req));*/
-
-        // Generate timestamped filename
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
-
-        // Ensure folder exists
-        var webhookFolder = Path.Combine(AppContext.BaseDirectory , "webhooks");
-        Directory.CreateDirectory(webhookFolder);
-
-        // Build file path
-        var filePath = Path.Combine(webhookFolder , $"{timestamp}.json");
-
-        // Serialize with indentation for readability
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        var json = JsonSerializer.Serialize(req , options);
-
-        // Write to file
-        await File.WriteAllTextAsync(filePath , json);
-
-        // Example: handle messages
-        //if (req.Entry != null)
+        // Route each entry/change by type
+        //foreach (var entry in req.Entry)
         //{
-        //    Console.WriteLine($"Entry: {req.Entry}");
+        //    foreach (var change in entry.Changes)
+        //    {
+        //        ProcessMessages(change.Value);
+        //        ProcessStatuses(change.Value);
+        //    }
         //}
 
-        return new WhatsAppWebhookResponse
+        _webhooksManager.HandleWebhookRequest(req);
+
+        return new WebhookResponse { Status = "processed" };
+    }
+
+    private async Task WriteRequestInFile()
+    {
+        try
         {
-            Status = "Webhook processed"
-        };
+            var httpContext = HttpContext;
+
+            // Read raw body
+            httpContext.Request.Body.Position = 0;
+            using var reader = new StreamReader(httpContext.Request.Body , leaveOpen: true);
+            var rawBody = await reader.ReadToEndAsync();
+            httpContext.Request.Body.Position = 0;
+
+            if (!string.IsNullOrWhiteSpace(rawBody))
+            {
+                // Parse and re‑serialize with indentation
+                using var doc = JsonDocument.Parse(rawBody);
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                var prettyJson = JsonSerializer.Serialize(doc.RootElement , options);
+
+                // Generate timestamped filename
+                var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
+
+                // Ensure folder exists
+                var webhookFolder = Path.Combine(AppContext.BaseDirectory , "webhooks");
+                Directory.CreateDirectory(webhookFolder);
+
+                // Build file path
+                var filePath = Path.Combine(webhookFolder , $"{timestamp}.json");
+
+                await File.WriteAllTextAsync(filePath , prettyJson);
+            }
+        }
+        catch(Exception ex)
+        {
+
+        }
+    }
+
+    private static void ProcessMessages(WebhookValue value)
+    {
+        if (value.Messages is not { Count: > 0 })
+            return;
+
+        foreach (var msg in value.Messages)
+        {
+            Console.WriteLine($"  [{msg.Type}] from={msg.From} id={msg.Id}");
+
+            switch (msg.Type)
+            {
+                case WebhookMessageType.Text when msg.Text is not null:
+                    Console.WriteLine($"    body={msg.Text.Body}");
+                    break;
+                case WebhookMessageType.Image when msg.Image is not null:
+                    Console.WriteLine($"    image_id={msg.Image.Id}");
+                    break;
+                case WebhookMessageType.Interactive when msg.Interactive is not null:
+                    Console.WriteLine($"    interactive_type={msg.Interactive.Type}");
+                    break;
+                case WebhookMessageType.Location when msg.Location is not null:
+                    Console.WriteLine($"    lat={msg.Location.Latitude} lon={msg.Location.Longitude}");
+                    break;
+            }
+        }
+    }
+
+    private static void ProcessStatuses(WebhookValue value)
+    {
+        if (value.Statuses is not { Count: > 0 })
+            return;
+
+        foreach (var s in value.Statuses)
+        {
+            Console.WriteLine($"  [status] id={s.Id} status={s.Status} recipient={s.RecipientId}");
+
+            if (s.Errors is { Count: > 0 })
+            {
+                foreach (var err in s.Errors)
+                    Console.WriteLine($"    error {err.Code}: {err.Title}");
+            }
+        }
     }
 }
 
-public class WhatsAppWebhookRequest
+public sealed class WebhookResponse
 {
-    public string Object { get; set; }
-    public dynamic Entry { get; set; } // flexible for nested JSON
-}
-public class WhatsAppWebhookResponse
-{
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
-// Verify that the webhook endpoint is reachable and correctly configured in your WhatsApp Business API settings.
 public class WhatsAppWebhookVerifyEndpoint : EndpointWithoutRequest
 {
     private readonly IConfiguration _configuration;

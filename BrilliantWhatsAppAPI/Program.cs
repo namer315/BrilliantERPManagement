@@ -56,6 +56,10 @@ public partial class Program
         // cleared when the request ends (must run BEFORE UseFastEndpoints).
         app.UseMiddleware<TenantScopeCleaner>();
 
+        // Must be registered BEFORE UseFastEndpoints so the body is buffered
+        // before FastEndpoints' model binder reads it.
+        app.UseMiddleware<RequestBodyBufferingMiddleware>();
+
         app.UseFastEndpoints(c =>
         {
             c.Endpoints.Configurator = ep =>
