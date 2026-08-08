@@ -33,7 +33,8 @@ public partial class Program
         });
 
         // ── HTTP context accessor (needed for tenant resolution) ──
-        builder.Services.AddHttpContextAccessor(); 
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddDistributedMemoryCache();
         builder.Services.AddSession();
 
 

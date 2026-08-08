@@ -2,14 +2,15 @@
 using CommonData.DAO;
 using CommonData.VO;
 using Microsoft.AspNetCore.Http;
+using static Mysqlx.Expect.Open.Types.Condition.Types;
 
 namespace CommonData.Managers;
 
 public class TenantManager
 {
     //private readonly IList<TenantVO> _tenantList = new List<TenantVO>();
-    private static IDictionary<string, TenantVO> _tenantList { get; set; } = new Dictionary<string, TenantVO>();
-    private readonly TenantDAO _dao = new();
+    private static IDictionary<string , TenantVO> _tenantList { get; set; } = new Dictionary<string , TenantVO>();
+    private static TenantDAO _dao = new TenantDAO();
 
 
     private static IHttpContextAccessor _httpContext = new HttpContextAccessor();
@@ -65,14 +66,16 @@ public class TenantManager
             throw new ArgumentException("Token cannot be null or empty." , nameof(token));
 
         // Search in cached list
-        var tenant = _tenantList.FirstOrDefault(t => t.Token == token);
-        if (tenant != null)
-            return tenant;
+        if (_tenantList.TryGetValue(token , out var value))
+        {
+            // value found, can be null if dictionary stores nullable types
+            return _tenantList[token];
+        }
 
         // Fallback: fetch from DB
-        tenant = await _dao.GetByToken(token);
-        if (tenant != null)
-            _tenantList.Add(tenant);
+        TenantVO tenant = await _dao.GetByToken(token);
+        //if (tenant != null)
+        //    _tenantList[token] = tenant;
 
         return tenant;
     }
