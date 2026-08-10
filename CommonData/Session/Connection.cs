@@ -1,5 +1,5 @@
-using System.Data.Common;
 using System.Text;
+using System.Text.Json;
 
 namespace CommonData.Session;
 
@@ -14,7 +14,7 @@ public class Connection
     public string DataBaseName { get; set; } = string.Empty;
     public string User { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public DataBaseKinds DataBaseKind { get; set; } = DataBaseKinds.MySql;
+    public DataBaseKinds DataBaseKind { get; set; } = DataBaseKinds.SQLServer;
 
     public static Connection CurrentConnection { get; set; }
 
@@ -44,6 +44,7 @@ public class Connection
         SybaseASE = 6,
     }
 
+    #region methods
     public void SessionConnect_Login(Connection connection)
     {
         new SessionFactoryGenerator().CreateSessionFactory_Login(connection);
@@ -83,4 +84,43 @@ public class Connection
 
         return msg.ToString();
     }
+
+    /// <summary>
+    /// Reads the Connection model from config.json.
+    /// If the file doesn't exist, creates a new default Connection,
+    /// saves it to config.json, and returns it.
+    /// </summary>
+    public static Connection LoadOrCreateConfig(string? filePath = null)
+    {
+        filePath ??= Path.Combine(AppContext.BaseDirectory, "config.json");
+
+        if (File.Exists(filePath))
+        {
+            var json = File.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<Connection>(json,
+                       new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                   ?? new Connection();
+        }
+
+        // File doesn't exist — create a default model, save it, and return it
+        var defaultConnection = new Connection();
+        File.WriteAllText(filePath,
+            JsonSerializer.Serialize(defaultConnection,
+                new JsonSerializerOptions { WriteIndented = true }));
+        return defaultConnection;
+    }
+
+    /// <summary>
+    /// Loads (or creates) the connection config from config.json, then
+    /// connects to the database and applies any pending schema updates.
+    /// </summary>
+    public static async Task DataBaseConnect()
+    {
+        Connection connection = LoadOrCreateConfig();
+        connection.SessionConnect_Login();
+        await connection.SessionConnect();
+        await DataBaseUpdate(connection);
+    }
+
+    #endregion
 }

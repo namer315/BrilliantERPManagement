@@ -45,7 +45,7 @@ public partial class Program
         builder.Services.AddSingleton<TenantCacheService>();
 
         //connect to the database before starting the application
-        await DataBaseConnect();
+        await Connection.DataBaseConnect();
 
         var app = builder.Build();
 
@@ -82,21 +82,5 @@ public partial class Program
         });
 
         app.Run();
-    }
-
-    private static async Task DataBaseConnect()
-    {
-
-        Connection connection = new Connection()
-        {
-            Server = "DESKTOP-PJCEMGK" ,
-            DataBaseName = "BrilliantWhatsApp" ,
-            User = "sa" ,
-            Password = "123456" ,
-            DataBaseKind = Connection.DataBaseKinds.SQLServer ,
-        };
-        connection.SessionConnect_Login();
-        await connection.SessionConnect();
-        await Connection.DataBaseUpdate(connection);
     }
 }
