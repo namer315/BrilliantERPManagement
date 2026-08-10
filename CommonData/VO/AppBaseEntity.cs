@@ -15,7 +15,11 @@ public abstract class AppBaseEntity
     public virtual string UpdatedBy { get; set; } = "system";
     public virtual bool IsDeleted { get; set; }
 }
-
+public abstract class AppBaseEntityWithCode : AppBaseEntity
+{
+    public virtual string Code { get; set; }
+    public virtual int Number { get; set; }
+}
 /// <summary>
 /// Reusable base mapping for entities deriving from <see cref="AppBaseEntity"/>.
 /// Maps the Guid primary key (GuidComb), audit columns and the optimistic-lock
