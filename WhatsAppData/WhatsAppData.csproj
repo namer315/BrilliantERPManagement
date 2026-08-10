@@ -10,4 +10,8 @@
     <Folder Include="Webhooks\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CommonData\CommonData.csproj" />
+  </ItemGroup>
+
 </Project>

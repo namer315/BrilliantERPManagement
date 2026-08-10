@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CommonBusiness\CommonBusiness.csproj" />
+    <ProjectReference Include="..\CommonData\CommonData.csproj" />
+    <ProjectReference Include="..\CommonFDM\CommonFDM.csproj" />
+    <ProjectReference Include="..\WhatsAppBusiness\WhatsAppBusiness.csproj" />
+    <ProjectReference Include="..\WhatsAppData\WhatsAppData.csproj" />
+  </ItemGroup>
+
 </Project>
