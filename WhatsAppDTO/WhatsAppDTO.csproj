@@ -11,4 +11,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CommonBusiness\CommonBusiness.csproj" />
+    <ProjectReference Include="..\CommonData\CommonData.csproj" />
+    <ProjectReference Include="..\WhatsAppBusiness\WhatsAppBusiness.csproj" />
+    <ProjectReference Include="..\WhatsAppData\WhatsAppData.csproj" />
+  </ItemGroup>
+
 </Project>
