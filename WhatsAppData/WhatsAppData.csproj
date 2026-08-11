@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Webhooks\" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommonData\CommonData.csproj" />
