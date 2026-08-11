@@ -12,6 +12,8 @@ using NHibernate.Envers.Configuration.Attributes;
 using NHibernate.Loader;
 using NHibernate.Tool.hbm2ddl;
 using NLog;
+using System.Linq;
+using System;
 
 namespace CommonData.Session;
 
@@ -67,12 +69,26 @@ Connection.DataBaseKinds.SQLite, connection => SQLiteConfiguration.Standard
     private static string _lastConfigHash = null!;
     private static readonly object _sessionFactoryLock = new object();
 
-    // Cache audited types to avoid repeated reflection scans
+    // Cache audited types to avoid repeated reflection scans across assemblies that reference CommonData
     private static readonly Lazy<Type[]> _cachedAuditedTypes = new Lazy<Type[]>(() =>
-    typeof(TenantVO).Assembly
-    .GetTypes()
-    .Where(t => t.IsDefined(typeof(AuditedAttribute) , inherit: true))
-    .ToArray() ,
+    {
+        var coreAssembly = typeof(TenantVO).Assembly;
+        var coreName = coreAssembly.GetName().Name;
+
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => !a.IsDynamic && a != null)
+            .Where(a => a == coreAssembly || a.GetReferencedAssemblies().Any(r => r.Name == coreName))
+            .Distinct();
+
+        return assemblies
+            .SelectMany(a =>
+            {
+                try { return a.GetTypes(); }
+                catch { return Array.Empty<Type>(); }
+            })
+            .Where(t => t.IsDefined(typeof(AuditedAttribute), inherit: true))
+            .ToArray();
+    },
     LazyThreadSafetyMode.ExecutionAndPublication);
 
     // Cache for SQL version per server to avoid repeated connections

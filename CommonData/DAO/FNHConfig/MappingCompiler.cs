@@ -3,6 +3,8 @@ using CommonData.VO;
 using FluentNHibernate.Cfg;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Linq;
+using System;
 
 namespace CommonData.DAO.FNHConfig;
 
@@ -21,11 +23,29 @@ public static class MappingCompiler
         = new ConcurrentDictionary<Assembly , Type[]>();
 
     /// <summary>
-    /// Gets or creates a pre-compiled PersistenceModel for the assembly containing UserVO.
+    /// Gets or creates a pre-compiled PersistenceModel by auto-discovering mapping
+    /// types across the CommonData assembly and other loaded assemblies that
+    /// reference it (for example modules that contain additional entity mappings).
     /// </summary>
     public static FluentNHibernate.PersistenceModel GetCompiledModel()
     {
-        return GetCompiledModel(typeof(TenantVO).Assembly);
+        var coreAssembly = typeof(TenantVO).Assembly;
+        var coreName = coreAssembly.GetName().Name;
+
+        // Find assemblies loaded into the AppDomain that reference the core assembly
+        var referencingAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => !a.IsDynamic && a != null)
+            .Where(a => a == coreAssembly || a.GetReferencedAssemblies().Any(r => r.Name == coreName))
+            .Distinct()
+            .ToArray();
+
+        // If only the core assembly is present, use the cached single-assembly model
+        if (referencingAssemblies.Length == 1 && referencingAssemblies[0] == coreAssembly)
+            return GetCompiledModel(coreAssembly);
+
+        // Build and cache a merged model for the discovered assemblies. Cache key is based on core assembly
+        // to preserve existing cache behavior while ensuring mappings are merged at runtime.
+        return _compiledModels.GetOrAdd(coreAssembly, _ => BuildMergedModel(referencingAssemblies));
     }
 
     /// <summary>
@@ -37,6 +57,32 @@ public static class MappingCompiler
             throw new ArgumentNullException(nameof(assembly));
 
         return _compiledModels.GetOrAdd(assembly , CompileModelForAssembly);
+    }
+
+    private static FluentNHibernate.PersistenceModel BuildMergedModel(Assembly[] assemblies)
+    {
+        var model = new FluentNHibernate.PersistenceModel();
+
+        foreach (var asm in assemblies)
+        {
+            try
+            {
+                var mappingTypes = GetMappingTypes(asm);
+                foreach (var mappingType in mappingTypes)
+                {
+                    model.Add(mappingType);
+                }
+            }
+            catch
+            {
+                // Ignore individual assembly failures — logging is handled in GetMappingTypes
+            }
+        }
+
+        model.Conventions.Add(FluentNHibernate.Conventions.Helpers.DynamicUpdate.AlwaysTrue());
+        model.Conventions.Add(FluentNHibernate.Conventions.Helpers.DynamicInsert.AlwaysTrue());
+
+        return model;
     }
 
     /// <summary>
