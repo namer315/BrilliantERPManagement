@@ -103,11 +103,20 @@ public class Connection
         }
 
         // File doesn't exist — create a default model, save it, and return it
-        var defaultConnection = new Connection();
+        Connection defaultConnection = new Connection()
+        {
+            Server = Environment.MachineName ,
+            DataBaseName = "BrilliantWhatsApp" ,
+        };
         File.WriteAllText(filePath,
             JsonSerializer.Serialize(defaultConnection,
                 new JsonSerializerOptions { WriteIndented = true }));
-        return defaultConnection;
+
+        throw new Exception(
+                "config.json has been created with default values. " +
+                "Please configure your database connection (Server, DataBaseName, User, Password, DataBaseKind) " +
+                "in config.json, then restart the application.");
+        //return defaultConnection;
     }
 
     /// <summary>
