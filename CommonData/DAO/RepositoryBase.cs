@@ -84,7 +84,7 @@ public class RepositoryBase
     /// <summary>
     /// Gets a dedicated session for an async operation
     /// </summary>
-    /*public static async Task<ISession> GetSessionForAsyncOperation(CancellationToken cancellationToken = default)
+    public static async Task<ISession> GetSessionForAsyncOperation(CancellationToken cancellationToken = default)
     {
         // Cache factory reference
         var sessionFactory = SessionFactoryGenerator.SessionFactory;
@@ -124,7 +124,7 @@ public class RepositoryBase
 
             // Create new session using cached interceptor
             _session.Value = sessionFactory.WithOptions()
-            .Interceptor(_sharedInterceptor)
+            //.Interceptor(_sharedInterceptor)
             .OpenSession();
 
             return _session.Value;
@@ -152,67 +152,67 @@ public class RepositoryBase
     /// <summary>
     /// Disconnects the session and cleans up resources
     /// </summary>
-    public static async Task SessionDisconnectAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (Session != null)
-            {
-                await new ObjectStateDAO().ReleaseAllObjectForCurrentUser().ConfigureAwait(false);
-            }
+    //public static async Task SessionDisconnectAsync(CancellationToken cancellationToken = default)
+    //{
+    //    try
+    //    {
+    //        if (Session != null)
+    //        {
+    //            await new ObjectStateDAO().ReleaseAllObjectForCurrentUser().ConfigureAwait(false);
+    //        }
 
-            // Reset user state
-            AppBaseEntity.Instance.UserCurrentStatic = null;
-            Connection.CurrentConnection = null;
+    //        // Reset user state
+    //        AppBaseEntity.Instance.UserCurrentStatic = null;
+    //        Connection.CurrentConnection = null;
 
-            if (SessionFactoryGenerator.SessionFactory != null && !SessionFactoryGenerator.SessionFactory.IsClosed)
-            {
-                // Clear statistics
-                SessionFactoryGenerator.SessionFactory.Statistics.Clear();
+    //        if (SessionFactoryGenerator.SessionFactory != null && !SessionFactoryGenerator.SessionFactory.IsClosed)
+    //        {
+    //            // Clear statistics
+    //            SessionFactoryGenerator.SessionFactory.Statistics.Clear();
 
-                // Dispose connections properly
-                using (var tempSession = SessionFactoryGenerator.SessionFactory.OpenSession())
-                {
-                    if (tempSession.Connection != null)
-                    {
-                        tempSession.Disconnect();
-                    }
-                }
+    //            // Dispose connections properly
+    //            using (var tempSession = SessionFactoryGenerator.SessionFactory.OpenSession())
+    //            {
+    //                if (tempSession.Connection != null)
+    //                {
+    //                    tempSession.Disconnect();
+    //                }
+    //            }
 
-                // Close and dispose the session factory
-                SessionFactoryGenerator.SessionFactory.Close();
-                SessionFactoryGenerator.SessionFactory.Dispose();
-            }
+    //            // Close and dispose the session factory
+    //            SessionFactoryGenerator.SessionFactory.Close();
+    //            SessionFactoryGenerator.SessionFactory.Dispose();
+    //        }
 
-            // Clean up references
-            SessionFactoryGenerator.SessionFactory = null;
-            _session.Value = null;
+    //        // Clean up references
+    //        SessionFactoryGenerator.SessionFactory = null;
+    //        _session.Value = null;
 
-            if (_statelessSession != null && _statelessSession.IsOpen)
-            {
-                _statelessSession.Dispose();
-                _statelessSession = null;
-            }
+    //        if (_statelessSession != null && _statelessSession.IsOpen)
+    //        {
+    //            _statelessSession.Dispose();
+    //            _statelessSession = null;
+    //        }
 
-            SessionFactoryGenerator.sqlConfiguration = null;
-            SessionFactoryGenerator.garbageCollector();
-        }
-        catch (Exception ex)
-        {
-            CurrentLogger.Instance.Error($"Error during session disconnect: {ex.Message}" , ex);
-        }
-    }
+    //        SessionFactoryGenerator.sqlConfiguration = null;
+    //        SessionFactoryGenerator.garbageCollector();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        CurrentLogger.Instance.Error($"Error during session disconnect: {ex.Message}" , ex);
+    //    }
+    //}
 
     /// <summary>
     /// Refreshes an entity from the database
     /// </summary>
-    public static async Task RefreshEntityAsync(EntityBase entity , CancellationToken cancellationToken = default)
-    {
-        if (entity == null || Session == null)
-            return;
+    //public static async Task RefreshEntityAsync(EntityBase entity , CancellationToken cancellationToken = default)
+    //{
+    //    if (entity == null || Session == null)
+    //        return;
 
-        await Session.RefreshAsync(entity , LockMode.None , cancellationToken).ConfigureAwait(false);
-    }
+    //    await Session.RefreshAsync(entity , LockMode.None , cancellationToken).ConfigureAwait(false);
+    //}
     // Generic method to execute operations in a transaction
     private async Task<T> ExecuteInTransactionAsync<T>(
     Func<ISession , CancellationToken , Task<T>> operation ,
@@ -267,7 +267,7 @@ public class RepositoryBase
     /// <summary>
     /// Deletes an entity asynchronously
     /// </summary>
-    public async Task<string> DeleteAsync(EntityBase entity , CancellationToken cancellationToken = default)
+    /*public async Task<string> DeleteAsync(EntityBase entity , CancellationToken cancellationToken = default)
     {
         if (entity == null)
             return "Entity cannot be null";
@@ -773,7 +773,7 @@ public class RepositoryBase
         }
 
         return msg.ToString();
-    }
+    }*/
 
     /// <summary>
     /// Saves or updates an entity
@@ -787,16 +787,6 @@ public class RepositoryBase
 
         try
         {
-            // Set user tracking information before transaction
-            entity.UserEdited = AppBaseEntity.Instance.UserCurrentStatic;
-
-            // Determine operation type
-            var userTracker = new UserTrackerVO
-            {
-                TransationType = entity.Id != Guid.Empty
-            ? ReminderVO.TriggerKinds.Edit
-            : ReminderVO.TriggerKinds.Add
-            };
 
             // Execute the save/update operation within a transaction
             await ExecuteInTransactionAsync<EntityBase>(
@@ -812,29 +802,29 @@ public class RepositoryBase
             ).ConfigureAwait(false);
 
             // Process tracker after successful transaction
-            await afterSavingAsync(userTracker , entity).ConfigureAwait(false);
+            //await afterSavingAsync(userTracker , entity).ConfigureAwait(false);
 
             // Build success message
-            msg.Append(AppBaseEntity.RightToLeft
-            ? $"{((AppBaseEntity)entity).Name} تم الحفظ بنجاح"
-            : $"{((AppBaseEntity)entity).Name} was saved successfully");
+            msg.Append(EntityBase.RightToLeft
+            ? $"{((EntityBase)entity)} تم الحفظ بنجاح"
+            : $"{((EntityBase)entity)} was saved successfully");
         }
-        catch (OperationCanceledException)
-        {
-            // Handle cancellation
-            msg.Append(AppBaseEntity.RightToLeft
-            ? "تم إلغاء العملية"
-            : "Operation was cancelled");
-        }
+        //catch (OperationCanceledException)
+        //{
+        //    // Handle cancellation
+        //    msg.Append(AppBaseEntity.RightToLeft
+        //    ? "تم إلغاء العملية"
+        //    : "Operation was cancelled");
+        //}
         catch (Exception ex)
         {
             // Format error message
-            msg.Append(AppBaseEntity.RightToLeft
-            ? $"للاسف!! لم تتم عملية الحفظ \n{ex.Message}"
-            : $"Save operation failed \n{ex.Message}");
+            //msg.Append(EntityBase.RightToLeft
+            //? $"للاسف!! لم تتم عملية الحفظ \n{ex.Message}"
+            //: $"Save operation failed \n{ex.Message}");
 
-            await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
-            throw new Exception(msg.ToString() , ex);
+            //await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
+            //throw new Exception(msg.ToString() , ex);
         }
 
         return msg.ToString();
@@ -843,7 +833,7 @@ public class RepositoryBase
     /// <summary>
     /// Saves or updates a list of entities in batches
     /// </summary>
-    public async Task<string> PersistList(IEnumerable<EntityBase> entities , int batchSize = DEFAULT_BATCH_SIZE , CancellationToken cancellationToken = default)
+    /*public async Task<string> PersistList(IEnumerable<EntityBase> entities , int batchSize = DEFAULT_BATCH_SIZE , CancellationToken cancellationToken = default)
     {
         if (entities == null || !entities.Any())
             return "No entities to save";

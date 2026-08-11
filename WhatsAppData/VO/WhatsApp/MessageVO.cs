@@ -5,19 +5,21 @@ using System.Text;
 
 namespace WhatsAppData.VO.WhatsApp;
 
-public class MessageVO : AppBaseEntityWithCode
+public class MessageVO : EntityBaseWithCode
 {
     public virtual string MessageId { get; set; }     // WhatsApp message ID
     public virtual string Content { get; set; }       // Text or payload
     public virtual DateTime ReceivedAt { get; set; }  // Timestamp
     public virtual string Status { get; set; }        // delivered, read, etc.
 
+    public virtual WhatsAppMessageTypes Type { get; set; }
+
     // Relationship
     public virtual ContactVO Sender { get; set; }
     public virtual ContactVO Receiver { get; set; }
 
 
-    public enum WhatsAppMessageType
+    public enum WhatsAppMessageTypes
     {
         Text = 1,
         Template = 2,
@@ -33,5 +35,18 @@ public class MessageVO : AppBaseEntityWithCode
         System = 12
     }
 
+}
+
+
+public class MessageMap : EntityWithIdMapping<MessageVO>
+{
+    public MessageMap()
+    {
+        Map(x => x.MessageId);
+        Map(x => x.Content);//.Not.Nullable();
+        //Map(x => x.ReceivedAt).Not.Nullable();
+        //Map(x => x.Status).Not.Nullable();
+        Map(x => x.Type).Not.Nullable();
+    }
 }
 
