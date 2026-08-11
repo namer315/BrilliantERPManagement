@@ -1,35 +1,50 @@
 ﻿using FastEndpoints;
 using System.Text.Json;
-using WhatsAppDTO.Models.Webhooks;
+using WhatsAppData.DTO.Webhooks;
 using WhatsAppDTO.Management.Webhooks;
+using WhatsAppDTO.Models.Webhooks;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
-public class WebhookEP : Endpoint<WhatsAppWebhookRequest, WebhookResponse>
+public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , WebhookResponse>
 {
     private WebhooksManager _webhooksManager = new WebhooksManager();
+    //private WebhookFDM
+
     public override void Configure()
     {
         Post("/webhook/whatsapp");
         AllowAnonymous();
     }
 
-    public override async Task<WebhookResponse> ExecuteAsync(WhatsAppWebhookRequest req, CancellationToken ct)
+    public override async Task<WebhookResponse> ExecuteAsync(WebhookDTO req , CancellationToken ct)
     {
-        WriteRequestInFile();
-        Console.WriteLine($"Webhook received: {req.Object}");
+        try
+        {
+            //Console.WriteLine($"Webhook received: {req.Object}");
 
-        // Route each entry/change by type
-        //foreach (var entry in req.Entry)
-        //{
-        //    foreach (var change in entry.Changes)
-        //    {
-        //        ProcessMessages(change.Value);
-        //        ProcessStatuses(change.Value);
-        //    }
-        //}
+            // Route each entry/change by type
+            //foreach (var entry in req.Entry)
+            //{
+            //    foreach (var change in entry.Changes)
+            //    {
+            //        ProcessMessages(change.Value);
+            //        ProcessStatuses(change.Value);
+            //    }
+            //}
 
-        _webhooksManager.HandleWebhookRequest(req);
+            bool shouldSaveRequestToFile = await _webhooksManager.HandleWebhookRequest(req);
+            if (shouldSaveRequestToFile)
+            {
+
+                WriteRequestInFile();
+            }
+        }
+        catch (Exception ex)
+        {
+
+            WriteRequestInFile();
+        }
 
         return new WebhookResponse { Status = "processed" };
     }
@@ -69,7 +84,7 @@ public class WebhookEP : Endpoint<WhatsAppWebhookRequest, WebhookResponse>
                 await File.WriteAllTextAsync(filePath , prettyJson);
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
 
         }
@@ -148,13 +163,13 @@ public class WhatsAppWebhookVerifyEndpoint : EndpointWithoutRequest
 
         var expectedToken = _configuration["WhatsApp:WebhookVerifyToken"];
 
-        if (string.Equals(mode, "subscribe", StringComparison.Ordinal)
+        if (string.Equals(mode , "subscribe" , StringComparison.Ordinal)
             && !string.IsNullOrEmpty(challenge)
-            && string.Equals(token, expectedToken, StringComparison.Ordinal))
+            && string.Equals(token , expectedToken , StringComparison.Ordinal))
         {
             // Echo the challenge back as plain text with HTTP 200.
             HttpContext.Response.StatusCode = StatusCodes.Status200OK;
-            await HttpContext.Response.WriteAsync(challenge, ct);
+            await HttpContext.Response.WriteAsync(challenge , ct);
         }
         else
         {

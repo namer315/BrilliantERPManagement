@@ -21,3 +21,18 @@ public class TemplateEP : Endpoint<TemplateSendDTO , MessageResponseDTO>
         return await _fdm.SendTemplateMessage(req);
     }
 }
+public class TemplateListEP : EndpointWithoutRequest<WhatsAppTemplateResponse>
+{
+    WhatsAppHelper _whatsAppHelper = new WhatsAppHelper();
+    private TemplateFDM _fdm = new TemplateFDM();
+    public override void Configure()
+    {
+        Get("WhatsApp/TemplateList");
+        AllowAnonymous();
+    }
+
+    public async override Task<WhatsAppTemplateResponse> ExecuteAsync(CancellationToken ct)
+    {
+        return await _whatsAppHelper.GetAllTemplatesAsync();
+    }
+}
