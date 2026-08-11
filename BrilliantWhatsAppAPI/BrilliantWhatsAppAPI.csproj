@@ -16,6 +16,7 @@
     <ProjectReference Include="..\CommonData\CommonData.csproj" />
     <ProjectReference Include="..\CommonFDM\CommonFDM.csproj" />
     <ProjectReference Include="..\WhatsAppDTO\WhatsAppDTO.csproj" />
+    <ProjectReference Include="..\WhatsAppFDM\WhatsAppFDM.csproj" />
   </ItemGroup>
 
   <ItemGroup>
