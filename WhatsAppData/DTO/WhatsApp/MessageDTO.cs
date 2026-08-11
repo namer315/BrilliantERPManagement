@@ -7,8 +7,9 @@ namespace WhatsAppData.DTO.WhatsApp;
 
 public class MessageDTO
 {
+    [JsonPropertyName("id")]
     public string Id { get; set; }
 
-    [JsonPropertyName("message_status ")]
+    [JsonPropertyName("message_status")]
     public string MessageStatus { get; set; }
 }

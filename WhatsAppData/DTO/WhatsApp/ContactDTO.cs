@@ -7,6 +7,7 @@ namespace WhatsAppData.DTO.WhatsApp;
 
 public class ContactDTO
 {
+    [JsonPropertyName("input")]
     public string Input { get; set; }
 
     [JsonPropertyName("wa_id")]
