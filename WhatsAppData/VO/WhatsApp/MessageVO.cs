@@ -18,6 +18,8 @@ public class MessageVO : EntityBaseWithCode
     public virtual ContactVO Sender { get; set; }
     public virtual ContactVO Receiver { get; set; }
 
+    public virtual TenantVO Tenant { get; set; }
+
 
     public enum WhatsAppMessageTypes
     {
@@ -45,7 +47,7 @@ public class MessageMap : EntityWithIdMapping<MessageVO>
         Map(x => x.MessageId);
         Map(x => x.Content);//.Not.Nullable();
         //Map(x => x.ReceivedAt).Not.Nullable();
-        //Map(x => x.Status).Not.Nullable();
+        Map(x => x.Status);
         Map(x => x.Type).Not.Nullable();
     }
 }

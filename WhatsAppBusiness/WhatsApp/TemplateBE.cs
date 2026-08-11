@@ -20,6 +20,17 @@ public class TemplateBE : WhatsAppBE
 
         MessageVO message = await _message.GetNew(MessageVO.WhatsAppMessageTypes.Template);
         message.Receiver = await contact.GetContactBy(templateSend.RecipientPhoneNumber);
+        //message_templates?name=order_confirmed
+        TemplatesResponseDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
+
+        if(templatesResponseDTO.Data is not { Count:>0} || templatesResponseDTO.Data[0].Components is not { Count: > 0 })
+            throw new InvalidOperationException( $"Template '{templateSend.TemplateName}' was not found or contains no components.");
+
+        message.Content = templatesResponseDTO.Data[0].Components[0].Text;
+        foreach(TemplateParameterDTO parameter in templateSend.ParameterList)
+        {
+            message.Content = message.Content.Replace("{{" + parameter.Name + "}}" , parameter.Text);
+        }
 
         string s = await _message.Persist(message);
 
@@ -32,6 +43,42 @@ public class TemplateBE : WhatsAppBE
         s = await _message.Persist(message);
 
         return messageResponseDTO;
+    }
+
+
+    public async Task<TemplatesResponseDTO> GetAllTemplatesAsync(
+       string fields = "name,status,category,language,components" ,
+       int limit = 50 ,
+       string templateName = null,
+       CancellationToken ct = default)
+    {
+        //// --- Input validation ---
+        //if (string.IsNullOrWhiteSpace(_WhatsAppBusinessAccountId))
+        //    throw new ArgumentNullException(nameof(_WhatsAppBusinessAccountId) , "WABA ID cannot be null or empty.");
+
+        //if (string.IsNullOrWhiteSpace(_accessToken))
+        //    throw new ArgumentNullException(nameof(_accessToken) , "Access token cannot be null or empty.");
+
+        //// --- Build the URL ---
+        //var url = $"https://graph.facebook.com/v22.0/{_WhatsAppBusinessAccountId}/message_templates"
+        //        + $"?fields={Uri.EscapeDataString(fields)}"
+        //        + $"&limit={limit}";
+
+        //string respond = await _httpClientHelper.GetAsync(url);
+        //string responce = await GetWABAAsync("message_templates?fields={Uri.EscapeDataString(fields)");
+
+        //TemplatesResponseDTO templates = JsonSerializer.Deserialize<TemplatesResponseDTO>(respond)
+        //    ?? throw new InvalidOperationException("Failed to deserialize WhatsApp template response.");
+
+        string queryParameters = $"fields={Uri.EscapeDataString(fields)}&limit={limit}";
+        if (!string.IsNullOrEmpty(templateName))
+        {
+            queryParameters += $"&name={Uri.EscapeDataString(templateName)}";
+        }
+
+        TemplatesResponseDTO templatesResponseDTO = await GetWABAAsync<TemplatesResponseDTO>($"message_templates?{queryParameters}");
+
+        return templatesResponseDTO;
     }
 }
 

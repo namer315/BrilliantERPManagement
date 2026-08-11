@@ -1,4 +1,5 @@
-﻿using WhatsAppData.DAO;
+﻿using CommonData.Managers;
+using WhatsAppData.DAO;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
@@ -12,6 +13,7 @@ public class MessageBE
         MessageVO message = new MessageVO();
 
         message.Type = type;
+        message.Tenant = TenantManager.CurrentTenant;
 
         return message;
     }
