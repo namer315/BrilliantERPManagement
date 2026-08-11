@@ -1,4 +1,5 @@
-﻿using CommonData.Services;
+﻿using CommonData.Common;
+using CommonData.Services;
 using CommonData.Session;
 using CommonData.VO;
 using CommonFDM;
@@ -54,7 +55,7 @@ public class TokenPreProcessor : IGlobalPreProcessor
             {
                 // Store in HttpContext.Items (backward compat) and the ambient
                 // TenantContext so it is readable from any method in the solution.
-                context.HttpContext.Items["Tenant"] = tenantVO;
+                context.HttpContext.Items[NameKeys.TenantKey] = tenantVO.Token;
                 TenantContext.CurrentTenant = tenantVO; 
             }
             else

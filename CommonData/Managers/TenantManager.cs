@@ -66,16 +66,16 @@ public class TenantManager
             throw new ArgumentException("Token cannot be null or empty." , nameof(token));
 
         // Search in cached list
-        if (_tenantList.TryGetValue(token , out var value))
-        {
-            // value found, can be null if dictionary stores nullable types
-            return _tenantList[token];
-        }
+        //if (_tenantList.TryGetValue(token , out var value))
+        //{
+        //    // value found, can be null if dictionary stores nullable types
+        //    return _tenantList[token];
+        //}
 
         // Fallback: fetch from DB
         TenantVO tenant = await _dao.GetByToken(token);
-        //if (tenant != null)
-        //    _tenantList[token] = tenant;
+        if (tenant != null)
+            _tenantList[token] = tenant;
 
         return tenant;
     }
