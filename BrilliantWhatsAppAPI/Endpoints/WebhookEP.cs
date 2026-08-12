@@ -11,6 +11,12 @@ public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , Webho
 {
     private WebhooksManager _webhooksManager = new WebhooksManager();
     private WebhookFDM _fdm = new WebhookFDM();
+    private readonly IConfiguration _configuration;
+
+    public WebhookEP(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
 
     public override void Configure()
     {
@@ -35,8 +41,10 @@ public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , Webho
             //}
 
             //bool shouldSaveRequestToFile = await _webhooksManager.HandleWebhookRequest(req);
+            bool writeToFile = _configuration.GetValue<bool>("Webhook:WriteToFile");
             bool shouldSaveRequestToFile = await _fdm.HandleWebhook(req);
-            if (shouldSaveRequestToFile)
+
+            if (writeToFile || shouldSaveRequestToFile)
             {
                 WriteRequestInFile();
             }
@@ -162,7 +170,8 @@ public class WhatsAppWebhookVerifyEndpoint : EndpointWithoutRequest
         var token = Query<string>("hub.verify_token");
         var challenge = Query<string>("hub.challenge");
 
-        var expectedToken = _configuration["WhatsApp:WebhookVerifyToken"];
+        // var expectedToken = _configuration["WhatsApp:WebhookVerifyToken"];
+        var expectedToken = _configuration["Webhook:VerifyToken"];
 
         if (string.Equals(mode , "subscribe" , StringComparison.Ordinal)
             && !string.IsNullOrEmpty(challenge)
