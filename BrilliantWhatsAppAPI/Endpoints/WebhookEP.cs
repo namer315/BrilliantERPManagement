@@ -3,13 +3,14 @@ using System.Text.Json;
 using WhatsAppData.DTO.Webhooks;
 using WhatsAppDTO.Management.Webhooks;
 using WhatsAppDTO.Models.Webhooks;
+using WhatsAppFDM;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
 public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , WebhookResponse>
 {
     private WebhooksManager _webhooksManager = new WebhooksManager();
-    //private WebhookFDM
+    private WebhookFDM _fdm = new WebhookFDM();
 
     public override void Configure()
     {
@@ -33,10 +34,10 @@ public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , Webho
             //    }
             //}
 
-            bool shouldSaveRequestToFile = await _webhooksManager.HandleWebhookRequest(req);
+            //bool shouldSaveRequestToFile = await _webhooksManager.HandleWebhookRequest(req);
+            bool shouldSaveRequestToFile = await _fdm.HandleWebhook(req);
             if (shouldSaveRequestToFile)
             {
-
                 WriteRequestInFile();
             }
         }
