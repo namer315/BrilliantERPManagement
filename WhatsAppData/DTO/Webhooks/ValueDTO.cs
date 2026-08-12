@@ -10,9 +10,9 @@ public class ValueDTO
 
     public MetadataDTO Metadata { get; set; } = new();
 
-    public IList<ContactDTO>? Contacts { get; set; }
+    public IList<ContactDTO> Contacts { get; set; }
 
-    public IList<MessageDTO>? Messages { get; set; }
+    public IList<MessageDTO> Messages { get; set; }
 
-    public IList<StatusDTO>? Statuses { get; set; }
+    public IList<StatusDTO> Statuses { get; set; }
 }

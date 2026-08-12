@@ -7,18 +7,22 @@ public class StatusDTO
 {
     public string Id { get; set; } = string.Empty;
 
-    public StatusTypeDTO Status { get; set; }
+    public string Status { get; set; }
 
     public string Timestamp { get; set; } = string.Empty;
 
     [JsonPropertyName("recipient_id")]
     public string RecipientId { get; set; } = string.Empty;
 
-    public ConversationDTO? Conversation { get; set; }
-
-    public PricingDTO? Pricing { get; set; }
-
-    public IList<ErrorDTO>? Errors { get; set; }
+    public ConversationDTO Conversation { get; set; }
+    /// <summary>
+    /// only included with sent status, and one of either delivered or read status
+    /// </summary>
+    public PricingDTO Pricing { get; set; }
+    /// <summary>
+    /// only included if failure to send or deliver message
+    /// </summary>
+    public IList<ErrorDTO> Errors { get; set; }
 }
 
 public class ConversationDTO

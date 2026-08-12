@@ -44,7 +44,7 @@ public class MessageMap : EntityWithIdMapping<MessageVO>
 {
     public MessageMap()
     {
-        Map(x => x.MessageId);
+        Map(x => x.MessageId).Not.Nullable();
         Map(x => x.Content).Length(int.MaxValue);//.Not.Nullable();
         //Map(x => x.ReceivedAt).Not.Nullable();
         Map(x => x.Status);
