@@ -492,6 +492,7 @@ public class RepositoryBase
 
             //await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
             //throw new Exception(msg.ToString() , ex);
+            throw ex;
         }
 
         return msg.ToString();
@@ -825,6 +826,7 @@ public class RepositoryBase
 
             //await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
             //throw new Exception(msg.ToString() , ex);
+            throw ex;
         }
 
         return msg.ToString();

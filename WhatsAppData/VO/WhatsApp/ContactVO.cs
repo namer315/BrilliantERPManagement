@@ -16,8 +16,8 @@ public class ContactMap : EntityWithIdMapping<ContactVO>
 {
     public ContactMap()
     {
-        Map(x => x.PhoneNumber).Not.Nullable();
-        Map(x => x.WaId);
+        Map(x => x.PhoneNumber);
+        Map(x => x.WaId).Not.Nullable();
         //Map(x => x.Name).Not.Nullable();
     }
 }

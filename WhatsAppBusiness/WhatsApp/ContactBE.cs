@@ -30,7 +30,7 @@ public class ContactBE
 
     }
 
-    private async Task<ContactVO?> GetNew(string waId , string Name = null)
+    private async Task<ContactVO> GetNew(string waId , string Name = null)
     {
         ContactVO contact = new ContactVO();
 
@@ -39,4 +39,9 @@ public class ContactBE
 
         return contact;
     }
+
+    //internal async Task<ContactVO> Persist(string waId)
+    //{
+    //    ContactVO contact = await GetContactBy(waId);
+    //}
 }

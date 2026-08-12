@@ -21,12 +21,14 @@ public class MessageBE
         return message;
     }
 
-    internal async Task<MessageVO> GetNew(MessageVO.WhatsAppMessageTypes type)
+    internal async Task<MessageVO> GetNew(MessageVO.WhatsAppMessageTypes type , string messageId = null)
     {
         MessageVO message = new MessageVO();
 
+        message.MessageId = messageId;
         message.Type = type;
-        message.Tenant = TenantManager.CurrentTenant;
+        if(messageId is null) // temp
+            message.Tenant = TenantManager.CurrentTenant;
 
         return message;
     }

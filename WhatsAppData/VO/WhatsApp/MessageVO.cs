@@ -44,14 +44,14 @@ public class MessageMap : EntityWithIdMapping<MessageVO>
 {
     public MessageMap()
     {
-        Map(x => x.MessageId).Not.Nullable();
+        Map(x => x.MessageId)/*.Not.Nullable()*/;
         Map(x => x.Content).Length(int.MaxValue);//.Not.Nullable();
         //Map(x => x.ReceivedAt).Not.Nullable();
         Map(x => x.Status);
         Map(x => x.Type).Not.Nullable();
 
-        References(x => x.Tenant).Column("Tenant").Not.Nullable().Cascade.None();
-        References(x => x.Receiver).Column("Receiver").Not.Nullable().Cascade.Merge();
+        References(x => x.Tenant).Column("Tenant")/*.Not.Nullable()*/.Cascade.None();
+        References(x => x.Receiver).Column("Receiver")/*.Not.Nullable()*/.Cascade.Merge();
     }
 }
 

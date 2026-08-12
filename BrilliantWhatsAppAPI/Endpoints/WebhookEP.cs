@@ -35,14 +35,14 @@ public class WebhookEP : Endpoint<WebhookDTO , WebhookResponse>
         }
         catch (Exception ex)
         {
-
-            WriteRequestInFile();
+            WriteRequestInFile("_ex");
+            throw ex;
         }
 
         return new WebhookResponse { Status = "processed" };
     }
 
-    private async Task WriteRequestInFile()
+    private async Task WriteRequestInFile(string suffix = "")
     {
         try
         {

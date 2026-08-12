@@ -1,4 +1,5 @@
 ﻿using CommonData.Extensions;
+using NHibernate.Engine;
 using WhatsAppBusiness.WhatsApp;
 using WhatsAppData.DTO.Webhooks;
 using WhatsAppData.VO.WhatsApp;
@@ -8,9 +9,9 @@ namespace WhatsAppBusiness.Webhooks;
 
 public class WebhookBE
 {
-    private MessageBE _message = new MessageBE();
+    private MessageBE _messageBE = new MessageBE();
     private MessageStatusBE _messageStatus = new MessageStatusBE();
-    private ContactBE _contact = new ContactBE();
+    private ContactBE _contactBE = new ContactBE();
     private WhatsAppErrorBE _whatsAppErrorBE = new WhatsAppErrorBE();
     private WhatsAppPricingBE _whatsAppPricingBE = new WhatsAppPricingBE();
 
@@ -44,7 +45,7 @@ public class WebhookBE
                             {
                                 foreach (StatusDTO status in change.Value.Statuses)
                                 {
-                                    MessageVO message = await _message.getMessageBy(status.Id);
+                                    MessageVO message = await _messageBE.getMessageBy(status.Id);
                                     MessageStatusVO messageStatus = _messageStatus.GetNew(message);
                                     messageStatus.Status = status.Status.ToEnum<WhatsAppMessageStatus>();
                                     messageStatus.Timestamp = Convert.ToInt64(status.Timestamp);
@@ -81,6 +82,28 @@ public class WebhookBE
                                     }
                                 }
                             }
+
+                            if (change.Value.Messages is { Count: > 0 })
+                            {
+                                foreach (MessageDTO msg in change.Value.Messages)
+                                {
+
+                                    MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Text, msg.Id);
+
+                                    message.Sender = await _contactBE.GetContactBy(msg.From);
+                                    if (string.IsNullOrEmpty(message.Sender.Name))
+                                    {
+                                        message.Sender.Name = change.Value.Contacts?.FirstOrDefault(x => x.WaId.Equals(message.Sender.WaId))?.Profile?.Name;
+                                    }
+
+                                    if(msg.Text is not null)
+                                    {
+                                        message.Content = msg.Text.Body;
+                                    }
+
+                                    s = await _messageBE.Persist(message , true);
+                                }
+                            }
                         }
                             break;
                         case "statuses":
@@ -100,6 +123,7 @@ public class WebhookBE
         }
         catch(Exception ex)
         {
+            throw ex;
             return true;
         }
     }
