@@ -15,7 +15,7 @@ public class WhatsAppErrorVO : EntityBase
     public virtual string Href { get; set; }       // <ERROR_CODES_URL> https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes/
 
     // Relationship back to MessageStatusVO (optional, if you want to link errors to statuses)
-    public virtual MessageStatusVO Status { get; set; }
+    public virtual MessageStatusVO MessageStatus { get; set; }
 }
 public class WhatsAppErrorMap : EntityWithCreatedAtMapping<WhatsAppErrorVO>
 {
@@ -27,6 +27,6 @@ public class WhatsAppErrorMap : EntityWithCreatedAtMapping<WhatsAppErrorVO>
         Map(x => x.Details).Length(int.MaxValue);
         //Map(x => x.Href).Length(int.MaxValue);
 
-        References(x => x.Status).Column("StatusId").Cascade.None()/*.Nullable()*/;
+        References(x => x.MessageStatus).Column("MessageStatus").Cascade.None()/*.Nullable()*/;
     }
 }

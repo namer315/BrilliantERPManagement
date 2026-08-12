@@ -30,6 +30,6 @@ public class MessageStatusMap : EntityWithCreatedAtMapping<MessageStatusVO>
         Map(x => x.Status).Not.Nullable();
         Map(x => x.Timestamp).Not.Nullable();
 
-        References(x => x.Message).Column("MessageId").Not.Nullable().Cascade.None();
+        References(x => x.Message).Column("Message").Not.Nullable().Cascade.None();
     }
 }
