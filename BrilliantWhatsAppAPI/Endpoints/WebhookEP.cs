@@ -1,15 +1,12 @@
 ﻿using FastEndpoints;
 using System.Text.Json;
 using WhatsAppData.DTO.Webhooks;
-using WhatsAppDTO.Management.Webhooks;
-using WhatsAppDTO.Models.Webhooks;
 using WhatsAppFDM;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
-public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , WebhookResponse>
+public class WebhookEP : Endpoint<WebhookDTO , WebhookResponse>
 {
-    private WebhooksManager _webhooksManager = new WebhooksManager();
     private WebhookFDM _fdm = new WebhookFDM();
     private readonly IConfiguration _configuration;
 
@@ -28,19 +25,6 @@ public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , Webho
     {
         try
         {
-            //Console.WriteLine($"Webhook received: {req.Object}");
-
-            // Route each entry/change by type
-            //foreach (var entry in req.Entry)
-            //{
-            //    foreach (var change in entry.Changes)
-            //    {
-            //        ProcessMessages(change.Value);
-            //        ProcessStatuses(change.Value);
-            //    }
-            //}
-
-            //bool shouldSaveRequestToFile = await _webhooksManager.HandleWebhookRequest(req);
             bool writeToFile = _configuration.GetValue<bool>("Webhook:WriteToFile");
             bool shouldSaveRequestToFile = await _fdm.HandleWebhook(req);
 
@@ -97,51 +81,7 @@ public class WebhookEP : Endpoint</*WhatsAppWebhookRequest*/  WebhookDTO , Webho
         {
 
         }
-    }
-
-    private static void ProcessMessages(WebhookValue value)
-    {
-        if (value.Messages is not { Count: > 0 })
-            return;
-
-        foreach (var msg in value.Messages)
-        {
-            Console.WriteLine($"  [{msg.Type}] from={msg.From} id={msg.Id}");
-
-            switch (msg.Type)
-            {
-                case WebhookMessageType.Text when msg.Text is not null:
-                    Console.WriteLine($"    body={msg.Text.Body}");
-                    break;
-                case WebhookMessageType.Image when msg.Image is not null:
-                    Console.WriteLine($"    image_id={msg.Image.Id}");
-                    break;
-                case WebhookMessageType.Interactive when msg.Interactive is not null:
-                    Console.WriteLine($"    interactive_type={msg.Interactive.Type}");
-                    break;
-                case WebhookMessageType.Location when msg.Location is not null:
-                    Console.WriteLine($"    lat={msg.Location.Latitude} lon={msg.Location.Longitude}");
-                    break;
-            }
-        }
-    }
-
-    private static void ProcessStatuses(WebhookValue value)
-    {
-        if (value.Statuses is not { Count: > 0 })
-            return;
-
-        foreach (var s in value.Statuses)
-        {
-            Console.WriteLine($"  [status] id={s.Id} status={s.Status} recipient={s.RecipientId}");
-
-            if (s.Errors is { Count: > 0 })
-            {
-                foreach (var err in s.Errors)
-                    Console.WriteLine($"    error {err.Code}: {err.Title}");
-            }
-        }
-    }
+    }   
 }
 
 public sealed class WebhookResponse

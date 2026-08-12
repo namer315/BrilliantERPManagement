@@ -26,6 +26,5 @@ internal class MessageStatusBE
 
     private void Validation(MessageStatusVO messageStatus)
     {
-        throw new NotImplementedException();
     }
 }

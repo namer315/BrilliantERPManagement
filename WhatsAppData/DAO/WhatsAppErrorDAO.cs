@@ -2,6 +2,6 @@
 
 namespace WhatsAppData.DAO;
 
-public class MessageStatusDAO : RepositoryBase
+public class WhatsAppErrorDAO : RepositoryBase
 {
 }
