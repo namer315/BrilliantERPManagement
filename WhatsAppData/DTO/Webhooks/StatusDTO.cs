@@ -54,10 +54,10 @@ public class ConversationDTO
 {
     public string Id { get; set; } = string.Empty;
 
-    public ConversationOriginDTO? Origin { get; set; }
+    public ConversationOriginDTO Origin { get; set; }
 
     [JsonPropertyName("expiration_timestamp")]
-    public string? ExpirationTimestamp { get; set; }
+    public string ExpirationTimestamp { get; set; } = string.Empty;
 }
 
 public class ConversationOriginDTO
@@ -65,6 +65,20 @@ public class ConversationOriginDTO
     public ConversationOriginTypeDTO Type { get; set; }
 }
 
+/// <summary>
+/// Pricing information for the message status.
+/// Only included with sent status, and one of either delivered or read status.
+/// <para>
+/// Related documentation:
+/// <list type="bullet">
+/// <item><description>Pricing overview (per-message pricing, rates, volume tiers): https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing</description></item>
+/// <item><description>Groups API pricing (billing per recipient, group pricing categories): https://developers.facebook.com/documentation/business-messaging/whatsapp/groups/pricing</description></item>
+/// <item><description>Groups API webhooks (pricing data in status webhooks): https://developers.facebook.com/documentation/business-messaging/whatsapp/groups/webhooks#pricing-information</description></item>
+/// <item><description>Customer service windows: https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/send-messages#customer-service-windows</description></item>
+/// <item><description>Analytics (pricing_analytics, tiering): https://developers.facebook.com/documentation/business-messaging/whatsapp/analytics#pricing-analytics</description></item>
+/// </list>
+/// </para>
+/// </summary>
 public class PricingDTO
 {
     public bool? Billable { get; set; }
@@ -75,7 +89,6 @@ public class PricingDTO
     /// <summary>
     /// PRICING_TYPE (e.g. "CBP", "CBP_NUMBER", "GPU", "0").
     /// </summary>
-    [JsonPropertyName("type")]
     public string Type { get; set; } = string.Empty;
 
     public string Category { get; set; } = string.Empty;

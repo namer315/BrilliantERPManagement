@@ -12,6 +12,7 @@ public class WebhookBE
     private MessageStatusBE _messageStatus = new MessageStatusBE();
     private ContactBE _contact = new ContactBE();
     private WhatsAppErrorBE _whatsAppErrorBE = new WhatsAppErrorBE();
+    private WhatsAppPricingBE _whatsAppPricingBE = new WhatsAppPricingBE();
 
     public async Task<bool> HandleWebhook(WebhookDTO webhook)
     {
@@ -19,7 +20,7 @@ public class WebhookBE
         {
             //bool shouldSaveRequestToFile = false; // Set this flag based on your logic
             // Implementation for handling webhook
-
+            string s;
             if (!webhook.Object.Equals("whatsapp_business_account") || webhook.Entry is not { Count: > 0 })
                 return true;
 
@@ -39,27 +40,45 @@ public class WebhookBE
                         case "messages":
                         {
                             // Handle incoming messages
-                            foreach (StatusDTO status in change.Value.Statuses)
+                            if (change.Value.Statuses is { Count: > 0 })
                             {
-                                MessageVO message = await _message.getMessageBy(status.Id);
-                                MessageStatusVO messageStatus = _messageStatus.GetNew(message);
-                                messageStatus.Status = status.Status.ToEnum<WhatsAppMessageStatus>();
-                                messageStatus.Timestamp = Convert.ToInt64(status.Timestamp);
-
-                                string s = await _messageStatus.Persist(messageStatus);
-
-                                foreach (ErrorDTO e in status.Errors)
+                                foreach (StatusDTO status in change.Value.Statuses)
                                 {
-                                    WhatsAppErrorVO error = _whatsAppErrorBE.GetNew(messageStatus);
-                                    error.ErrorCode = e.Code;
-                                    error.Title = e.Title;
-                                    error.Message = e.Message;
-                                    error.Details = e.ErrorData.Details;
-                                    error.Href = e.Href;
-                                }
-                                if (status.Pricing is not null)
-                                {
+                                    MessageVO message = await _message.getMessageBy(status.Id);
+                                    MessageStatusVO messageStatus = _messageStatus.GetNew(message);
+                                    messageStatus.Status = status.Status.ToEnum<WhatsAppMessageStatus>();
+                                    messageStatus.Timestamp = Convert.ToInt64(status.Timestamp);
 
+                                    s = await _messageStatus.Persist(messageStatus);
+
+                                    if (status.Errors is { Count: > 0 })
+                                    {
+                                        foreach (ErrorDTO e in status.Errors)
+                                        {
+                                            WhatsAppErrorVO error = _whatsAppErrorBE.GetNew(messageStatus);
+                                            error.ErrorCode = e.Code;
+                                            error.Title = e.Title;
+                                            error.Message = e.Message;
+                                            error.Details = e.ErrorData?.Details ?? string.Empty;
+                                            error.Href = e.Href;
+
+                                            s = await _whatsAppErrorBE.Persist(error);
+                                        }
+                                    }
+                                    if (status.Pricing is not null)
+                                    {
+                                        WhatsAppPricingVO pricing = _whatsAppPricingBE.GetNew(messageStatus);
+                                        pricing.Billable = status.Pricing.Billable;
+                                        pricing.PricingModel = status.Pricing.PricingModel;
+                                        pricing.Type = status.Pricing.Type;
+                                        pricing.Category = status.Pricing.Category;
+
+                                        s = await _whatsAppPricingBE.Persist(pricing);
+
+                                        // Pricing is informational (billable/model/category/type).
+                                        // It is not currently mapped to a persistent column; log/capture for audit.
+                                        Console.WriteLine($"[status] pricing id={status.Id} billable={status.Pricing.Billable} model={status.Pricing.PricingModel} type={status.Pricing.Type} category={status.Pricing.Category}");
+                                    }
                                 }
                             }
                         }
