@@ -19,7 +19,7 @@ public abstract class EntityBase
 public abstract class EntityBaseWithCode : EntityBase
 {
     public virtual string Code { get; set; }
-    public virtual int Number { get; set; }
+    public virtual long Number { get; set; }
 }
 /// <summary>
 /// Reusable base mapping for entities deriving from <see cref="EntityBase"/>.
@@ -58,6 +58,48 @@ public class EntityWithDatesMapping<T> : ClassMap<T> where T : EntityBase
 
         Map(e => e.CreatedAt).Not.Nullable().Default("CURRENT_TIMESTAMP");
         Map(e => e.UpdatedAt).Nullable();
+
+        OptimisticLock.Version().DynamicUpdate();
+    }
+}
+
+/// <summary>
+/// Base mapping for entities deriving from <see cref="EntityBase"/> that expose
+/// only the CreatedAt audit column (no UpdatedAt). Maps the Guid primary key
+/// (GuidComb), optimistic-lock Version strategy and the CreatedAt column.
+/// </summary>
+/// <typeparam name="T">A concrete entity type deriving from AppBaseEntity.</typeparam>
+public class EntityWithCreatedAtMapping<T> : ClassMap<T> where T : EntityBase
+{
+    public EntityWithCreatedAtMapping()
+    {
+        base.Cache.NonStrictReadWrite();
+
+        Id(e => e.Id).GeneratedBy.GuidComb();
+
+        Map(e => e.CreatedAt).Not.Nullable().Default("CURRENT_TIMESTAMP");
+
+        OptimisticLock.Version().DynamicUpdate();
+    }
+}
+
+/// <summary>
+/// Reusable base mapping for entities deriving from <see cref="EntityBaseWithCode"/>.
+/// Maps the Guid primary key (GuidComb), the Code and Number columns, and the
+/// optimistic-lock Version column. Concrete entities derive from this and map
+/// their own columns plus their Table in their own mapping class.
+/// </summary>
+/// <typeparam name="T">A concrete entity type deriving from EntityBaseWithCode.</typeparam>
+public class EntityWithCodeMapping<T> : ClassMap<T> where T : EntityBaseWithCode
+{
+    public EntityWithCodeMapping()
+    {
+        base.Cache.NonStrictReadWrite();
+
+        Id(e => e.Id).GeneratedBy.GuidComb();
+
+        Map(e => e.Code);
+        Map(e => e.Number);
 
         OptimisticLock.Version().DynamicUpdate();
     }

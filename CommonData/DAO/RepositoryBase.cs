@@ -418,7 +418,7 @@ public class RepositoryBase
             throw new Exception(resultMessage.ToString() , ex);
         }
         return resultMessage.ToString();
-    }
+    }*/
 
     /// <summary>
     /// Merges an entity with the current session
@@ -429,24 +429,24 @@ public class RepositoryBase
             return "Entity cannot be null";
 
         var msg = new StringBuilder();
-        var userTracker = new UserTrackerVO();
+        //var userTracker = new UserTrackerVO();
 
         try
         {
             // Determine if this is an update or insert
-            userTracker.TransationType = entity.Id != Guid.Empty
-            ? ReminderVO.TriggerKinds.Edit
-            : ReminderVO.TriggerKinds.Add;
+            //userTracker.TransationType = entity.Id != Guid.Empty
+            //? ReminderVO.TriggerKinds.Edit
+            //: ReminderVO.TriggerKinds.Add;
 
-            // Set user information
-            if ((entity is InvoiceVO invoice && invoice.InvoiceProperty.IsPointOfSale && invoice.InvoiceProperty.IsTouchScreen)
-                || (entity is OrderVO order && order.OrderProperty.IsTouchScreen))
-            {
-                if (entity.UserEdited is null)
-                    entity.UserEdited = AppBaseEntity.Instance.UserCurrentStatic;
-            }
-            else
-                entity.UserEdited = AppBaseEntity.Instance.UserCurrentStatic;
+            //// Set user information
+            //if ((entity is InvoiceVO invoice && invoice.InvoiceProperty.IsPointOfSale && invoice.InvoiceProperty.IsTouchScreen)
+            //    || (entity is OrderVO order && order.OrderProperty.IsTouchScreen))
+            //{
+            //    if (entity.UserEdited is null)
+            //        entity.UserEdited = AppBaseEntity.Instance.UserCurrentStatic;
+            //}
+            //else
+            //    entity.UserEdited = AppBaseEntity.Instance.UserCurrentStatic;
 
             // Clear the current session
             SessionClear();
@@ -467,31 +467,31 @@ public class RepositoryBase
 
 
             // Handle tracking and notifications after saving
-            await afterSavingAsync(userTracker , entity).ConfigureAwait(false);
+            //await afterSavingAsync(userTracker , entity).ConfigureAwait(false);
 
-            msg.Append(AppBaseEntity.RightToLeft
-            ? $"{((AppBaseEntity)entity).Name}\n تم الحفظ بنجاح"
-            : $"{((AppBaseEntity)entity).Name} was saved successfully");
+            msg.Append(EntityBase.RightToLeft
+            ? $"{((EntityBase)entity)}\n تم الحفظ بنجاح"
+            : $"{((EntityBase)entity)} was saved successfully");
         }
-        catch (TaskCanceledException ex)
-        {
-            msg.Append("The operation was canceled. Please try again.");
-            await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
-            throw new OperationCanceledException(msg.ToString() , ex , cancellationToken);
-        }
-        catch (TimeoutException ex)
-        {
-            msg.Append("The database operation timed out. Please ensure the database is responsive.");
-            await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
-            throw new Exception(msg.ToString() , ex);
-        }
+        //catch (TaskCanceledException ex)
+        //{
+        //    msg.Append("The operation was canceled. Please try again.");
+        //    await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
+        //    throw new OperationCanceledException(msg.ToString() , ex , cancellationToken);
+        //}
+        //catch (TimeoutException ex)
+        //{
+        //    msg.Append("The database operation timed out. Please ensure the database is responsive.");
+        //    await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
+        //    throw new Exception(msg.ToString() , ex);
+        //}
         catch (Exception ex)
         {
             // Handle specific database errors with user-friendly messages
-            msg = BuildExceptionMessage(entity , ex);
+            //msg = BuildExceptionMessage(entity , ex);
 
-            await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
-            throw new Exception(msg.ToString() , ex);
+            //await loggErrorMessage(entity , msg.ToString() , ex).ConfigureAwait(false);
+            //throw new Exception(msg.ToString() , ex);
         }
 
         return msg.ToString();
@@ -502,7 +502,7 @@ public class RepositoryBase
     /// <param name="entity">The entity being processed</param>
     /// <param name="ex">The exception that was thrown</param>
     /// <returns>A formatted error message</returns>
-    private StringBuilder BuildExceptionMessage(EntityBase entity , Exception ex)
+    /*private StringBuilder BuildExceptionMessage(EntityBase entity , Exception ex)
     {
         var msg = new StringBuilder();
         string entityName = entity is AppBaseEntity appEntity ? appEntity.Name ?? entity.GetType().Name : entity.GetType().Name;
@@ -1146,7 +1146,7 @@ public class RepositoryBase
     }
 
     #region UserTracker
-
+    */
     public static void SessionClear()
     {
         if (_session.Value != null && _session.Value.IsOpen)
@@ -1187,7 +1187,7 @@ public class RepositoryBase
     /// Last updated by: namer315
     /// Last update: 2025-03-16 21:26:42
     /// </remarks>
-    private async Task endEditUserTracker(UserTrackerVO userTracker , EntityBase entity , CancellationToken cancellationToken = default)
+    /*private async Task endEditUserTracker(UserTrackerVO userTracker , EntityBase entity , CancellationToken cancellationToken = default)
     {
         try
         {
