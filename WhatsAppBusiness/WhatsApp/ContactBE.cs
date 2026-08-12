@@ -6,30 +6,36 @@ namespace WhatsAppBusiness.WhatsApp;
 public class ContactBE
 {
     private ContactDAO _dao = new ContactDAO();
-    public async Task<ContactVO> GetContactBy(string phoneNumber)
+    public async Task<ContactVO> GetContactBy(string waId)
     {
-        ContactVO contact = await _dao.GetContactBy(phoneNumber);
+        ContactVO contact = await _dao.GetContactBy(waId);
         if (contact is null)
         {
-            contact = await GetNew(phoneNumber);
+            contact = await GetNew(waId);
             string s = await Persist(contact);
         }
 
         return contact;
     }
 
-    private async Task<string> Persist(ContactVO contact)
+    public async Task<string> Persist(ContactVO contact)
     {
-
+        Validation(contact);
 
         return await _dao.PersistAsync(contact);
     }
 
-    private async Task<ContactVO?> GetNew(string phoneNumber , string Name = null)
+    private void Validation(ContactVO contact)
+    {
+
+    }
+
+    private async Task<ContactVO?> GetNew(string waId , string Name = null)
     {
         ContactVO contact = new ContactVO();
 
-        contact.PhoneNumber = phoneNumber;
+        //contact.PhoneNumber = phoneNumber;
+        contact.WaId = waId;
 
         return contact;
     }

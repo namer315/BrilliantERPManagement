@@ -11,14 +11,14 @@ namespace WhatsAppData.DAO;
 
 public class ContactDAO : RepositoryBase
 {
-    public async Task<ContactVO> GetContactBy(string phoneNumber)
+    public async Task<ContactVO> GetContactBy(string waId)
     {
         IQuery q = Session.CreateQuery(@"
 			FROM ContactVO as contact
 			WHERE
-			    contact.PhoneNumber = :phoneNumber
+			    contact.WaId = :waId
 			")
-             .SetParameter("phoneNumber" , phoneNumber)
+             .SetParameter("waId" , waId)
              .SetMaxResults(1);
 
         return await q.UniqueResultAsync<ContactVO>();

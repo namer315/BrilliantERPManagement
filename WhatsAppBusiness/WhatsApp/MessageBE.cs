@@ -18,11 +18,14 @@ public class MessageBE
         return message;
     }
 
-    internal async Task<string> Persist(MessageVO message)
+    internal async Task<string> Persist(MessageVO message, bool merge = false)
     {
         Validation(message);
 
-        return await _dao.PersistAsync(message);
+        if (merge)
+            return await _dao.MergeAsync(message);
+        else
+            return await _dao.PersistAsync(message);
     }
 
     private void Validation(MessageVO message)

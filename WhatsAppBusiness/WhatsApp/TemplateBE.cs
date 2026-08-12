@@ -1,6 +1,4 @@
-﻿using FluentNHibernate.Conventions.Helpers;
-using System.Text.Json;
-using WhatsAppData.DTO.WhatsApp;
+﻿using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppData.VO.WhatsApp;
 
@@ -10,7 +8,7 @@ public class TemplateBE : WhatsAppBE
 {
     private TemplatePayloadBuilderBE _payloadBuilder = new TemplatePayloadBuilderBE();
     private MessageBE _message = new MessageBE();
-    private ContactBE contact = new ContactBE();
+    private ContactBE _contact = new ContactBE();
 
 
     public async Task<MessageResponseDTO> SendTemplateMessage(TemplateSendDTO templateSend)
@@ -19,7 +17,7 @@ public class TemplateBE : WhatsAppBE
             templateSend.LanguageCode = "en_US";
 
         MessageVO message = await _message.GetNew(MessageVO.WhatsAppMessageTypes.Template);
-        message.Receiver = await contact.GetContactBy(templateSend.RecipientPhoneNumber);
+        //message.Receiver = await _contact.GetContactBy(templateSend.RecipientPhoneNumber);
         //message_templates?name=order_confirmed
         TemplatesResponseDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
 
@@ -35,12 +33,16 @@ public class TemplateBE : WhatsAppBE
         string s = await _message.Persist(message);
 
         string payload = _payloadBuilder.BuildTemplateMessagePayload(templateSend);
-        string responce = await PostAsync("messages" , payload);
+        MessageResponseDTO messageResponseDTO = await PostAsync<MessageResponseDTO>("messages" , payload);
 
-        MessageResponseDTO messageResponseDTO = JsonSerializer.Deserialize<MessageResponseDTO>(responce);
-        message.Status = messageResponseDTO.Messages[0].MessageStatus;
-        message.MessageId = messageResponseDTO.Messages[0].Id;
-        s = await _message.Persist(message);
+        message.Status = messageResponseDTO.Messages[0]?.MessageStatus;
+        message.MessageId = messageResponseDTO.Messages[0]?.Id;
+
+        message.Receiver = await _contact.GetContactBy(messageResponseDTO.Contacts[0]?.WaId);
+        if (string.IsNullOrEmpty(message.Receiver.PhoneNumber))
+            message.Receiver.PhoneNumber = messageResponseDTO.Contacts[0]?.Input;
+
+        s = await _message.Persist(message, true);
 
         return messageResponseDTO;
     }

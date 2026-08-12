@@ -25,6 +25,15 @@ public class WhatsAppBE
 
         return await _HTTPService.PostAsync(url , jsonPayload , new AuthenticationHeaderValue("Bearer" , _accessToken));
     }
+    public async Task<T> PostAsync<T>(string subURL , string jsonPayload)
+    {
+        string responce = await PostAsync(subURL , jsonPayload);
+
+        return JsonSerializer.Deserialize<T>(responce, new JsonSerializerOptions()
+        {
+           PropertyNameCaseInsensitive = true
+        });
+    }
 
     public async Task<string> GetWABAAsync(string subURL)
     {
