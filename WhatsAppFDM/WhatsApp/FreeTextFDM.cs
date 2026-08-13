@@ -7,6 +7,12 @@ namespace WhatsAppFDM.WhatsApp;
 public class FreeTextFDM
 {
     FreeTextBE _be = new FreeTextBE();
+
+    public async Task<SessionCheckResponseDTO> Check24hSession(string number)
+    {
+        return await new MessageBE().Check24hSession(number);
+    }
+
     public async Task<MessageResponseDTO> SendFreeTextMessage(FreeTextDTO req)
     {
         throw new NotImplementedException();

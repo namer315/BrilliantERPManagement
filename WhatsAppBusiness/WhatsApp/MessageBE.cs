@@ -1,5 +1,6 @@
 ﻿using CommonData.Managers;
 using WhatsAppData.DAO;
+using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
@@ -48,26 +49,25 @@ public class MessageBE
 
     }
 
-    public async Task GetLastMessageBySender(string number)
+    public async Task<MessageVO> GetLastMessageBySender(string number)
     {
         if (string.IsNullOrWhiteSpace(number))
             throw new ArgumentException("number cannot be null or empty." , nameof(number));
 
-        MessageVO message = await _dao.GetLastMessageBySender(number);
-
+        return await _dao.GetLastMessageBySender(number);
     }
 
     // "1723467890" -> DateTime
-    public static DateTime ToDateTime(string webhookTimestamp)
+    public static DateTime ToDateTime(long webhookTimestamp)
     {
-        long seconds = long.Parse(webhookTimestamp);
-        var dt = DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime;
+        //long seconds = long.Parse(webhookTimestamp);
+        var dt = DateTimeOffset.FromUnixTimeSeconds(webhookTimestamp).UtcDateTime;
         //Console.WriteLine($"[ToDateTime] webhookTimestamp: {webhookTimestamp} -> DateTime: {dt:yyyy-MM-dd HH:mm:ss} UTC");
         return dt;
     }
 
     // "1723467890" -> TimeSpan since that time
-    public static TimeSpan ToTimeSpanSince(string webhookTimestamp)
+    public static TimeSpan ToTimeSpanSince(long webhookTimestamp)
     {
         var date = ToDateTime(webhookTimestamp);
         var elapsed = DateTime.UtcNow - date;
@@ -76,7 +76,7 @@ public class MessageBE
     }
 
     // "1723467890" -> how much left in 24h window
-    public static TimeSpan TimeLeftInSession(string webhookTimestamp)
+    public static TimeSpan TimeLeftInSession(long webhookTimestamp)
     {
         var elapsed = ToTimeSpanSince(webhookTimestamp);
         var total = TimeSpan.FromHours(24);
@@ -88,12 +88,47 @@ public class MessageBE
 
         return left;
     }
-    public static bool IsIn24hSession(string webhookTimestamp)
+    public bool IsIn24hSession(long webhookTimestamp)
     {
         var left = TimeLeftInSession(webhookTimestamp);
         bool isInSession = left > TimeSpan.Zero;
 
         //Console.WriteLine($"[IsIn24hSession] timestamp {webhookTimestamp} -> IsInSession: {isInSession}");
         return isInSession;
+    }
+    //public async Task<bool> IsIn24hSession(string number)
+    //{
+    //    var lastMessage = await GetLastMessageBySender(number);
+
+    //    // No inbound message ever recorded → not in an open session
+    //    if (lastMessage?.Timestamp is not long ts)
+    //        return false;
+
+    //    // MessageBE.IsIn24hSession expects the raw Unix-seconds timestamp
+    //    return IsIn24hSession(ts.ToString());
+    //}
+
+
+    public async Task<SessionCheckResponseDTO> Check24hSession(string number)
+    {
+        MessageVO lastMessage = await GetLastMessageBySender(number);
+
+        if(lastMessage is null || lastMessage.Timestamp is null)
+        {
+            return new SessionCheckResponseDTO
+            {
+                PhoneNumber = number ,
+                IsIn24hSession = false
+            };
+        }
+
+        bool isInSession = IsIn24hSession(lastMessage.Timestamp.Value);
+
+        return new SessionCheckResponseDTO
+        {
+            PhoneNumber = number ,
+            IsIn24hSession = isInSession,
+            //TimeLeft            
+        };
     }
 }
