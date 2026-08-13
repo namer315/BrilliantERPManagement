@@ -100,6 +100,7 @@ public class WebhookBE
                                     {
                                         message.Content = msg.Text.Body;
                                     }
+                                    message.Timestamp = Convert.ToInt64(msg.Timestamp);
 
                                     s = await _messageBE.Persist(message , true);
                                 }

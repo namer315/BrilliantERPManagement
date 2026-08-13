@@ -11,6 +11,7 @@ public class MessageVO : EntityBaseWithCode
     public virtual string Content { get; set; }       // Text or payload
     public virtual DateTime ReceivedAt { get; set; }  // Timestamp
     public virtual string Status { get; set; }        // delivered, read, etc.
+    public virtual long? Timestamp { get; set; } = null;       // raw webhook timestamp (Unix seconds)
 
     public virtual WhatsAppMessageTypes Type { get; set; }
 
@@ -19,6 +20,10 @@ public class MessageVO : EntityBaseWithCode
     public virtual ContactVO Receiver { get; set; }
 
     public virtual TenantVO Tenant { get; set; }
+
+
+    // Status history (delivered, read, ...) — inverse of MessageStatusVO.Message
+    public virtual IList<MessageStatusVO> StatuseList { get; set; } = new List<MessageStatusVO>();
 
 
     public enum WhatsAppMessageTypes
@@ -48,11 +53,17 @@ public class MessageMap : EntityWithDatesMapping<MessageVO>
         Map(x => x.Content).Length(int.MaxValue);//.Not.Nullable();
         //Map(x => x.ReceivedAt).Not.Nullable();
         Map(x => x.Status);
+        Map(x => x.Timestamp).Nullable();
         Map(x => x.Type).Not.Nullable();
 
         References(x => x.Tenant).Column("Tenant")/*.Not.Nullable()*/.Cascade.None();
         References(x => x.Receiver).Column("Receiver")/*.Not.Nullable()*/.Cascade.Merge();
         References(x => x.Sender).Column("Sender")/*.Not.Nullable()*/.Cascade.Merge();
+
+
+        HasMany(x => x.StatuseList).KeyColumn("Message")   // matches MessageStatusMap: References(x => x.Message).Column("Message")
+           .Inverse()
+           .Cascade.All();
     }
 }
 
