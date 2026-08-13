@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace WhatsAppData.DTO.Webhooks;
-
+//https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/status
 public class StatusDTO
 {
     public string Id { get; set; } = string.Empty;
