@@ -27,7 +27,7 @@ public class MessageBE
 
         message.MessageId = messageId;
         message.Type = type;
-        if(messageId is null) // temp
+        if(TenantManager.IskeyExist)
             message.Tenant = TenantManager.CurrentTenant;
 
         return message;
