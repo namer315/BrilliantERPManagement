@@ -40,7 +40,7 @@ public class MessageVO : EntityBaseWithCode
 }
 
 
-public class MessageMap : EntityWithIdMapping<MessageVO>
+public class MessageMap : EntityWithDatesMapping<MessageVO>
 {
     public MessageMap()
     {
@@ -52,6 +52,7 @@ public class MessageMap : EntityWithIdMapping<MessageVO>
 
         References(x => x.Tenant).Column("Tenant")/*.Not.Nullable()*/.Cascade.None();
         References(x => x.Receiver).Column("Receiver")/*.Not.Nullable()*/.Cascade.Merge();
+        References(x => x.Sender).Column("Sender")/*.Not.Nullable()*/.Cascade.Merge();
     }
 }
 
