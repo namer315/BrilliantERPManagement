@@ -13,8 +13,8 @@ public class TemplateBE : WhatsAppBE
 
     public async Task<MessageResponseDTO> SendTemplateMessage(TemplateSendDTO templateSend)
     {
-        if (templateSend.TemplateName.Equals("order_confirmed"))
-            templateSend.LanguageCode = "en_US";
+        //if (templateSend.TemplateName.Equals("order_confirmed"))
+        //    templateSend.LanguageCode = "en_US";
 
         MessageVO message = await _message.GetNew(MessageVO.WhatsAppMessageTypes.Template);
         //message.Receiver = await _contact.GetContactBy(templateSend.RecipientPhoneNumber);
@@ -25,7 +25,8 @@ public class TemplateBE : WhatsAppBE
             throw new InvalidOperationException( $"Template '{templateSend.TemplateName}' was not found or contains no components.");
 
         message.Content = templatesResponseDTO.Data[0].Components[0].Text;
-        foreach(TemplateParameterDTO parameter in templateSend.ParameterList)
+        templateSend.LanguageCode = templatesResponseDTO.Data[0].Language;
+        foreach (TemplateParameterDTO parameter in templateSend.ParameterList)
         {
             message.Content = message.Content.Replace("{{" + parameter.Name + "}}" , parameter.Text);
         }
