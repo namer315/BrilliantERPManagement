@@ -1,10 +1,7 @@
 ﻿using CommonData.Services;
-using System;
-using System.Collections.Generic;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
-using WhatsAppData.DTO.WhatsApp;
+using WhatsAppData.DTO.Webhooks;
 
 namespace WhatsAppBusiness.WhatsApp;
 
@@ -19,7 +16,12 @@ public class WhatsAppBE
 
     private readonly static HTTPService _HTTPService = new HTTPService();
 
-    public async Task<string> PostAsync(string subURL , string jsonPayload)
+    private JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    public async Task<HttpResponseMessage> PostAsync(string subURL , string jsonPayload)
     {
         string url = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/{subURL}";
 
@@ -27,12 +29,33 @@ public class WhatsAppBE
     }
     public async Task<T> PostAsync<T>(string subURL , string jsonPayload)
     {
-        string responce = await PostAsync(subURL , jsonPayload);
+        HttpResponseMessage response = await PostAsync(subURL , jsonPayload);
+        string responseBody = await response.Content.ReadAsStringAsync();
 
-        return JsonSerializer.Deserialize<T>(responce, new JsonSerializerOptions()
+        #if DEBUG
+        Console.WriteLine($"Status: {(int)response.StatusCode} {response.ReasonPhrase}");
+        Console.WriteLine(responseBody);
+        #endif
+
+        if (!response.IsSuccessStatusCode)
         {
-           PropertyNameCaseInsensitive = true
-        });
+            //throw new HttpRequestException(
+            //    $"HTTP request failed: {(int)response.StatusCode} {response.ReasonPhrase}\n{responseBody}");
+            ErrorResponseDTO errorResponse = JsonSerializer.Deserialize<ErrorResponseDTO>(responseBody , _serializerOptions);
+            // throw new WhatsAppApiException(errorResponse?.Error);
+            throw new CommonData.Exceptions.AppException(
+                errorResponse.Error.Message ?? "WhatsApp Cloud API returned an error.",
+                CommonData.Exceptions.AppErrorType.ExternalService,
+                code: errorResponse.Error.Code.ToString(),
+                details: new Dictionary<string, object?>
+                {
+                    ["type"] = errorResponse.Error.Type,
+                    ["title"] = errorResponse.Error.Title,
+                    ["fbtraceId"] = errorResponse.Error.FbTraceId
+                });
+        }
+
+        return JsonSerializer.Deserialize<T>(responseBody , _serializerOptions);
     }
 
     public async Task<string> GetWABAAsync(string subURL)
@@ -53,9 +76,9 @@ public class WhatsAppBE
     {
         string responce = await GetWABAAsync(subURL);
 
-        return JsonSerializer.Deserialize<T>(responce, new JsonSerializerOptions()
+        return JsonSerializer.Deserialize<T>(responce , new JsonSerializerOptions()
         {
-           PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true
         });
     }
 

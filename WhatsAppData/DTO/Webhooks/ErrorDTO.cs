@@ -2,6 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace WhatsAppData.DTO.Webhooks;
 
+// Wrapper class to match the root {"error": { ... }} object
+public class ErrorResponseDTO
+{
+    public ErrorDTO Error { get; set; }
+}
 public class ErrorDTO
 {
     public int Code { get; set; }
