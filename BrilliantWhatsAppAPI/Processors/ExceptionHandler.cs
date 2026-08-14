@@ -94,6 +94,26 @@ namespace BrilliantWhatsAppAPI.Processors
                     }
                 }
                 break;
+                case CommonData.Exceptions.IAppException ex:
+                {
+                    context.MarkExceptionAsHandled();
+
+                    var response = context.HttpContext.Response;
+                    response.StatusCode = ex.HttpStatusCode;
+                    response.ContentType = "application/json";
+
+                    var body = JsonSerializer.Serialize(new
+                    {
+                        error = ex.Message,
+                        code = ex.Code,
+                        type = ex.Type.ToString(),
+                        details = ex.Details,
+                        occurredAtUtc = ex.OccurredAtUtc
+                    });
+
+                    await response.WriteAsync(body, ct);
+                }
+                break;
                 case Exception ex:
                 {
                     context.MarkExceptionAsHandled();
