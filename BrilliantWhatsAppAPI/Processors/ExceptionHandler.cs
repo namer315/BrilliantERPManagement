@@ -108,7 +108,8 @@ namespace BrilliantWhatsAppAPI.Processors
                         code = ex.Code,
                         type = ex.Type.ToString(),
                         details = ex.Details,
-                        occurredAtUtc = ex.OccurredAtUtc
+                        occurredAtUtc = ex.OccurredAtUtc,
+                        StatusCode = ex.HttpStatusCode
                     });
 
                     await response.WriteAsync(body, ct);

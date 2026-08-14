@@ -47,6 +47,7 @@ public class WhatsAppBE
                     errorResponse.Error.Message ?? "WhatsApp Cloud API returned an error." ,
                     CommonData.Exceptions.AppErrorType.ExternalService ,
                     code: errorResponse.Error.Code.ToString() ,
+                    httpStatusCode: (int?)response.StatusCode,
                     details: new Dictionary<string , object?>
                     {
                         ["type"] = errorResponse.Error.Type ,
