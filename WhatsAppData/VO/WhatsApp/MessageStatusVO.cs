@@ -11,6 +11,8 @@ public class MessageStatusVO : EntityBase
     // Relationship back to Message
     public virtual MessageVO Message { get; set; }
 
+    public virtual IList<WhatsAppErrorVO> ErrorList { get; set; }
+
     #region enum
     public enum WhatsAppMessageStatus
     {
@@ -31,5 +33,9 @@ public class MessageStatusMap : EntityWithCreatedAtMapping<MessageStatusVO>
         Map(x => x.Timestamp).Not.Nullable();
 
         References(x => x.Message).Column("Message").Not.Nullable().Cascade.None();
+
+        HasMany(x => x.ErrorList).KeyColumn("MessageStatus")   // matches MessageStatusMap: References(x => x.Message).Column("Message")
+           .Inverse()
+           .Cascade.All();
     }
 }
