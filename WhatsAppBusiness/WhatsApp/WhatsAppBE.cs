@@ -44,15 +44,17 @@ public class WhatsAppBE
             ErrorResponseDTO errorResponse = JsonSerializer.Deserialize<ErrorResponseDTO>(responseBody , _serializerOptions);
             // throw new WhatsAppApiException(errorResponse?.Error);
             throw new CommonData.Exceptions.AppException(
-                errorResponse.Error.Message ?? "WhatsApp Cloud API returned an error.",
-                CommonData.Exceptions.AppErrorType.ExternalService,
-                code: errorResponse.Error.Code.ToString(),
-                details: new Dictionary<string, object?>
-                {
-                    ["type"] = errorResponse.Error.Type,
-                    ["title"] = errorResponse.Error.Title,
-                    ["fbtraceId"] = errorResponse.Error.FbTraceId
-                });
+                    errorResponse.Error.Message ?? "WhatsApp Cloud API returned an error." ,
+                    CommonData.Exceptions.AppErrorType.ExternalService ,
+                    code: errorResponse.Error.Code.ToString() ,
+                    details: new Dictionary<string , object?>
+                    {
+                        ["type"] = errorResponse.Error.Type ,
+                        ["title"] = errorResponse.Error.Title ,
+                        ["fbtraceId"] = errorResponse.Error.FbTraceId ,
+                        ["href"] = errorResponse.Error.Href ,
+                        ["details"] = errorResponse.Error.ErrorData?.Details ,
+                    });
         }
 
         return JsonSerializer.Deserialize<T>(responseBody , _serializerOptions);
