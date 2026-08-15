@@ -1,6 +1,9 @@
 ﻿using CommonData.Extensions;
-using NHibernate.Engine;
+using CommonData.Managers;
+using CommonData.VO;
+using System.Threading.Channels;
 using WhatsAppBusiness.WhatsApp;
+using WhatsAppData.DTO.Stream;
 using WhatsAppData.DTO.Webhooks;
 using WhatsAppData.VO.WhatsApp;
 using static WhatsAppData.VO.WhatsApp.MessageStatusVO;
@@ -103,6 +106,23 @@ public class WebhookBE
                                     message.Timestamp = Convert.ToInt64(msg.Timestamp);
 
                                     s = await _messageBE.Persist(message , true);
+
+                                    TenantVO tenant = await _messageBE.GetTenantbyContact(message.Sender);
+                                    if(tenant is not null)
+                                    {
+                                        StreamDTO stream = new StreamDTO();
+                                        stream.Token = tenant.Token;
+                                        stream.TenentName = tenant.Name;
+                                        stream.Message = new StreamMessageDTO();
+                                        stream.Message.From = message.Sender.WaId;
+                                        stream.Message.Content = message.Content;
+                                        if(message.Timestamp is long timestamp)
+                                            stream.Message.DateTimeUTC = DateTimeOffset.FromUnixTimeSeconds(timestamp);
+
+                                        // Assume req.Token carries the tenant token
+                                        var evt = new WebhookEvent(tenant , stream);
+                                        await WebhookEventChannel.Channel.Writer.WriteAsync(evt);
+                                    }
                                 }
                             }
                         }
@@ -128,4 +148,25 @@ public class WebhookBE
             return true;
         }
     }
+
+    public async IAsyncEnumerable<dynamic> Stream(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            //await Task.Delay(1000);
+            //yield return new { guid = Guid.NewGuid() };
+            var evt = await WebhookEventChannel.Channel.Reader.ReadAsync(ct);
+
+            if (evt.Tenant.Id == TenantManager.CurrentTenant.Id)
+                yield return evt.Data;
+        }
+    }
+}
+
+public record WebhookEvent(TenantVO Tenant , StreamDTO Data);
+
+public static class WebhookEventChannel
+{
+    public static readonly Channel<WebhookEvent> Channel =
+        System.Threading.Channels.Channel.CreateUnbounded<WebhookEvent>();
 }

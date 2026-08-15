@@ -1,6 +1,8 @@
 ﻿using CommonData.DAO;
+using CommonData.VO;
 using NHibernate;
 using WhatsAppData.VO.WhatsApp;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WhatsAppData.DAO;
 
@@ -28,9 +30,9 @@ public class MessageDAO : RepositoryBase
     /// <exception cref="ArgumentException">Thrown when number is null or empty.</exception>
     public async Task<MessageVO> GetLastMessageBySender(string number)
     {
-            //SELECT 
-            //    message.Id, message.CreatedAt, message.Content, message.ReceivedAt, message.Status, message.Type, message.Timestamp
-            //    , message.Sender, message.Receiver, message.Tenant
+        //SELECT 
+        //    message.Id, message.CreatedAt, message.Content, message.ReceivedAt, message.Status, message.Type, message.Timestamp
+        //    , message.Sender, message.Receiver, message.Tenant
         IQuery q = Session.CreateQuery(@"
             FROM MessageVO as message
                 LEFT OUTER JOIN FETCH message.Sender as sender
@@ -43,5 +45,38 @@ public class MessageDAO : RepositoryBase
             .SetMaxResults(1);
 
         return await q.UniqueResultAsync<MessageVO>();
+    }
+
+    public async Task<IList<TenantVO>> GetTenantsByContact(ContactVO sender)
+    {
+        var results = await Session.CreateQuery(@"
+            SELECT DISTINCT message.Tenant, message.CreatedAt
+            FROM MessageVO as message
+                LEFT OUTER JOIN message.Receiver as receiver
+            WHERE
+                receiver IS NOT NULL 
+                AND
+                receiver.Id = :receiverId
+            ORDER BY message.CreatedAt DESC"
+        )
+            .SetParameter("receiverId" , sender.Id)
+            .ListAsync<object[]>();
+
+        // Extract only the TenantVO from the object array tuples
+        return results.Select(r => (TenantVO)r[0]).ToList();
+        /*IQuery q = Session.CreateQuery(@"
+            SELECT DISTINCT message.Tenant
+            FROM MessageVO as message
+                LEFT OUTER JOIN message.Receiver as receiver
+            WHERE
+                receiver IS NOT NULL 
+                AND
+                receiver.Id = :receiverId
+            ORDER BY message.CreatedAt DESC"
+        )
+            .SetParameter("receiverId" , sender.Id);
+            //.SetMaxResults(1);
+
+        return await q.ListAsync<TenantVO>();*/
     }
 }
