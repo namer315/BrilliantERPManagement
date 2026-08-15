@@ -13,4 +13,9 @@ public class WebhookFDM
     {
         return await _be.HandleWebhook(webhook);
     }
+
+    public IAsyncEnumerable<dynamic> Stream(CancellationToken ct)
+    {
+        return _be.Stream(ct);
+    }
 }

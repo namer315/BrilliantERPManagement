@@ -1,4 +1,5 @@
 ﻿using CommonData.Managers;
+using CommonData.VO;
 using WhatsAppData.DAO;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.VO.WhatsApp;
@@ -130,5 +131,24 @@ public class MessageBE
             IsIn24hSession = isInSession,
             //TimeLeft            
         };
+    }
+
+    internal async Task<TenantVO> GetTenantbyContact(ContactVO sender)
+    {
+        if (sender is null)
+            throw new ArgumentNullException(nameof(sender));
+        if (sender.Id == Guid.Empty)
+            throw new ArgumentException("Sender's Id cannot be empty.", nameof(sender));
+
+        IList<TenantVO> tenantList = await _dao.GetTenantsByContact(sender);
+        if (tenantList is { Count: > 0 })
+            return tenantList.FirstOrDefault();
+        else
+            return null;
+
+        //if(tenantList is { Count: > 1 })
+        //    throw new InvalidOperationException($"Multiple tenants found for contact '{sender.Id}'.");
+
+        //return tenantList.FirstOrDefault() ?? sender.Tenant;
     }
 }

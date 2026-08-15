@@ -31,6 +31,16 @@ public partial class Program
                 }, new[] { "" });
             };
         });
+        // 1. Register CORS policy (CORS Middleware)
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll" , policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+        });
 
         // ── HTTP context accessor (needed for tenant resolution) ──
         builder.Services.AddHttpContextAccessor();
@@ -51,6 +61,9 @@ public partial class Program
 
         // ── Initialize NHibernate eagerlly (before any DB access) ──
         app.UseSwaggerGen();
+
+        // CORS Middleware
+        app.UseCors("AllowAll");   // 👈 must be between UseRouting and UseEndpoints
 
         // Wrap the endpoint pipeline so the ambient TenantContext is always
         // cleared when the request ends (must run BEFORE UseFastEndpoints).
