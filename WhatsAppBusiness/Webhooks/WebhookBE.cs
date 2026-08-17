@@ -1,6 +1,8 @@
 ﻿using CommonData.Extensions;
 using CommonData.Managers;
 using CommonData.VO;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using WhatsAppBusiness.WhatsApp;
 using WhatsAppData.DTO.Stream;
@@ -121,7 +123,7 @@ public class WebhookBE
 
                                         // Assume req.Token carries the tenant token
                                         var evt = new WebhookEvent(tenant , stream);
-                                        await WebhookEventChannel.Channel.Writer.WriteAsync(evt);
+                                        await WebhookEventChannel.PublishAsync(evt);
                                     }
                                 }
                             }
@@ -149,17 +151,100 @@ public class WebhookBE
         }
     }
 
-    public async IAsyncEnumerable<dynamic> Stream(CancellationToken ct)
+    public async IAsyncEnumerable<dynamic> Stream([EnumeratorCancellation] CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
-        {
-            //await Task.Delay(1000);
-            //yield return new { guid = Guid.NewGuid() };
-            var evt = await WebhookEventChannel.Channel.Reader.ReadAsync(ct);
+        // Capture the authenticated tenant ONCE before any yield. The ambient
+        // TenantContext is cleared by TenantScopeCleaner once the request scope
+        // ends, so it must not be re-read inside the streaming loop.
+        var currentTenant = TenantManager.CurrentTenant;
 
-            if (evt.Tenant.Id == TenantManager.CurrentTenant.Id)
-                yield return evt.Data;
+        // Each SSE connection subscribes to its own channel so events fan out to
+        // every connected client (a single shared Channel is single-consumer).
+        var subscriberId = WebhookEventChannel.Subscribe(out var channel);
+        var reader = channel.Reader;
+
+        try
+        {
+            // Notify the client immediately that it has started listening.
+            yield return new StreamDTO
+            {
+                Token = currentTenant?.Token,
+                TenentName = currentTenant?.Name,
+                Message = new StreamMessageDTO
+                {
+                    From = "system",
+                    Content = "Your session has been connected successfully.",
+                    DateTimeUTC = DateTimeOffset.UtcNow
+                }
+            };
+
+            while (!ct.IsCancellationRequested)
+            {
+                WebhookEvent? evt = null;
+                bool hadError = false;
+                bool heartbeat = false;
+
+                try
+                {
+                    // Try to read with timeout so we can send heartbeats
+                    //evt = await reader.ReadAsync(ct);
+                    // Try to read with timeout so we can send heartbeats
+                    var readTask = reader.ReadAsync(ct).AsTask();
+                    var completed = await Task.WhenAny(readTask , Task.Delay(1000 * 10 , ct));
+
+                    if (completed == readTask)
+                    {
+                        evt = await readTask; // got event
+                    }
+                    else
+                    {
+                        heartbeat = true; // timeout → heartbeat
+                    }
+                }
+                catch (OperationCanceledException ex)
+                {
+                    WriteExceptionToLog(ex);
+                    //yield break; // graceful shutdown
+                }
+                catch (Exception ex)
+                {
+                    WriteExceptionToLog(ex);
+                    hadError = true;
+                }
+
+                // Yield outside of try/catch
+                if (evt != null && currentTenant != null && evt.Tenant.Id == currentTenant.Id)
+                {
+                    // Only deliver events belonging to this connection's tenant.
+                    yield return evt.Data;
+                }
+                else if (hadError || heartbeat)
+                {
+
+                    //yield return new StreamDTO(); // keep connection alive
+                    yield return ": ping"; // keep connection alive
+                }
+            }
         }
+        finally
+        {
+            WebhookEventChannel.Unsubscribe(subscriberId);
+        }
+    }
+
+
+
+    public static void WriteExceptionToLog(Exception ex)
+    {
+        if (ex == null) return;
+
+        string logFolder = Path.Combine(AppContext.BaseDirectory , "log");
+        Directory.CreateDirectory(logFolder);
+
+        string logFile = Path.Combine(logFolder , $"error-{DateTime.Now:yyyyMMdd}.log");
+        string entry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}{Environment.NewLine}";
+
+        File.AppendAllText(logFile , entry);
     }
 }
 
@@ -167,6 +252,41 @@ public record WebhookEvent(TenantVO Tenant , StreamDTO Data);
 
 public static class WebhookEventChannel
 {
-    public static readonly Channel<WebhookEvent> Channel =
-        System.Threading.Channels.Channel.CreateUnbounded<WebhookEvent>();
+    // Each connected SSE client gets its own unbounded channel (single-consumer
+    // per client). Public events are fanned out to every subscriber channel.
+    private static readonly ConcurrentDictionary<Guid, Channel<WebhookEvent>> _subscribers = new();
+
+    /// <summary>
+    /// Registers a new subscriber channel for a connected client.
+    /// </summary>
+    /// <returns>An id that must be passed to <see cref="Unsubscribe"/> on disconnect.</returns>
+    public static Guid Subscribe(out Channel<WebhookEvent> channel)
+    {
+        channel = Channel.CreateUnbounded<WebhookEvent>(
+            new UnboundedChannelOptions { SingleReader = true , SingleWriter = false });
+        var id = Guid.NewGuid();
+        _subscribers.TryAdd(id , channel);
+        return id;
+    }
+
+    /// <summary>
+    /// Removes and completes a subscriber channel when its connection is closed.
+    /// </summary>
+    public static void Unsubscribe(Guid id)
+    {
+        if (_subscribers.TryRemove(id , out var channel))
+            channel.Writer.TryComplete();
+    }
+
+    /// <summary>
+    /// Fans the event out to every connected subscriber channel. Consumers are
+    /// expected to filter events by tenant before delivering to their client.
+    /// </summary>
+    public static async Task PublishAsync(WebhookEvent evt)
+    {
+        foreach (var (id , channel) in _subscribers)
+        {
+            await channel.Writer.WriteAsync(evt);
+        }
+    }
 }
