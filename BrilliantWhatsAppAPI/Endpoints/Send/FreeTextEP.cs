@@ -21,20 +21,20 @@ namespace BrilliantWhatsAppAPI.Endpoints.Send;
 //        return _fdm.SendFreeTextMessage(req);
 //    }
 //}
-public class SessionCheckEP : Endpoint<SessionCheckRequestDTO , SessionCheckResponseDTO>
-{
-    FreeTextFDM _fdm = new FreeTextFDM();
-    public override void Configure()
-    {
-        Post("Send/FreeText/IsIn24hSession");
-        AllowAnonymous();
-    }
+//public class GetLastMessageBySender : Endpoint<SessionCheckRequestDTO , SessionCheckResponseDTO>
+//{
+//    FreeTextFDM _fdm = new FreeTextFDM();
+//    public override void Configure()
+//    {
+//        Post("Send/FreeText/IsIn24hSession");
+//        AllowAnonymous();
+//    }
 
-    public override Task<SessionCheckResponseDTO> ExecuteAsync(SessionCheckRequestDTO req , CancellationToken ct)
-    {
-        return _fdm.Check24hSession(req.PhoneNumber);
-    }
-}
+//    public override Task<SessionCheckResponseDTO> ExecuteAsync(SessionCheckRequestDTO req , CancellationToken ct)
+//    {
+//        return _fdm.Check24hSession(req.PhoneNumber);
+//    }
+//}
 public class TextEP : Endpoint<TextDTO , MessageResponseDTO>
 {
     FreeTextFDM _fdm = new FreeTextFDM();
