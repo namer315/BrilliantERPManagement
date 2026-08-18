@@ -85,6 +85,12 @@ public class WebhookBE
                                         // It is not currently mapped to a persistent column; log/capture for audit.
                                         Console.WriteLine($"[status] pricing id={status.Id} billable={status.Pricing.Billable} model={status.Pricing.PricingModel} type={status.Pricing.Type} category={status.Pricing.Category}");
                                     }
+
+                                    if(message.Timestamp is null && status.Status.Equals("sent"))
+                                    {
+                                        message.Timestamp = messageStatus.Timestamp;
+                                        s = await _messageBE.Persist(message , true);
+                                    }
                                 }
                             }
 
