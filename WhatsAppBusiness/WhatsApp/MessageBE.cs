@@ -110,15 +110,15 @@ public class MessageBE
     //}
 
 
-    public async Task<SessionCheckResponseDTO> Check24hSession(string number)
+    public async Task<SessionCheckResponseDTO> Check24hSession(string phone)
     {
-        MessageVO lastMessage = await GetLastMessageBySender(number);
+        MessageVO lastMessage = await GetLastMessageBySender(phone);
 
         if(lastMessage is null || lastMessage.Timestamp is null)
         {
             return new SessionCheckResponseDTO
             {
-                PhoneNumber = number ,
+                Phone = phone ,
                 IsIn24hSession = false
             };
         }
@@ -127,9 +127,9 @@ public class MessageBE
 
         return new SessionCheckResponseDTO
         {
-            PhoneNumber = number ,
-            IsIn24hSession = isInSession,
-            //TimeLeft            
+            Phone = phone ,
+            IsIn24hSession = isInSession ,
+            DateTime = isInSession && lastMessage.Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(lastMessage.Timestamp.Value) : null        
         };
     }
 

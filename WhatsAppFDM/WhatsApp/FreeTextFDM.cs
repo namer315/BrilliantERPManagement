@@ -8,9 +8,9 @@ public class FreeTextFDM
 {
     FreeTextBE _be = new FreeTextBE();
 
-    public async Task<SessionCheckResponseDTO> Check24hSession(string number)
+    public async Task<SessionCheckResponseDTO> Check24hSession(string phone)
     {
-        return await new MessageBE().Check24hSession(number);
+        return await new MessageBE().Check24hSession(phone);
     }
 
     public async Task<MessageResponseDTO> SendFreeTextMessage(FreeTextDTO req)
