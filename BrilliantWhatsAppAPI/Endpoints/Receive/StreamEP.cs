@@ -1,18 +1,14 @@
-﻿using CommonData.Managers;
-using FastEndpoints;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using System.Threading.Channels;
+﻿using FastEndpoints;
 using WhatsAppFDM;
 
-namespace BrilliantWhatsAppAPI.Endpoints.WhatsApp;
+namespace BrilliantWhatsAppAPI.Endpoints.Receive;
 
 public class StreamEP : EndpointWithoutRequest
 {
     private readonly WebhookFDM _fdm = new WebhookFDM();
     public override void Configure()
     {
-        Get("/Received/Stream");
+        Get("/Receive/Stream");
         AllowAnonymous();
         Options(x => x.RequireCors(p => p.AllowAnyOrigin()));
         //Options(x => x.WithTags("Realtime").RequireCors("AllowAll"));

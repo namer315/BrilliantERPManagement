@@ -4,7 +4,7 @@ using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppFDM.WhatsApp;
 
-namespace BrilliantWhatsAppAPI.Endpoints.WhatsApp;
+namespace BrilliantWhatsAppAPI.Endpoints.Send;
 
 //Session messages
 //public class FreeTextEP : Endpoint<FreeTextDTO , MessageResponseDTO>

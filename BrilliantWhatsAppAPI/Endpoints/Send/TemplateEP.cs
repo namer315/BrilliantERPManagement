@@ -1,11 +1,9 @@
-﻿using BrilliantWhatsAppAPI.DTO;
-using BrilliantWhatsAppAPI.Management;
-using FastEndpoints;
+﻿using FastEndpoints;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppFDM.WhatsApp;
 
-namespace BrilliantWhatsAppAPI.Endpoints.WhatsApp;
+namespace BrilliantWhatsAppAPI.Endpoints.Send;
 
 public class TemplateEP : Endpoint<TemplateSendDTO , MessageResponseDTO>
 {
@@ -13,7 +11,7 @@ public class TemplateEP : Endpoint<TemplateSendDTO , MessageResponseDTO>
 
     public override void Configure()
     {
-        Post("WhatsApp/Template");
+        Post("Send/Template/Text");
         AllowAnonymous();
     }
     public async override Task<MessageResponseDTO> ExecuteAsync(TemplateSendDTO req , CancellationToken ct)
@@ -21,18 +19,17 @@ public class TemplateEP : Endpoint<TemplateSendDTO , MessageResponseDTO>
         return await _fdm.SendTemplateMessage(req);
     }
 }
-public class TemplateListEP : EndpointWithoutRequest<WhatsAppTemplateResponse>
+public class TemplateListEP : EndpointWithoutRequest<TemplatesResponseDTO>
 {
-    WhatsAppHelper _whatsAppHelper = new WhatsAppHelper();
     private TemplateFDM _fdm = new TemplateFDM();
     public override void Configure()
     {
-        Get("WhatsApp/TemplateList");
+        Get("Receive/Template/List");
         AllowAnonymous();
     }
 
-    public async override Task<WhatsAppTemplateResponse> ExecuteAsync(CancellationToken ct)
+    public async override Task<TemplatesResponseDTO> ExecuteAsync(CancellationToken ct)
     {
-        return await _whatsAppHelper.GetAllTemplatesAsync();
+        return await _fdm.GetTemplateList();
     }
 }
