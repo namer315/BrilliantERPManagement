@@ -132,7 +132,7 @@ public class MessageBE
         {
             Phone = phone ,
             IsIn24hSession = isInSession ,
-            DateTime = isInSession && lastMessage.Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(lastMessage.Timestamp.Value) : null        
+            LastMessageAt = isInSession && lastMessage.Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(lastMessage.Timestamp.Value) : null        
         };
     }
 
