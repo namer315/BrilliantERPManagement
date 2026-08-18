@@ -26,7 +26,7 @@ public class FreeTextBE : WhatsAppBE
         message.Receiver = await _contact.GetContactBy(messageResponseDTO.Contacts[0]?.WaId);
         if (string.IsNullOrEmpty(message.Receiver.PhoneNumber))
             message.Receiver.PhoneNumber = messageResponseDTO.Contacts[0]?.Input;
-        message.UpdatedAt = DateTime.UtcNow;
+        //message.UpdatedAt = DateTime.UtcNow;
 
         s = await _message.Persist(message, true);
 

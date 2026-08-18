@@ -47,7 +47,10 @@ public class MessageBE
 
     private void Validation(MessageVO message)
     {
-
+        if (message.Id != Guid.Empty)
+        {
+            message.UpdatedAt = DateTime.UtcNow;
+    }
     }
 
     public async Task<MessageVO> GetLastMessageBySender(string number)
