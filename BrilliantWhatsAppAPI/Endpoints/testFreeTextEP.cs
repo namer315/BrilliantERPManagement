@@ -5,7 +5,7 @@ using Org.BouncyCastle.Asn1.X509;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
-public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
+/*public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
 {
     WhatsAppHelper _whatsAppHelper = new WhatsAppHelper();
 
@@ -17,7 +17,7 @@ public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
     public async override Task<dynamic> ExecuteAsync(tTextMessageDTO req , CancellationToken ct)
     {
         return await _whatsAppHelper.SendMessageAsync(req);
-        /*//string phoneNumber = "27613009425";
+        /* //string phoneNumber = "27613009425";
         string phoneNumber = "0742420893";
         req.PhoneNumber = phoneNumber;
         await _whatsAppHelper.SendMessageAsync(req);
@@ -57,6 +57,7 @@ public class testTextEP : Endpoint<tTextMessageDTO , dynamic>
             PhoneNumber = phoneNumber ,
             Message = "Share your location" ,
             InteractiveType = "location"
-        });*/
+        });* /
     }
 }
+*/

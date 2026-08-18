@@ -4,7 +4,7 @@ using FastEndpoints;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
-public class testTemplateEP : Endpoint<tTemplateDTO , dynamic>
+/*public class testTemplateEP : Endpoint<tTemplateDTO , dynamic>
 {
     WhatsAppHelper _whatsAppHelper = new WhatsAppHelper();
 
@@ -32,4 +32,4 @@ public class GetTemplatesEP : EndpointWithoutRequest<WhatsAppTemplateResponse>
         return await _whatsAppHelper.GetAllTemplatesAsync();
     }
 }
-
+*/

@@ -19,8 +19,4 @@
     <ProjectReference Include="..\WhatsAppFDM\WhatsAppFDM.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="PreProcessors\" />
-  </ItemGroup>
-
 </Project>
