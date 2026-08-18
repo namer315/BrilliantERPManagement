@@ -2,7 +2,6 @@
 using CommonData.VO;
 using NHibernate;
 using WhatsAppData.VO.WhatsApp;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WhatsAppData.DAO;
 
@@ -64,19 +63,20 @@ public class MessageDAO : RepositoryBase
 
         // Extract only the TenantVO from the object array tuples
         return results.Select(r => (TenantVO)r[0]).ToList();
-        /*IQuery q = Session.CreateQuery(@"
-            SELECT DISTINCT message.Tenant
+    }
+
+    public async Task<IList<MessageVO>> GetMessageHistoryBy(string waId)
+    {
+        IQuery q = Session.CreateQuery(@"
             FROM MessageVO as message
-                LEFT OUTER JOIN message.Receiver as receiver
+                LEFT OUTER JOIN FETCH message.Sender as sender
+                LEFT OUTER JOIN FETCH message.Receiver as receiver
             WHERE
-                receiver IS NOT NULL 
-                AND
-                receiver.Id = :receiverId
+                (sender.WaId = :waId OR receiver.WaId = :waId)
             ORDER BY message.CreatedAt DESC"
         )
-            .SetParameter("receiverId" , sender.Id);
-            //.SetMaxResults(1);
+            .SetParameter("waId" , waId);
 
-        return await q.ListAsync<TenantVO>();*/
+        return await q.ListAsync<MessageVO>();
     }
 }
