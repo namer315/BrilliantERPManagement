@@ -1,4 +1,6 @@
-﻿using WhatsAppData.DAO;
+﻿using CommonData.Managers;
+using WhatsAppData.DAO;
+using WhatsAppData.DTO.Common;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
@@ -40,8 +42,24 @@ public class ContactBE
         return contact;
     }
 
-    //internal async Task<ContactVO> Persist(string waId)
-    //{
-    //    ContactVO contact = await GetContactBy(waId);
-    //}
+    public async Task<IList<ContactDTO>> GetChatsContactList()
+    {
+        if (!TenantManager.IskeyExist)
+            throw new InvalidOperationException("Tenant key does not exist.");
+
+        if (TenantManager.CurrentTenant is null)
+            throw new InvalidOperationException("Current tenant is not set.");
+
+        IList<ContactVO> rawData = await _dao.GetChatListContacts();
+
+        IList<ContactDTO> contactDTOList = rawData
+            .Select(x => new ContactDTO()
+            {
+                Id = x.Id ,
+                WaId = x.WaId
+            })
+            .ToList();
+
+        return contactDTOList;
+    }
 }
