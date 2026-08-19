@@ -66,6 +66,21 @@ public class MessageDAO : RepositoryBase
         return results.Select(r => (TenantVO)r[0]).ToList();
     }
 
+    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id)
+    {
+        IQuery q = Session.CreateQuery(@"
+            FROM MessageVO as message
+                LEFT OUTER JOIN FETCH message.Sender as sender
+                LEFT OUTER JOIN FETCH message.Receiver as receiver
+            WHERE
+                (sender.Id = :id OR receiver.Id = :id)
+            ORDER BY message.CreatedAt DESC"
+        )
+            .SetParameter("id" , id);
+
+        return await q.ListAsync<MessageVO>();
+    }
+
     public async Task<IList<MessageVO>> GetMessageHistoryBy(string waId)
     {
         IQuery q = Session.CreateQuery(@"
