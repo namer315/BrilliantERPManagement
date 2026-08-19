@@ -26,6 +26,7 @@ public class ChatBE
             Id = x.Id ,
             MessageId = x.MessageId ,
             Timestamp = x.Timestamp,
+            MessageDirection = x.Sender?.WaId == waId ? ChatMessageDTO.MessageDirections.Outgoing : ChatMessageDTO.MessageDirections.Incoming,
             Text = x.Content,
         })
             .ToList();

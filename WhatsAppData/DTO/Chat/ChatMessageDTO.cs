@@ -16,8 +16,16 @@ public class ChatMessageDTO
 
     //public bool HasPreviewUrl { get; init; } = false;
 
-    
+    public MessageDirections MessageDirection { get; set; }
+
 
     public string Text { get; set; }
-    
+
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum MessageDirections
+    {
+        Incoming,
+        Outgoing
+    }
 }
