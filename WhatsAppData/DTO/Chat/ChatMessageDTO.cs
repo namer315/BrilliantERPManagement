@@ -12,14 +12,14 @@ public class ChatMessageDTO
 
     [JsonIgnore]
     public long? Timestamp { get; set; }
-    public DateTimeOffset? DateTime => Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(Timestamp.Value) : null;
+    public DateTimeOffset? DateTimeUTC => Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(Timestamp.Value) : null;
 
     //public bool HasPreviewUrl { get; init; } = false;
 
     public MessageDirections MessageDirection { get; set; }
 
 
-    public string Text { get; set; }
+    public string Body { get; set; }
 
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

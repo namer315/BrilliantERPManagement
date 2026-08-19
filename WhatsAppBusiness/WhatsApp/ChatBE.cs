@@ -3,22 +3,24 @@ using System.Collections;
 using WhatsAppData.DAO;
 using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.Common;
+using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
 
 public class ChatBE
 {
-    public async Task<ChatHistoryDTO> GetChatHistoryBy(string waId)
+    public async Task<ChatHistoryDTO> GetChatHistoryBy(ChatHistorySH chatHistorySH)
     {
         //if (string.IsNullOrEmpty(waId))
         //    throw new ArgumentException("WhatsApp ID cannot be null or empty." , nameof(waId));
 
-        if (string.IsNullOrEmpty(waId))
-            throw new ArgumentNullException(nameof(waId) , "WhatsApp ID is required.");
+        if (string.IsNullOrEmpty(chatHistorySH.WaId))
+            throw new ArgumentNullException(nameof(chatHistorySH.WaId) , "WhatsApp ID is required.");
 
+        ContactVO contact = await new ContactBE().GetContactBy(chatHistorySH.WaId);
         // Fetch message history from your data source
-        IList<MessageVO> messageList = await new MessageDAO().GetMessageHistoryBy(waId);
+        IList<MessageVO> messageList = await new MessageDAO().GetMessageHistoryBy(contact.Id, chatHistorySH);
 
         ChatHistoryDTO chatHistory = new ChatHistoryDTO();
         chatHistory.ChatMessagList = messageList.Select(x => new ChatMessageDTO()
@@ -26,11 +28,18 @@ public class ChatBE
             Id = x.Id ,
             MessageId = x.MessageId ,
             Timestamp = x.Timestamp,
-            MessageDirection = x.Sender?.WaId == waId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
-            Text = x.Content,
+            MessageDirection = x.Sender?.WaId == chatHistorySH.WaId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
+            Body = x.Content,
         })
             .ToList();
-
+        chatHistory.Chat = new ChatDTO()
+        {
+            Contact = new ContactDTO()
+            {
+                Id = contact.Id ,
+                WaId = contact.WaId
+            }
+        };
 
         return chatHistory;
     }

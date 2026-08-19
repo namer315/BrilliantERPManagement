@@ -1,6 +1,6 @@
 ﻿using FastEndpoints;
 using WhatsAppData.DTO.Chat;
-using WhatsAppData.DTO.Common;
+using WhatsAppData.Search.Chat;
 using WhatsAppFDM.Chat;
 
 namespace BrilliantWhatsAppAPI.Endpoints.Chat;
@@ -33,16 +33,21 @@ public class GetChatHistoryEP : EndpointWithoutRequest<ChatHistoryDTO>
             s.Summary = "Get chat history / message thread for a specific WhatsApp ID";
             s.Params["waId"] = "The WhatsApp ID (waId) of the contact";
             s.Params["pageSize"] = "Number of messages to retrieve (optional)";
-            s.Params["cursor"] = "Pagination cursor (optional)";
+            s.Params["pageNumber"] = "Pagination page number (optional)";
         });
     }
 
     public override async Task<ChatHistoryDTO> ExecuteAsync(CancellationToken ct)
     {
         string waId = Route<string>("waId")!;
-        int pageSize = Query<int>("pageSize" , isRequired: false);
-        string? cursor = Query<string>("cursor" , isRequired: false);
+        int pageSize = Query<int?>("pageSize" , isRequired: false) ?? 10;
+        int cursor = Query<int?>("pageNumber" , isRequired: false) ?? 1;
 
-        return await _fdm.GetChatHistoryBy(waId , cursor , pageSize , ct);
+        return await _fdm.GetChatHistoryBy(new ChatHistorySH()
+        {
+            WaId = waId,
+            PageSize = pageSize,
+            PageNumber = cursor
+        }, ct);
     }
 }

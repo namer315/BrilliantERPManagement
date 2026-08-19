@@ -1,15 +1,15 @@
 ﻿using WhatsAppBusiness.WhatsApp;
 using WhatsAppData.DTO.Chat;
-using WhatsAppData.DTO.Common;
+using WhatsAppData.Search.Chat;
 
 namespace WhatsAppFDM.Chat;
 
 public class ChatFDM
 {
     private ChatBE _be = new ChatBE();
-    public async Task<ChatHistoryDTO> GetChatHistoryBy(string waId , string? cursor , int pageSize , CancellationToken ct)
+    public async Task<ChatHistoryDTO> GetChatHistoryBy(ChatHistorySH chatHistory , CancellationToken ct)
     {
-        return await _be.GetChatHistoryBy(waId);
+        return await _be.GetChatHistoryBy(chatHistory);
     }
 
     public async Task<IList<ChatDTO>> GetChatsContactList()

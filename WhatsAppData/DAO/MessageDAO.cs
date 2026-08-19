@@ -1,4 +1,5 @@
 ﻿using CommonData.DAO;
+using CommonData.Search;
 using CommonData.VO;
 using NHibernate;
 using System.Collections;
@@ -65,21 +66,47 @@ public class MessageDAO : RepositoryBase
         // Extract only the TenantVO from the object array tuples
         return results.Select(r => (TenantVO)r[0]).ToList();
     }
-
-    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id)
+    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id , Pagination pagination)
     {
         IQuery q = Session.CreateQuery(@"
-            FROM MessageVO as message
-                LEFT OUTER JOIN FETCH message.Sender as sender
-                LEFT OUTER JOIN FETCH message.Receiver as receiver
-            WHERE
-                (sender.Id = :id OR receiver.Id = :id)
-            ORDER BY message.CreatedAt DESC"
+        FROM MessageVO as message
+            LEFT OUTER JOIN FETCH message.Sender as sender
+            LEFT OUTER JOIN FETCH message.Receiver as receiver
+        WHERE
+            (sender.Id = :id OR receiver.Id = :id)
+        ORDER BY message.CreatedAt DESC"
         )
-            .SetParameter("id" , id);
+        .SetParameter("id" , id)
+        .SetFirstResult(pagination.Offset)       // use model property
+        .SetMaxResults(pagination.PageSize);     // use model property
 
         return await q.ListAsync<MessageVO>();
     }
+
+    /*public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id , int pageNumber , int pageSize)
+    {
+        if (pageNumber < 1)
+            pageNumber = 1;
+            //throw new ArgumentOutOfRangeException(nameof(pageNumber) , "Page number must be greater than 0.");
+        if (pageSize < 1)
+            pageSize = 30;
+            //throw new ArgumentOutOfRangeException(nameof(pageSize) , "Page size must be greater than 0.");
+
+        IQuery q = Session.CreateQuery(@"
+        FROM MessageVO as message
+            LEFT OUTER JOIN FETCH message.Sender as sender
+            LEFT OUTER JOIN FETCH message.Receiver as receiver
+        WHERE
+            (sender.Id = :id OR receiver.Id = :id)
+        ORDER BY message.CreatedAt DESC"
+        )
+        .SetParameter("id" , id)
+        .SetFirstResult((pageNumber - 1) * pageSize)   // offset
+        .SetMaxResults(pageSize);                      // limit
+
+        return await q.ListAsync<MessageVO>();
+    }*/
+
 
     public async Task<IList<MessageVO>> GetMessageHistoryBy(string waId)
     {
