@@ -12,8 +12,8 @@ public class ChatFDM
         return await _be.GetChatHistoryBy(waId);
     }
 
-    public async Task<IList<ContactDTO>> GetChatsContactList()
+    public async Task<IList<ChatDTO>> GetChatsContactList()
     {
-        return await new ContactBE().GetChatsContactList();
+        return await _be.GetChatsContactList();
     }
 }

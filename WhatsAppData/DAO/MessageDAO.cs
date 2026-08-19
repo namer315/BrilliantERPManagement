@@ -1,6 +1,7 @@
 ﻿using CommonData.DAO;
 using CommonData.VO;
 using NHibernate;
+using System.Collections;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppData.DAO;
@@ -78,5 +79,84 @@ public class MessageDAO : RepositoryBase
             .SetParameter("waId" , waId);
 
         return await q.ListAsync<MessageVO>();
+    }
+
+    /*public IList<LatestMessageDto> GetLatestMessagesForContacts(IList<long> contactIds)
+    {
+        if (contactIds == null || contactIds.Count == 0)
+            return new List<LatestMessageDto>();
+
+        // HQL query using correlated subquery to fetch the record with the maximum CreatedAt per conversation/contact
+        string hql = @"
+        select 
+            m.MessageId as MessageId,
+            m.Content as Content,
+            m.CreatedAt as CreatedAt,
+            m.Sender as Sender,
+            m.Receiver as Receiver
+        from MessageVO m
+        where (m.Sender.Id in (:contactIds) or m.Receiver.Id in (:contactIds))
+          and m.CreatedAt = (
+              select max(sub.CreatedAt) 
+              from MessageVO sub 
+              where (sub.Sender.Id = m.Sender.Id and sub.Receiver.Id = m.Receiver.Id)
+                 or (sub.Sender.Id = m.Receiver.Id and sub.Receiver.Id = m.Sender.Id)
+          )";
+
+        return Session.CreateQuery(hql)
+            .SetParameterList("contactIds" , contactIds)
+            .SetResultTransformer(NHibernate.Transform.Transformers.AliasToBean<LatestMessageDto>())
+            .List<LatestMessageDto>();
+    }*/
+
+    /*public async Task<IList> GetLatestMessagesForContacts(IList<Guid> contactIdList)
+    {
+        IQuery q = Session.CreateQuery(@"
+        SELECT
+            sender.Id,
+            receiver.Id,
+            m.Id,
+            m.Content as Content,
+            m.CreatedAt as Timestamp,
+            m.MessageId as MessageId
+        FROM MessageVO m
+            LEFT OUTER JOIN m.Sender as sender
+            LEFT OUTER JOIN m.Receiver as receiver
+        WHERE
+            (m.Sender.Id in (:contactIdList) or m.Receiver.Id in (:contactIdList))
+            and m.CreatedAt = (
+                select max(sub.CreatedAt)
+                from MessageVO sub
+                where (sub.Sender.Id = m.Sender.Id and sub.Receiver.Id = m.Receiver.Id)
+                    or (sub.Sender.Id = m.Receiver.Id and sub.Receiver.Id = m.Sender.Id)
+            )"
+    )
+        .SetParameterList("contactIdList" , contactIdList);
+
+        return await q.ListAsync();
+    }*/
+    public async Task<IList> GetLatestMessagesForContacts(IList<Guid> contactIdList)
+    {
+        if (contactIdList == null || !contactIdList.Any())
+            return new List<object>();
+
+        return await Session.CreateQuery(@"
+        SELECT 
+            m.Sender.Id as SenderId,
+            m.Receiver.Id as ReceiverId,
+            m.Id as Id,
+            m.Content as Content,
+            m.CreatedAt as Timestamp,
+            m.MessageId as MessageId
+        FROM MessageVO m
+        WHERE (m.Sender.Id IN (:contactIdList) OR m.Receiver.Id IN (:contactIdList))
+          AND m.CreatedAt = (
+              SELECT MAX(sub.CreatedAt)
+              FROM MessageVO sub
+              WHERE (sub.Sender.Id = m.Sender.Id AND sub.Receiver.Id = m.Receiver.Id)
+                 OR (sub.Sender.Id = m.Receiver.Id AND sub.Receiver.Id = m.Sender.Id)
+          )")
+            .SetParameterList("contactIdList" , contactIdList)
+            .ListAsync();
     }
 }

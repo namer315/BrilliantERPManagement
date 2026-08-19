@@ -5,7 +5,7 @@ using WhatsAppFDM.Chat;
 
 namespace BrilliantWhatsAppAPI.Endpoints.Chat;
 
-public class GetChatsEP : EndpointWithoutRequest<IList<ContactDTO>>
+public class GetChatsEP : EndpointWithoutRequest<IList<ChatDTO>>
 {
     ChatFDM _fdm = new ChatFDM();
     public override void Configure()
@@ -14,7 +14,7 @@ public class GetChatsEP : EndpointWithoutRequest<IList<ContactDTO>>
         AllowAnonymous();
     }
 
-    public async override Task<IList<ContactDTO>> ExecuteAsync(CancellationToken ct)
+    public async override Task<IList<ChatDTO>> ExecuteAsync(CancellationToken ct)
     {
         return await _fdm.GetChatsContactList();
     }
