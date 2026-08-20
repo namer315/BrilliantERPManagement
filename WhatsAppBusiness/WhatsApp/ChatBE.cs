@@ -19,19 +19,8 @@ public class ChatBE
             throw new ArgumentNullException(nameof(chatHistorySH.WaId) , "WhatsApp ID is required.");
 
         ContactVO contact = await new ContactBE().GetContactBy(chatHistorySH.WaId);
-        // Fetch message history from your data source
-        IList<MessageVO> messageList = await new MessageDAO().GetMessageHistoryBy(contact.Id, chatHistorySH);
 
         ChatHistoryDTO chatHistory = new ChatHistoryDTO();
-        chatHistory.ChatMessagList = messageList.Select(x => new ChatMessageDTO()
-        {
-            Id = x.Id ,
-            MessageId = x.MessageId ,
-            Timestamp = x.Timestamp,
-            MessageDirection = x.Sender?.WaId == chatHistorySH.WaId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
-            Body = x.Content,
-        })
-            .ToList();
         chatHistory.Chat = new ChatDTO()
         {
             Contact = new ContactDTO()
@@ -41,6 +30,29 @@ public class ChatBE
             }
         };
 
+        // Fetch message history from your data source
+        IList<MessageVO> messageList = await new MessageDAO().GetMessageHistoryBy(contact.Id, chatHistorySH);
+        chatHistory.ChatMessagList = messageList.Select(x => new ChatMessageDTO()
+        {
+            Id = x.Id ,
+            MessageId = x.MessageId ,
+            Timestamp = x.Timestamp,
+            MessageDirection = x.Sender?.WaId == chatHistorySH.WaId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
+            Body = x.Content,
+        })
+            .ToList();
+        foreach (var batch in chatHistory.ChatMessagList.Select(x => x.Id).ToList().Chunk(1900))
+        {
+            var rawDataStatus = await new MessageStatusDAO().GetMessageStatusBy(batch);
+            foreach (ChatMessageDTO chatMessage in chatHistory.ChatMessagList)
+            {
+                (Guid Id , MessageStatusVO.WhatsAppMessageStatus Status) row = rawDataStatus.FirstOrDefault(s => s.Id == chatMessage.Id);
+                if (row.Id != Guid.Empty)
+                {
+                    chatMessage.Status = row.Status;
+                }
+            }
+        }
         return chatHistory;
     }
 

@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using WhatsAppData.DTO.Common;
+using static WhatsAppData.VO.WhatsApp.MessageStatusVO;
 
 namespace WhatsAppData.DTO.Chat;
 
@@ -18,9 +17,12 @@ public class ChatMessageDTO
 
     public MessageDirections MessageDirection { get; set; }
 
+    public WhatsAppMessageStatus? Status { get; set; }
 
     public string Body { get; set; }
 
+
+    public ContactDTO Contact { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum MessageDirections
