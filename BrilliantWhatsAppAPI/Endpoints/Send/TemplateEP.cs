@@ -1,11 +1,12 @@
 ﻿using FastEndpoints;
+using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppFDM.WhatsApp;
 
 namespace BrilliantWhatsAppAPI.Endpoints.Send;
 
-public class TemplateEP : Endpoint<TemplateSendDTO , MessageResponseDTO>
+public class TemplateEP : Endpoint<TemplateSendDTO , ChatMessageDTO>
 {
     private TemplateFDM _fdm = new TemplateFDM();
 
@@ -14,7 +15,7 @@ public class TemplateEP : Endpoint<TemplateSendDTO , MessageResponseDTO>
         Post("Send/Template/Text");
         AllowAnonymous();
     }
-    public async override Task<MessageResponseDTO> ExecuteAsync(TemplateSendDTO req , CancellationToken ct)
+    public async override Task<ChatMessageDTO> ExecuteAsync(TemplateSendDTO req , CancellationToken ct)
     {
         return await _fdm.SendTemplateMessage(req);
     }
