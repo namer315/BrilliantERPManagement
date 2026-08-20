@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using WhatsAppData.DTO.Common;
 using static WhatsAppData.VO.WhatsApp.MessageStatusVO;
+using static WhatsAppData.VO.WhatsApp.MessageVO;
 
 namespace WhatsAppData.DTO.Chat;
 
@@ -8,6 +9,8 @@ public class ChatMessageDTO
 {
     public Guid Id { get; set; }
     public string MessageId { get; set; }
+
+    //public virtual WhatsAppMessageTypes Type { get; set; }
 
     [JsonIgnore]
     public long? Timestamp { get; set; }

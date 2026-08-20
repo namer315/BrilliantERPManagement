@@ -10,9 +10,11 @@ public class StreamDTO
 #endif
     public string Token { get; set; }
 
-    public string TenentName { get; set; }
+    public string TenantName { get; set; }
 
     public ChatHistoryDTO ChatHistory { get; set; }
 
-    public StreamMessageDTO Message { get; set; }
+    public ChatMessageDTO Message { get; set; }
+
+    public ChatMessageStatusDTO MessageStatus { get; set; }
 }

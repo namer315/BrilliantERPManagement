@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using WhatsAppBusiness.WhatsApp;
+using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.Stream;
 using WhatsAppData.DTO.Webhooks;
 using WhatsAppData.VO.WhatsApp;
@@ -56,6 +57,10 @@ public class WebhookBE
                                     messageStatus.Timestamp = Convert.ToInt64(status.Timestamp);
 
                                     s = await _messageStatus.Persist(messageStatus);
+                                    ChatMessageStatusDTO chatMessageStatus = new ChatMessageStatusDTO();
+                                    chatMessageStatus.MessageId = messageStatus.Message.MessageId;
+                                    chatMessageStatus.Status = messageStatus.Status;
+                                    chatMessageStatus.Timestamp = messageStatus.Timestamp;
 
                                     if (status.Errors is { Count: > 0 })
                                     {
@@ -69,6 +74,13 @@ public class WebhookBE
                                             error.Href = e.Href;
 
                                             s = await _whatsAppErrorBE.Persist(error);
+
+                                            chatMessageStatus.Error = new WhatsAppData.DTO.Common.ErrorDTO();
+                                            chatMessageStatus.Error.ErrorCode = error.ErrorCode;
+                                            chatMessageStatus.Error.Message = error.Message;
+                                            chatMessageStatus.Error.Details = error.Details;
+
+
                                         }
                                     }
                                     if (status.Pricing is not null)
@@ -86,10 +98,31 @@ public class WebhookBE
                                         Console.WriteLine($"[status] pricing id={status.Id} billable={status.Pricing.Billable} model={status.Pricing.PricingModel} type={status.Pricing.Type} category={status.Pricing.Category}");
                                     }
 
-                                    if(message.Timestamp is null && status.Status.Equals("sent"))
+                                    if(message.Timestamp is null && (status.Status.Equals("sent") || status.Status.Equals("failed")))
                                     {
                                         message.Timestamp = messageStatus.Timestamp;
                                         s = await _messageBE.Persist(message , true);
+                                    }
+
+                                    if (message.Tenant is not null)
+                                    {
+                                        StreamDTO stream = new StreamDTO();
+                                        stream.Token = message.Tenant.Token;
+                                        stream.TenantName = message.Tenant.Name;
+                                        stream.MessageStatus = chatMessageStatus;
+
+                                        stream.MessageStatus.Contact = new WhatsAppData.DTO.Common.ContactDTO();
+                                        stream.MessageStatus.Contact.WaId = message.Receiver.WaId;
+                                        stream.MessageStatus.Contact.Id = message.Receiver.Id;
+                                        //stream.Message = new StreamMessageDTO();
+                                        //stream.Message.From = message.Sender.WaId;
+                                        //stream.Message.Content = message.Content;
+                                        //if (message.Timestamp is long timestamp)
+                                        //    stream.Message.DateTimeUTC = DateTimeOffset.FromUnixTimeSeconds(timestamp);
+
+                                        // Assume req.Token carries the tenant token
+                                        var evt = new WebhookEvent(message.Tenant , stream);
+                                        await WebhookEventChannel.PublishAsync(evt);
                                     }
                                 }
                             }
@@ -120,12 +153,21 @@ public class WebhookBE
                                     {
                                         StreamDTO stream = new StreamDTO();
                                         stream.Token = tenant.Token;
-                                        stream.TenentName = tenant.Name;
-                                        stream.Message = new StreamMessageDTO();
-                                        stream.Message.From = message.Sender.WaId;
-                                        stream.Message.Content = message.Content;
-                                        if(message.Timestamp is long timestamp)
-                                            stream.Message.DateTimeUTC = DateTimeOffset.FromUnixTimeSeconds(timestamp);
+                                        stream.TenantName = tenant.Name;
+
+                                        stream.Message = new ChatMessageDTO();
+                                        stream.Message.Body = message.Content;
+                                        stream.Message.Timestamp = message.Timestamp;
+                                        stream.Message.MessageDirection = ChatMessageDTO.MessageDirections.Incoming;
+
+                                        stream.Message.Contact = new WhatsAppData.DTO.Common.ContactDTO();
+                                        stream.Message.Contact.WaId = message.Sender.WaId;
+                                        stream.Message.Contact.Id = message.Sender.Id;
+                                        //stream.Message = new StreamMessageDTO();
+                                        //stream.Message.From = message.Sender.WaId;
+                                        //stream.Message.Content = message.Content;
+                                        //if (message.Timestamp is long timestamp)
+                                        //    stream.Message.DateTimeUTC = DateTimeOffset.FromUnixTimeSeconds(timestamp);
 
                                         // Assume req.Token carries the tenant token
                                         var evt = new WebhookEvent(tenant , stream);
@@ -175,13 +217,13 @@ public class WebhookBE
             yield return new StreamDTO
             {
                 Token = currentTenant?.Token,
-                TenentName = currentTenant?.Name,
-                Message = new StreamMessageDTO
-                {
-                    From = "system",
-                    Content = "Your session has been connected successfully.",
-                    DateTimeUTC = DateTimeOffset.UtcNow
-                }
+                TenantName = currentTenant?.Name,
+                //Message = new StreamMessageDTO
+                //{
+                //    From = "system",
+                //    Content = "Your session has been connected successfully.",
+                //    DateTimeUTC = DateTimeOffset.UtcNow
+                //}
             };
 
             while (!ct.IsCancellationRequested)
