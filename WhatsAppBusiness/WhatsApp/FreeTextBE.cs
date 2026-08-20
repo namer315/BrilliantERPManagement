@@ -1,4 +1,5 @@
-﻿using WhatsAppData.DTO.WhatsApp;
+﻿using WhatsAppData.DTO.Chat;
+using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.VO.WhatsApp;
 
@@ -10,7 +11,7 @@ public class FreeTextBE : WhatsAppBE
     private MessageBE _message = new MessageBE();
     private ContactBE _contact = new ContactBE();
 
-    public async Task<MessageResponseDTO> SendTextMessage(TextDTO text)
+    public async Task<ChatMessageDTO> SendTextMessage(TextDTO text)
     {
         MessageVO message = await _message.GetNew(MessageVO.WhatsAppMessageTypes.Text);
         message.Content = text.Message;
@@ -30,6 +31,17 @@ public class FreeTextBE : WhatsAppBE
 
         s = await _message.Persist(message, true);
 
-        return messageResponseDTO;
+        ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
+        chatMessageDTO.Id = message.Id;
+        chatMessageDTO.MessageId = message.MessageId;
+        //chatMessageDTO.Timestamp = message.Timestamp;
+        chatMessageDTO.MessageDirection = ChatMessageDTO.MessageDirections.Outgoing;
+        chatMessageDTO.Body = message.Content;
+
+        chatMessageDTO.Contact = new WhatsAppData.DTO.Common.ContactDTO();
+        chatMessageDTO.Contact.Id = message.Receiver.Id;
+        chatMessageDTO.Contact.WaId = message.Receiver.WaId;
+
+        return chatMessageDTO;
     }
 }

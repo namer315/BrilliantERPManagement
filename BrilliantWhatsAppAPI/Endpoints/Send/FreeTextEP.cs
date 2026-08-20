@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.DTO.WhatsApp.Template;
@@ -35,7 +36,7 @@ namespace BrilliantWhatsAppAPI.Endpoints.Send;
 //        return _fdm.Check24hSession(req.PhoneNumber);
 //    }
 //}
-public class TextEP : Endpoint<TextDTO , MessageResponseDTO>
+public class TextEP : Endpoint<TextDTO , ChatMessageDTO>
 {
     FreeTextFDM _fdm = new FreeTextFDM();
     public override void Configure()
@@ -44,7 +45,7 @@ public class TextEP : Endpoint<TextDTO , MessageResponseDTO>
         AllowAnonymous();
     }
 
-    public override Task<MessageResponseDTO> ExecuteAsync(TextDTO req , CancellationToken ct)
+    public override Task<ChatMessageDTO> ExecuteAsync(TextDTO req , CancellationToken ct)
     {
         return _fdm.SendTextMessage(req);
     }

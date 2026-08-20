@@ -1,4 +1,5 @@
 ﻿using WhatsAppBusiness.WhatsApp;
+using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 
@@ -18,7 +19,7 @@ public class FreeTextFDM
         throw new NotImplementedException();
     }
 
-    public async Task<MessageResponseDTO> SendTextMessage(TextDTO text)
+    public async Task<ChatMessageDTO> SendTextMessage(TextDTO text)
     {
         return await _be.SendTextMessage(text);
     }
