@@ -26,12 +26,14 @@ public class GetChatHistoryEP : EndpointWithoutRequest<ChatHistoryDTO>
 
     public override void Configure()
     {
-        Get("chats/{waId}/messages");
+        Get("chats/{waId}/Messages");
+        //Get("chats/{waId}/Messages/{messagesId?}");
         AllowAnonymous();
         Summary(s =>
         {
             s.Summary = "Get chat history / message thread for a specific WhatsApp ID";
             s.Params["waId"] = "The WhatsApp ID (waId) of the contact";
+            s.Params["messagesId"] = "Optional message ID to filter by";
             s.Params["pageSize"] = "Number of messages to retrieve (optional)";
             s.Params["pageNumber"] = "Pagination page number (optional)";
         });
@@ -40,12 +42,15 @@ public class GetChatHistoryEP : EndpointWithoutRequest<ChatHistoryDTO>
     public override async Task<ChatHistoryDTO> ExecuteAsync(CancellationToken ct)
     {
         string waId = Route<string>("waId")!;
+        //string messagesId = Route<string?>("messagesId")!;
+        string? messagesId = Query<string?>("messagesId", isRequired: false); // optional
         int pageSize = Query<int?>("pageSize" , isRequired: false) ?? 10;
         int cursor = Query<int?>("pageNumber" , isRequired: false) ?? 1;
 
         return await _fdm.GetChatHistoryBy(new ChatHistorySH()
         {
             WaId = waId,
+            MessageId = messagesId,
             PageSize = pageSize,
             PageNumber = cursor
         }, ct);

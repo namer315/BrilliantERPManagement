@@ -8,4 +8,5 @@ namespace WhatsAppData.Search.Chat;
 public class ChatHistorySH : Pagination
 {
     public string WaId { get; set; }
+    public string MessageId { get; set; }
 }
