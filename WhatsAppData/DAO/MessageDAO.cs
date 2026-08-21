@@ -177,28 +177,54 @@ public class MessageDAO : RepositoryBase
 
         return await q.ListAsync();
     }*/
-    public async Task<IList> GetLatestMessagesForContacts(IList<Guid> contactIdList)
+    public async Task<IList<MessageVO>> GetLatestMessagesForContacts(IList<Guid> contactIdList)
     {
         if (contactIdList == null || !contactIdList.Any())
-            return new List<object>();
+            return new List<MessageVO>();
 
-        return await Session.CreateQuery(@"
-        SELECT 
-            m.Sender.Id as SenderId,
-            m.Receiver.Id as ReceiverId,
-            m.Id as Id,
-            m.Content as Content,
-            m.CreatedAt as Timestamp,
-            m.MessageId as MessageId
+        /* return await Session.CreateQuery(@"
+         SELECT 
+             m.Sender.Id as SenderId,
+             m.Receiver.Id as ReceiverId,
+             m.Id as Id,
+             m.Content as Content,
+             m.CreatedAt as Timestamp,
+             m.MessageId as MessageId
+         FROM MessageVO m
+         WHERE (m.Sender.Id IN (:contactIdList) OR m.Receiver.Id IN (:contactIdList))
+           AND m.CreatedAt = (
+               SELECT MAX(sub.CreatedAt)
+               FROM MessageVO sub
+               WHERE (sub.Sender.Id = m.Sender.Id AND sub.Receiver.Id = m.Receiver.Id)
+                  OR (sub.Sender.Id = m.Receiver.Id AND sub.Receiver.Id = m.Sender.Id)
+           )")
+             .SetParameterList("contactIdList" , contactIdList)
+             .ListAsync();*/
+
+        /*return await Session.CreateQuery(@"
         FROM MessageVO m
         WHERE (m.Sender.Id IN (:contactIdList) OR m.Receiver.Id IN (:contactIdList))
-          AND m.CreatedAt = (
-              SELECT MAX(sub.CreatedAt)
+          AND m.Timestamp = (
+              SELECT MAX(sub.Timestamp)
               FROM MessageVO sub
-              WHERE (sub.Sender.Id = m.Sender.Id AND sub.Receiver.Id = m.Receiver.Id)
-                 OR (sub.Sender.Id = m.Receiver.Id AND sub.Receiver.Id = m.Sender.Id)
+              WHERE sub.Sender.Id = m.Sender.Id
+                 OR sub.Receiver.Id = m.Receiver.Id
           )")
-            .SetParameterList("contactIdList" , contactIdList)
-            .ListAsync();
+        .SetParameterList("contactIdList" , contactIdList)
+        .ListAsync();*/
+        return await Session.CreateQuery(@"
+    FROM MessageVO m
+    WHERE (m.Sender.Id IN (:contactIdList) OR m.Receiver.Id IN (:contactIdList))
+      AND m.Timestamp = (
+          SELECT MAX(sub.Timestamp)
+          FROM MessageVO sub
+          WHERE (sub.Sender.Id = m.Sender.Id OR sub.Receiver.Id = m.Sender.Id)
+             OR (sub.Sender.Id = m.Receiver.Id OR sub.Receiver.Id = m.Receiver.Id)
+      )
+")
+.SetParameterList("contactIdList" , contactIdList)
+.ListAsync<MessageVO>();
+
+
     }
 }

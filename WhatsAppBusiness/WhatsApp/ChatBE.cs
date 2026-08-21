@@ -69,51 +69,38 @@ public class ChatBE
 
         IList<ContactVO> contactList = await new ContactDAO().GetChatListContacts();
 
-        IList<ContactDTO> contactDTOList = contactList
-            .Select(x => new ContactDTO()
-            {
-                Id = x.Id ,
-                WaId = x.WaId
-            })
-            .ToList();
-        if (contactDTOList is not { Count: > 0 })
+        if (contactList is not { Count: > 0 })
             return new List<ChatDTO>();
 
-        return contactDTOList
-            .Select(x => new ChatDTO()
-            {
-                Contact = x ,
-
+        IList<ChatDTO> chatList = contactList
+            .Select(x => new ChatDTO(){ 
+                Contact =  new ContactDTO()
+                {
+                    Id = x.Id ,
+                    WaId = x.WaId
+                }
             })
             .ToList();
-        IList rawData = await new MessageDAO().GetLatestMessagesForContacts(contactDTOList.Select(c => c.Id).ToList());
-        IList<ChatDTO> chatDTOList = new List<ChatDTO>();
 
-        int index = 0;
-        foreach (object[] row in rawData)
+        // Fetch lats message history from your data source
+        IList<MessageVO> messageList = await new MessageDAO().GetLatestMessagesForContacts(chatList.Select(c => c.Contact.Id).ToList());
+        chatList = chatList.Select(chat =>
         {
-            Guid senderId = Guid.Empty;
-            Guid receiverId = Guid.Empty;
-            if (row[index++] is Guid sender)
-                senderId = sender;
-            if (row[index++] is Guid receiver)
-                receiverId = receiver;
+            // Find the latest message for this contact
+            var lastMessage = messageList
+                .FirstOrDefault(m => m.Sender?.Id == chat.Contact.Id || m.Receiver?.Id == chat.Contact.Id);
+            if (lastMessage is null)
+                return chat;
 
-            ChatDTO chatDTO = new ChatDTO();
-            if (senderId != Guid.Empty)
-                chatDTO.Contact = contactDTOList.FirstOrDefault(x => x.Id == senderId);
-            if (chatDTO.Contact is null && receiverId != Guid.Empty)
-                chatDTO.Contact = contactDTOList.FirstOrDefault(x => x.Id == receiverId);
+            return new ChatDTO
+            {
+                Contact = chat.Contact ,
+                LastMessage = lastMessage?.Content ,
+                Timestamp = lastMessage?.Timestamp ,
+                MessageId = lastMessage?.MessageId
+            };
+        }).ToList();
 
-            chatDTO.LastMessage = Convert.ToString(row[index++]);
-            chatDTO.Timestamp = Convert.ToInt64(row[index++]);
-            chatDTO.MessageId = Convert.ToString(row[index++]);
-
-            chatDTOList.Add(chatDTO);
-        }
-
-        MessageVO message = new MessageVO();
-
-        return chatDTOList;
+        return chatList;
     }
 }
