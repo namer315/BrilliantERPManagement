@@ -81,11 +81,11 @@ public class WebhookBE
                                             chatMessageStatus.Error.Message = error.Message;
                                             chatMessageStatus.Error.Details = error.Details;
 
-                                            if(e.Code == (int)WhatsAppErrorType.Re_engagementMessage/*131047*/) // Message failed to send because more than 24 hours have passed since the customer last replied to this number.
+                                            if (e.Code == (int)WhatsAppErrorType.Re_engagementMessage/*131047*/) // Message failed to send because more than 24 hours have passed since the customer last replied to this number.
                                             {
                                                 ChatMessageDTO chatMessage = await _templateBE.ResendFreeTextAsTemplateBy(message);
                                                 MessageVO templateMessage = await _messageBE.getMessageBy(chatMessage.MessageId);
-                                                await DispatchIncomingMessageAsync(templateMessage , templateMessage.Tenant, false);
+                                                await DispatchIncomingMessageAsync(templateMessage , templateMessage.Tenant , false);
                                             }
                                         }
                                     }
@@ -104,7 +104,7 @@ public class WebhookBE
                                         Console.WriteLine($"[status] pricing id={status.Id} billable={status.Pricing.Billable} model={status.Pricing.PricingModel} type={status.Pricing.Type} category={status.Pricing.Category}");
                                     }
 
-                                    if(message.Timestamp is null && (status.Status.Equals("sent") || status.Status.Equals("failed")))
+                                    if (message.Timestamp is null && (status.Status.Equals("sent") || status.Status.Equals("failed")))
                                     {
                                         message.Timestamp = messageStatus.Timestamp;
                                         s = await _messageBE.Persist(message , true);
@@ -175,14 +175,14 @@ public class WebhookBE
 
             return false;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             throw ex;
             return true;
         }
     }
 
-    private static async Task DispatchIncomingMessageAsync(MessageVO message , TenantVO tenant, bool contactIsSender = true)
+    private static async Task DispatchIncomingMessageAsync(MessageVO message , TenantVO tenant , bool contactIsSender = true)
     {
         if (tenant is not null)
         {
