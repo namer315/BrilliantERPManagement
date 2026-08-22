@@ -3,7 +3,9 @@ using CommonData.Search;
 using CommonData.VO;
 using NHibernate;
 using System.Collections;
+using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
+using static Mysqlx.Expect.Open.Types;
 
 namespace WhatsAppData.DAO;
 
@@ -66,19 +68,30 @@ public class MessageDAO : RepositoryBase
         // Extract only the TenantVO from the object array tuples
         return results.Select(r => (TenantVO)r[0]).ToList();
     }
-    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id , Pagination pagination)
+    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id , ChatHistorySH chatHistorySH)
     {
-        IQuery q = Session.CreateQuery(@"
+        string whereCondition = string.Empty;
+        if (!string.IsNullOrEmpty(chatHistorySH.MessageId))
+            whereCondition += @" AND message.CreatedAt < (
+                SELECT ref.CreatedAt
+                FROM MessageVO ref
+                WHERE ref.MessageId = :messageId
+            )";
+        IQuery q = Session.CreateQuery($@"
         FROM MessageVO as message
             LEFT OUTER JOIN FETCH message.Sender as sender
             LEFT OUTER JOIN FETCH message.Receiver as receiver
         WHERE
             (sender.Id = :id OR receiver.Id = :id)
+            {whereCondition}
         ORDER BY message.CreatedAt DESC"
         )
         .SetParameter("id" , id)
-        .SetFirstResult(pagination.Offset)       // use model property
-        .SetMaxResults(pagination.PageSize);     // use model property
+        .SetFirstResult(chatHistorySH.Offset)       // use model property
+        .SetMaxResults(chatHistorySH.PageSize);     // use model property
+
+        if (!string.IsNullOrEmpty(chatHistorySH.MessageId))
+            q.SetParameter("messageId", chatHistorySH.MessageId);
 
         return await q.ListAsync<MessageVO>();
     }
