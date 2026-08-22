@@ -137,8 +137,49 @@ public class WebhookBE
                             {
                                 foreach (MessageDTO msg in change.Value.Messages)
                                 {
-
-                                    MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Text , msg.Id);
+                                    MessageVO.WhatsAppMessageTypes messageType = MessageVO.WhatsAppMessageTypes.Text;
+                                    MessageButtonVO button = null;
+                                    switch (msg.Type)
+                                    {
+                                        //case MessageTypeDTO.Text:
+                                        //    break;
+                                        //case MessageTypeDTO.Image:
+                                        //    break;
+                                        //case MessageTypeDTO.Video:
+                                        //    break;
+                                        //case MessageTypeDTO.Audio:
+                                        //    break;
+                                        //case MessageTypeDTO.Document:
+                                        //    break;
+                                        //case MessageTypeDTO.Sticker:
+                                        //    break;
+                                        //case MessageTypeDTO.Location:
+                                        //    break;
+                                        //case MessageTypeDTO.Contacts:
+                                        //    break;
+                                        //case MessageTypeDTO.Reaction:
+                                        //    break;
+                                        //case MessageTypeDTO.Interactive:
+                                        //    break;
+                                        //case MessageTypeDTO.Order:
+                                        //    break;
+                                        //case MessageTypeDTO.System:
+                                        //    break;
+                                        case MessageTypeDTO.Button:
+                                            messageType = MessageVO.WhatsAppMessageTypes.Button;
+                                            button = new MessageButtonVO();
+                                            button.Payload = msg.Button?.Payload;
+                                            button.Text = msg.Button?.Text;
+                                            break;
+                                        //case MessageTypeDTO.Unsupported:
+                                        //    break;
+                                        //case MessageTypeDTO.Unknown:
+                                        //    break;
+                                        //case null:
+                                        //    break;
+                                    }
+                                    MessageVO message = await _messageBE.GetNew(messageType , msg.Id);
+                                    message.Button = button;
 
                                     message.Sender = await _contactBE.GetContactBy(msg.From);
                                     if (string.IsNullOrEmpty(message.Sender.Name))
@@ -159,7 +200,7 @@ public class WebhookBE
                                 }
                             }
                         }
-                            break;
+                        break;
                         case "statuses":
                             // Handle message status updates
                             break;
@@ -200,6 +241,14 @@ public class WebhookBE
             stream.Message.Contact = new WhatsAppData.DTO.Common.ContactDTO();
             stream.Message.Contact.WaId = contactIsSender ? message.Sender.WaId : message.Receiver.WaId;
             stream.Message.Contact.Id = contactIsSender ? message.Sender.Id : message.Receiver.Id;
+
+            if(message.Button is not null)
+            {
+                message.Type = MessageVO.WhatsAppMessageTypes.Button;
+                stream.Message.Button = new ChatMessageButtonDTO();
+                stream.Message.Button.Id = message.Button.Id;
+                stream.Message.Button.Text = message.Button.Text;
+            }
             //stream.Message = new StreamMessageDTO();
             //stream.Message.From = message.Sender.WaId;
             //stream.Message.Content = message.Content;
@@ -229,8 +278,8 @@ public class WebhookBE
             // Notify the client immediately that it has started listening.
             yield return new StreamDTO
             {
-                Token = currentTenant?.Token,
-                TenantName = currentTenant?.Name,
+                Token = currentTenant?.Token ,
+                TenantName = currentTenant?.Name ,
                 //Message = new StreamMessageDTO
                 //{
                 //    From = "system",
@@ -315,7 +364,7 @@ public static class WebhookEventChannel
 {
     // Each connected SSE client gets its own unbounded channel (single-consumer
     // per client). Public events are fanned out to every subscriber channel.
-    private static readonly ConcurrentDictionary<Guid, Channel<WebhookEvent>> _subscribers = new();
+    private static readonly ConcurrentDictionary<Guid , Channel<WebhookEvent>> _subscribers = new();
 
     /// <summary>
     /// Registers a new subscriber channel for a connected client.

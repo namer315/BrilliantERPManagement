@@ -11,7 +11,7 @@ public class MessageDTO
 
     public string Timestamp { get; set; } = string.Empty;
 
-    public MessageTypeDTO Type { get; set; }
+    public MessageTypeDTO? Type { get; set; }
 
     public ContextDTO? Context { get; set; }
 
@@ -28,6 +28,7 @@ public class MessageDTO
     public MediaDTO? Document { get; set; }
 
     public MediaDTO? Sticker { get; set; }
+    public MessageButtonWDTO Button { get; set; }
 
     public InteractiveDTO? Interactive { get; set; }
 

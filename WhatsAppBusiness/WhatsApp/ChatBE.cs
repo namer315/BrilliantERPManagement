@@ -39,9 +39,15 @@ public class ChatBE
         {
             Id = x.Id ,
             MessageId = x.MessageId ,
+            Type = x.Type,
             Timestamp = x.Timestamp,
             MessageDirection = x.Sender?.WaId == chatHistorySH.WaId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
             Body = x.Content,
+            Button = x.Button is not null ? new ChatMessageButtonDTO()
+            {
+                Id = x.Button.Id ,
+                Text = x.Button.Text
+            } : null ,
         })
             .ToList();
         foreach (var batch in chatHistory.ChatMessagList.Select(x => x.Id).ToList().Chunk(1900))

@@ -10,7 +10,7 @@ public class ChatMessageDTO
     public Guid Id { get; set; }
     public string MessageId { get; set; }
 
-    //public virtual WhatsAppMessageTypes Type { get; set; }
+    public WhatsAppMessageTypes Type { get; set; }
 
     [JsonIgnore]
     public long? Timestamp { get; set; }
@@ -26,6 +26,8 @@ public class ChatMessageDTO
 
 
     public ContactDTO Contact { get; set; }
+
+    public ChatMessageButtonDTO Button { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum MessageDirections

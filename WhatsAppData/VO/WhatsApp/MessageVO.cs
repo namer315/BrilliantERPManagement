@@ -21,6 +21,8 @@ public class MessageVO : EntityBaseWithCode
 
     public virtual TenantVO Tenant { get; set; }
 
+    //Types Relation
+    public virtual MessageButtonVO Button { get; set; }
 
     // Status history (delivered, read, ...) — inverse of MessageStatusVO.Message
     public virtual IList<MessageStatusVO> StatuseList { get; set; } = new List<MessageStatusVO>();
@@ -39,7 +41,8 @@ public class MessageVO : EntityBaseWithCode
         Contacts = 9,
         Interactive = 10,
         Reaction = 11,
-        System = 12
+        System = 12,
+        Button = 13,
     }
 
 }
@@ -59,6 +62,8 @@ public class MessageMap : EntityWithDatesMapping<MessageVO>
         References(x => x.Tenant).Column("Tenant")/*.Not.Nullable()*/.Cascade.None();
         References(x => x.Receiver).Column("Receiver")/*.Not.Nullable()*/.Cascade.Merge();
         References(x => x.Sender).Column("Sender")/*.Not.Nullable()*/.Cascade.Merge();
+
+        References(x => x.Button , "Button").Cascade.Merge();
 
 
         HasMany(x => x.StatuseList).KeyColumn("Message")   // matches MessageStatusMap: References(x => x.Message).Column("Message")
