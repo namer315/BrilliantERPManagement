@@ -20,6 +20,7 @@ public class WebhookBE
     private ContactBE _contactBE = new ContactBE();
     private WhatsAppErrorBE _whatsAppErrorBE = new WhatsAppErrorBE();
     private WhatsAppPricingBE _whatsAppPricingBE = new WhatsAppPricingBE();
+    private TemplateBE _templateBE = new TemplateBE();
 
     public async Task<bool> HandleWebhook(WebhookDTO webhook)
     {
@@ -80,7 +81,12 @@ public class WebhookBE
                                             chatMessageStatus.Error.Message = error.Message;
                                             chatMessageStatus.Error.Details = error.Details;
 
-
+                                            if(e.Code == (int)WhatsAppErrorType.Re_engagementMessage/*131047*/) // Message failed to send because more than 24 hours have passed since the customer last replied to this number.
+                                            {
+                                                ChatMessageDTO chatMessage = await _templateBE.ResendFreeTextAsTemplateBy(message);
+                                                MessageVO templateMessage = await _messageBE.getMessageBy(chatMessage.MessageId);
+                                                await DispatchIncomingMessageAsync(templateMessage , templateMessage.Tenant, false);
+                                            }
                                         }
                                     }
                                     if (status.Pricing is not null)
@@ -132,7 +138,7 @@ public class WebhookBE
                                 foreach (MessageDTO msg in change.Value.Messages)
                                 {
 
-                                    MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Text, msg.Id);
+                                    MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Text , msg.Id);
 
                                     message.Sender = await _contactBE.GetContactBy(msg.From);
                                     if (string.IsNullOrEmpty(message.Sender.Name))
@@ -140,7 +146,7 @@ public class WebhookBE
                                         message.Sender.Name = change.Value.Contacts?.FirstOrDefault(x => x.WaId.Equals(message.Sender.WaId))?.Profile?.Name;
                                     }
 
-                                    if(msg.Text is not null)
+                                    if (msg.Text is not null)
                                     {
                                         message.Content = msg.Text.Body;
                                     }
@@ -149,30 +155,7 @@ public class WebhookBE
                                     s = await _messageBE.Persist(message , true);
 
                                     TenantVO tenant = await _messageBE.GetTenantbyContact(message.Sender);
-                                    if(tenant is not null)
-                                    {
-                                        StreamDTO stream = new StreamDTO();
-                                        stream.Token = tenant.Token;
-                                        stream.TenantName = tenant.Name;
-
-                                        stream.Message = new ChatMessageDTO();
-                                        stream.Message.Body = message.Content;
-                                        stream.Message.Timestamp = message.Timestamp;
-                                        stream.Message.MessageDirection = ChatMessageDTO.MessageDirections.Incoming;
-
-                                        stream.Message.Contact = new WhatsAppData.DTO.Common.ContactDTO();
-                                        stream.Message.Contact.WaId = message.Sender.WaId;
-                                        stream.Message.Contact.Id = message.Sender.Id;
-                                        //stream.Message = new StreamMessageDTO();
-                                        //stream.Message.From = message.Sender.WaId;
-                                        //stream.Message.Content = message.Content;
-                                        //if (message.Timestamp is long timestamp)
-                                        //    stream.Message.DateTimeUTC = DateTimeOffset.FromUnixTimeSeconds(timestamp);
-
-                                        // Assume req.Token carries the tenant token
-                                        var evt = new WebhookEvent(tenant , stream);
-                                        await WebhookEventChannel.PublishAsync(evt);
-                                    }
+                                    await DispatchIncomingMessageAsync(message , tenant);
                                 }
                             }
                         }
@@ -196,6 +179,36 @@ public class WebhookBE
         {
             throw ex;
             return true;
+        }
+    }
+
+    private static async Task DispatchIncomingMessageAsync(MessageVO message , TenantVO tenant, bool contactIsSender = true)
+    {
+        if (tenant is not null)
+        {
+            StreamDTO stream = new StreamDTO();
+            stream.Token = tenant.Token;
+            stream.TenantName = tenant.Name;
+
+            stream.Message = new ChatMessageDTO();
+            stream.Message.Id = message.Id;
+            stream.Message.MessageId = message.MessageId;
+            stream.Message.Body = message.Content;
+            stream.Message.Timestamp = message.Timestamp;
+            stream.Message.MessageDirection = contactIsSender ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing;
+
+            stream.Message.Contact = new WhatsAppData.DTO.Common.ContactDTO();
+            stream.Message.Contact.WaId = contactIsSender ? message.Sender.WaId : message.Receiver.WaId;
+            stream.Message.Contact.Id = contactIsSender ? message.Sender.Id : message.Receiver.Id;
+            //stream.Message = new StreamMessageDTO();
+            //stream.Message.From = message.Sender.WaId;
+            //stream.Message.Content = message.Content;
+            //if (message.Timestamp is long timestamp)
+            //    stream.Message.DateTimeUTC = DateTimeOffset.FromUnixTimeSeconds(timestamp);
+
+            // Assume req.Token carries the tenant token
+            var evt = new WebhookEvent(tenant , stream);
+            await WebhookEventChannel.PublishAsync(evt);
         }
     }
 

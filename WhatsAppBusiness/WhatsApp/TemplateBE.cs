@@ -1,4 +1,5 @@
-﻿using WhatsAppData.DTO.Chat;
+﻿using CommonData.VO;
+using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppData.VO.WhatsApp;
@@ -12,12 +13,12 @@ public class TemplateBE : WhatsAppBE
     private ContactBE _contactBE = new ContactBE();
 
 
-    public async Task<ChatMessageDTO> SendTemplateMessage(TemplateSendDTO templateSend)
+    public async Task<ChatMessageDTO> SendTemplateMessage(TemplateSendDTO templateSend , TenantVO tenant = null)
     {
         //if (templateSend.TemplateName.Equals("order_confirmed"))
         //    templateSend.LanguageCode = "en_US";
 
-        MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Template);
+        MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Template, tenant: tenant);
         //message.Receiver = await _contact.GetContactBy(templateSend.RecipientPhoneNumber);
         //message_templates?name=order_confirmed
         TemplatesResponseDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
@@ -60,6 +61,32 @@ public class TemplateBE : WhatsAppBE
         chatMessageDTO.Contact.WaId = message.Receiver.WaId;
 
         return chatMessageDTO;
+    }
+    internal async Task<ChatMessageDTO> ResendFreeTextAsTemplateBy(MessageVO message)
+    {
+        TemplateSendDTO templateSendDTO = new TemplateSendDTO()
+        {
+            TemplateName = "notification_confirmation" ,
+            RecipientPhoneNumber = message.Receiver.WaId ,
+            ParameterList = new List<TemplateParameterDTO>()
+            {
+                new TemplateParameterDTO()
+                {
+                    Type = "text" ,
+                    Text = message.Tenant.Name ,
+                    Name = "company_name"
+                },
+                new TemplateParameterDTO()
+                {
+                    Type = "text" ,
+                    Text = message.Content ,
+                    Name = "text"
+                }
+            }
+        }; 
+        ChatMessageDTO chatMessage = await SendTemplateMessage(templateSendDTO, message.Tenant);
+
+        return chatMessage;
     }
     public async Task<ChatMessageDTO> ResendFreeTextAsTemplateBy(string messageId, TemplateParameterDTO parameterCompany)
     {

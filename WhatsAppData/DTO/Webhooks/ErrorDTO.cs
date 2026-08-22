@@ -32,3 +32,21 @@ public class ErrorDataDTO
     [JsonPropertyName("messaging_product")]
     public string MessagingProduct { get; set; } = string.Empty;
 }
+
+public enum WhatsAppErrorType
+{
+    /// <summary>
+    /// Message failed to send because more than 24 hours have passed since the customer last replied to this number.
+    /// </summary>
+    Re_engagementMessage = 131047
+    //InvalidParameter,
+    //MissingParameter,
+    //InvalidRecipient,
+    //InvalidTemplate,
+    //InvalidMessageFormat,
+    //InvalidMedia,
+    //InvalidWebhook,
+    //RateLimitExceeded,
+    //InternalServerError,
+    //Unknown
+}
