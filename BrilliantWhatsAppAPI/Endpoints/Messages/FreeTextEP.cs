@@ -1,11 +1,9 @@
 ﻿using FastEndpoints;
 using WhatsAppData.DTO.Chat;
-using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
-using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppFDM.WhatsApp;
 
-namespace BrilliantWhatsAppAPI.Endpoints.Send;
+namespace BrilliantWhatsAppAPI.Endpoints.Messages;
 
 //Session messages
 //public class FreeTextEP : Endpoint<FreeTextDTO , MessageResponseDTO>
@@ -41,7 +39,7 @@ public class TextEP : Endpoint<TextDTO , ChatMessageDTO>
     FreeTextFDM _fdm = new FreeTextFDM();
     public override void Configure()
     {
-        Post("Send/FreeText/Text");
+        Post("Messages/FreeText/Text");
         AllowAnonymous();
     }
 
