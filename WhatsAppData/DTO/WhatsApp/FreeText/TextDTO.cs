@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace WhatsAppData.DTO.WhatsApp.FreeText;
 
-namespace WhatsAppData.DTO.WhatsApp.FreeText;
-
-public class TextDTO : FreeTextDTO
+public class TextDTO
 {
-
+    public string PhoneNumber { get; set; }
+    public string Message { get; set; }
     public bool PreviewURL { get; set; } = true;
 }

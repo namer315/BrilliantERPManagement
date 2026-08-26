@@ -1,5 +1,6 @@
 ﻿using WhatsAppBusiness.WhatsApp;
 using WhatsAppData.DTO.Chat;
+using WhatsAppData.DTO.FreeText;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 
@@ -14,10 +15,15 @@ public class FreeTextFDM
         return await new MessageBE().Check24hSession(phone);
     }
 
-    public async Task<MessageResponseDTO> SendFreeTextMessage(FreeTextDTO req)
+    public async Task<ChatMessageDTO> SendDocumentMessage(DocumentDTO document)
     {
-        throw new NotImplementedException();
+        return await _be.SendDocumentMessage(document);
     }
+
+    //public async Task<MessageResponseDTO> SendFreeTextMessage(FreeTextDTO req)
+    //{
+    //    throw new NotImplementedException();
+    //}
 
     public async Task<ChatMessageDTO> SendTextMessage(TextDTO text)
     {

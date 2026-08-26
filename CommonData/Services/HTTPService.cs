@@ -66,4 +66,56 @@ public class HTTPService
 
         return await GetAsync(fullUrl , authenticationHeaderValue);
     }
+
+    /*public async Task<string> UploadMediaAsync(string url , byte[] fileBytes , string filename , string mimeType)
+    {
+        using var client = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post , url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer" , _accessToken);
+
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent("whatsapp") , "messaging_product");
+        form.Add(new StringContent(mimeType) , "type");
+        var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+        form.Add(fileContent , "file" , filename);
+
+        request.Content = form;
+        var response = await client.SendAsync(request);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine($"Status: {(int)response.StatusCode} {response.ReasonPhrase}");
+        Console.WriteLine(responseBody);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"HTTP request failed: {(int)response.StatusCode} {response.ReasonPhrase}\n{responseBody}");
+        }
+
+        return responseBody;
+    }*/
+
+    public async Task<HttpResponseMessage> UploadMediaAsync(string url , HttpContent httpContent , AuthenticationHeaderValue authenticationHeaderValue = null)
+    {
+        using var client = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post , url);
+
+        request.Headers.Authorization = authenticationHeaderValue;
+        request.Content = httpContent;
+        var response = await client.SendAsync(request);
+
+        return response;
+    }
+
+    public MultipartFormDataContent CreateMultipartFormDataContent(byte[] fileBytes , string filename , string mimeType, string content, string name)
+    {
+        var form = new MultipartFormDataContent();
+        form.Add(new StringContent(content) , name);
+        form.Add(new StringContent(mimeType) , "type");
+        var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+        form.Add(fileContent , "file" , filename);
+        return form;
+    }
 }

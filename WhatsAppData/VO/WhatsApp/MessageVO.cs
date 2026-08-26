@@ -21,6 +21,7 @@ public class MessageVO : EntityBaseWithCode
 
     public virtual TenantVO Tenant { get; set; }
 
+    public virtual MessageMediaVO Media { get; set; }
     //Types Relation
     public virtual MessageButtonVO Button { get; set; }
 

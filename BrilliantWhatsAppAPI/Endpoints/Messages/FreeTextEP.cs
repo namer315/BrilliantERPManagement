@@ -1,5 +1,6 @@
 ﻿using FastEndpoints;
 using WhatsAppData.DTO.Chat;
+using WhatsAppData.DTO.FreeText;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppFDM.WhatsApp;
 
@@ -46,6 +47,21 @@ public class TextEP : Endpoint<TextDTO , ChatMessageDTO>
     public override Task<ChatMessageDTO> ExecuteAsync(TextDTO req , CancellationToken ct)
     {
         return _fdm.SendTextMessage(req);
+    }
+}
+public class DocumentEP : Endpoint<DocumentDTO , ChatMessageDTO>
+{
+    FreeTextFDM _fdm = new FreeTextFDM();
+
+    public override void Configure()
+    {
+        Post("Messages/FreeText/Document");
+        AllowAnonymous();
+    }
+
+    public override Task<ChatMessageDTO> ExecuteAsync(DocumentDTO req , CancellationToken ct)
+    {
+        return _fdm.SendDocumentMessage(req);
     }
 }
 

@@ -86,5 +86,40 @@ public class WhatsAppBE
     }
 
 
+    // Local helper: upload raw bytes to WhatsApp and return the media ID.
+    public async Task<string> UploadMediaAsync(byte[] fileBytes , string fileName , string mimeType)
+    {
+        string url = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/media";
+        using MultipartFormDataContent formDataContent = _HTTPService.CreateMultipartFormDataContent(fileBytes , fileName , mimeType, "whatsapp" , "messaging_product");
+        HttpResponseMessage response = await _HTTPService.UploadMediaAsync(url , formDataContent , new AuthenticationHeaderValue("Bearer" , _accessToken));
+        string responseBody = await response.Content.ReadAsStringAsync();
 
+#if DEBUG
+        Console.WriteLine($"Status: {(int)response.StatusCode} {response.ReasonPhrase}");
+        Console.WriteLine(responseBody);
+#endif
+
+        if (!response.IsSuccessStatusCode)
+        {
+            //throw new HttpRequestException(
+            //    $"HTTP request failed: {(int)response.StatusCode} {response.ReasonPhrase}\n{responseBody}");
+            ErrorResponseDTO errorResponse = JsonSerializer.Deserialize<ErrorResponseDTO>(responseBody , _serializerOptions);
+            // throw new WhatsAppApiException(errorResponse?.Error);
+            throw new CommonData.Exceptions.AppException(
+                    errorResponse.Error.Message ?? "WhatsApp Cloud API returned an error." ,
+                    CommonData.Exceptions.AppErrorType.ExternalService ,
+                    code: errorResponse.Error.Code.ToString() ,
+                    httpStatusCode: (int?)response.StatusCode ,
+                    details: new Dictionary<string , object?>
+                    {
+                        ["type"] = errorResponse.Error.Type ,
+                        ["title"] = errorResponse.Error.Title ,
+                        ["fbtraceId"] = errorResponse.Error.FbTraceId ,
+                        ["href"] = errorResponse.Error.Href ,
+                        ["details"] = errorResponse.Error.ErrorData?.Details ,
+                    });
+        }
+        using var doc = JsonDocument.Parse(responseBody);
+        return doc.RootElement.GetProperty("id").GetString();
+    }
 }
