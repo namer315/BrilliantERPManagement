@@ -1,13 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using AutoMapper;
+using System.Text.Json.Serialization;
 using WhatsAppData.DTO.Common;
+using WhatsAppData.VO.WhatsApp;
 using static WhatsAppData.VO.WhatsApp.MessageStatusVO;
 using static WhatsAppData.VO.WhatsApp.MessageVO;
 
 namespace WhatsAppData.DTO.Chat;
 
-public class ChatMessageDTO
+public class ChatMessageDTO : DTOBase
 {
-    public Guid Id { get; set; }
     public string MessageId { get; set; }
 
     public WhatsAppMessageTypes Type { get; set; }
@@ -27,7 +28,10 @@ public class ChatMessageDTO
 
     public ContactDTO Contact { get; set; }
 
+    #region Releted
+    public ChatMessageMediaDTO Media { get; set; }
     public ChatMessageButtonDTO Button { get; set; }
+    #endregion
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum MessageDirections
@@ -36,3 +40,21 @@ public class ChatMessageDTO
         Outgoing
     }
 }
+public class ChatMessageProfile : Profile
+{
+    public ChatMessageProfile()
+    {
+        CreateMap<MessageVO , ChatMessageDTO>()
+            .ForMember(dest => dest.Id , opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.MessageId , opt => opt.MapFrom(src => src.MessageId))
+            .ForMember(dest => dest.MessageDirection , opt => opt.MapFrom(src => src.MessageDirection))
+            .ForMember(dest => dest.Body , opt => opt.MapFrom(src => src.Content))
+            .ForMember(dest => dest.Status , opt => opt.Ignore())
+
+            .ForMember(dest => dest.Contact , opt => opt.MapFrom(src => src.Media))
+            .ForMember(dest => dest.Media , opt => opt.MapFrom(src => src.Media))
+            .ForMember(dest => dest.Button , opt => opt.MapFrom(src => src.Button))
+            ;
+    }
+}
+

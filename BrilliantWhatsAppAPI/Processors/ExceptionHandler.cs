@@ -115,6 +115,20 @@ namespace BrilliantWhatsAppAPI.Processors
                     await response.WriteAsync(body, ct);
                 }
                 break;
+                case AutoMapper.AutoMapperMappingException ex:
+                {
+                    context.MarkExceptionAsHandled();
+
+                    var response = context.HttpContext.Response;
+
+                    response.StatusCode = StatusCodes.Status401Unauthorized;
+                    response.ContentType = "application/json";
+
+                    var body = JsonSerializer.Serialize(new { error = ex.Message });
+
+                    await response.WriteAsync(body , ct);
+                }
+                break;
                 case Exception ex:
                 {
                     context.MarkExceptionAsHandled();
