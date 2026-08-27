@@ -1,11 +1,9 @@
-﻿using Org.BouncyCastle.Ocsp;
-using WhatsAppData.DTO.Chat;
+﻿using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.FreeText;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.Extensions;
 using WhatsAppData.VO.WhatsApp;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace WhatsAppBusiness.WhatsApp;
 
@@ -69,7 +67,8 @@ public class FreeTextBE : WhatsAppBE
             {
                 message.Media = new MessageMediaVO();
                 message.Media.Message = message;
-                message.Media.File = freeText.Document.FileBytes;
+                message.Media.MediaFile = freeText.Document.FileBytes;
+                message.Media.FileName = freeText.Document.FileName;
                 message.Media.Type = MessageMediaVO.MediaTypes.Document;
 
                 var mimeType = ResolveMimeType(freeText.Document.MimeType , freeText.Document.FileName , isDocument: true);

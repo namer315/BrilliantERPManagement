@@ -51,7 +51,7 @@ public class ChatMessageProfile : Profile
             .ForMember(dest => dest.Body , opt => opt.MapFrom(src => src.Content))
             .ForMember(dest => dest.Status , opt => opt.Ignore())
 
-            .ForMember(dest => dest.Contact , opt => opt.MapFrom(src => src.Media))
+            //.ForMember(dest => dest.Contact , opt => opt.MapFrom(src => src.Cont))
             .ForMember(dest => dest.Media , opt => opt.MapFrom(src => src.Media))
             .ForMember(dest => dest.Button , opt => opt.MapFrom(src => src.Button))
             ;
