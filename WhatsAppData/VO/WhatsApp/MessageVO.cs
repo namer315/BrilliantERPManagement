@@ -1,7 +1,5 @@
 ﻿using CommonData.VO;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using static WhatsAppData.DTO.Chat.ChatMessageDTO;
 
 namespace WhatsAppData.VO.WhatsApp;
 
@@ -14,6 +12,8 @@ public class MessageVO : EntityBaseWithCode
     public virtual long? Timestamp { get; set; } = null;       // raw webhook timestamp (Unix seconds)
 
     public virtual WhatsAppMessageTypes Type { get; set; }
+
+    public virtual MessageDirections MessageDirection => Receiver is null ? MessageDirections.Incoming : MessageDirections.Outgoing;
 
     // Relationship
     public virtual ContactVO Sender { get; set; }
@@ -65,6 +65,7 @@ public class MessageMap : EntityWithDatesMapping<MessageVO>
         References(x => x.Sender).Column("Sender")/*.Not.Nullable()*/.Cascade.Merge();
 
         References(x => x.Button , "Button").Cascade.Merge();
+        References(x => x.Media , "Media").Cascade.Merge();
 
 
         HasMany(x => x.StatuseList).KeyColumn("Message")   // matches MessageStatusMap: References(x => x.Message).Column("Message")

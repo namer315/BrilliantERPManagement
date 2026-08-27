@@ -3,6 +3,7 @@ using System.Collections;
 using WhatsAppData.DAO;
 using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.Common;
+using WhatsAppData.Extensions;
 using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
 
@@ -35,20 +36,21 @@ public class ChatBE
         if(string.IsNullOrEmpty(chatHistorySH.MessageId) && messageList is { Count:> 0 })
             messageList = messageList.OrderBy(x => x.CreatedAt).ToList();
 
-        chatHistory.ChatMessagList = messageList.Select(x => new ChatMessageDTO()
-        {
-            Id = x.Id ,
-            MessageId = x.MessageId ,
-            Type = x.Type,
-            Timestamp = x.Timestamp,
-            MessageDirection = x.Sender?.WaId == chatHistorySH.WaId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
-            Body = x.Content,
-            Button = x.Button is not null ? new ChatMessageButtonDTO()
+        chatHistory.ChatMessagList = messageList.Select(x => x.MapTo<ChatMessageDTO>()
+            /*new ChatMessageDTO()
             {
-                Id = x.Button.Id ,
-                Text = x.Button.Text
-            } : null ,
-        })
+                Id = x.Id ,
+                MessageId = x.MessageId ,
+                Type = x.Type,
+                Timestamp = x.Timestamp,
+                MessageDirection = x.Sender?.WaId == chatHistorySH.WaId ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing,
+                Body = x.Content,
+                Button = x.Button is not null ? new ChatMessageButtonDTO()
+                {
+                    Id = x.Button.Id ,
+                    Text = x.Button.Text
+                } : null ,
+            }*/)
             .ToList();
         foreach (var batch in chatHistory.ChatMessagList.Select(x => x.Id).ToList().Chunk(1900))
         {

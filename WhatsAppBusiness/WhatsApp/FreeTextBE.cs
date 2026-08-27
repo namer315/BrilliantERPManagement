@@ -3,6 +3,7 @@ using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.FreeText;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.FreeText;
+using WhatsAppData.Extensions;
 using WhatsAppData.VO.WhatsApp;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -90,8 +91,9 @@ public class FreeTextBE : WhatsAppBE
         //message.UpdatedAt = DateTime.UtcNow;
 
         s = await _message.Persist(message , true);
+        ChatMessageDTO chatMessageDTO = message.MapTo<ChatMessageDTO>();
 
-        ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
+        /*ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
         chatMessageDTO.Id = message.Id;
         chatMessageDTO.MessageId = message.MessageId;
         //chatMessageDTO.Timestamp = message.Timestamp;
@@ -101,6 +103,16 @@ public class FreeTextBE : WhatsAppBE
         chatMessageDTO.Contact = new WhatsAppData.DTO.Common.ContactDTO();
         chatMessageDTO.Contact.Id = message.Receiver.Id;
         chatMessageDTO.Contact.WaId = message.Receiver.WaId;
+
+        switch (message.Type)
+        {
+            case MessageVO.WhatsAppMessageTypes.Document:
+                chatMessageDTO.Media = new ChatMessageMediaDTO();
+                chatMessageDTO.Media.Id = message.Media.Id;
+                chatMessageDTO.Media.Type = message.Media.Type;
+                chatMessageDTO.Media.File = message.Media.File;
+                break;
+        }*/
 
         return chatMessageDTO;
     }
