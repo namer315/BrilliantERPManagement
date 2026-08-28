@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using WhatsAppData.DTO.Common;
 using WhatsAppData.VO.WhatsApp;
+using static WhatsAppData.DTO.Chat.ChatMessageDTO;
 using static WhatsAppData.VO.WhatsApp.MessageStatusVO;
 using static WhatsAppData.VO.WhatsApp.MessageVO;
 
@@ -51,7 +52,7 @@ public class ChatMessageProfile : Profile
             .ForMember(dest => dest.Body , opt => opt.MapFrom(src => src.Content))
             .ForMember(dest => dest.Status , opt => opt.Ignore())
 
-            //.ForMember(dest => dest.Contact , opt => opt.MapFrom(src => src.Cont))
+            .ForMember(dest => dest.Contact , opt => opt.MapFrom(src => src.Contact))
             .ForMember(dest => dest.Media , opt => opt.MapFrom(src => src.Media))
             .ForMember(dest => dest.Button , opt => opt.MapFrom(src => src.Button))
             ;

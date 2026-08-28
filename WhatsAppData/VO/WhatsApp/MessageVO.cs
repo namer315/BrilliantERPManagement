@@ -18,6 +18,7 @@ public class MessageVO : EntityBaseWithCode
     // Relationship
     public virtual ContactVO Sender { get; set; }
     public virtual ContactVO Receiver { get; set; }
+    public virtual ContactVO Contact => MessageDirection == MessageDirections.Outgoing ? Receiver : Sender;
 
     public virtual TenantVO Tenant { get; set; }
 
