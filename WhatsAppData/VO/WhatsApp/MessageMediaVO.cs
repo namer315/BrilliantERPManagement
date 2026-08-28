@@ -16,7 +16,10 @@ public class MessageMediaVO : EntityBase
 
     public enum MediaTypes
     {
-        Document = 3
+        Image = 1,
+        Video = 2,
+        Document = 3,
+        Audio = 4
     }
 }
 public class MessageMediaMap : EntityWithIdMapping<MessageMediaVO>

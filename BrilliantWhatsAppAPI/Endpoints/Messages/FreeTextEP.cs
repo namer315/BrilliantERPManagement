@@ -7,34 +7,6 @@ using WhatsAppFDM.WhatsApp;
 namespace BrilliantWhatsAppAPI.Endpoints.Messages;
 
 //Session messages
-//public class FreeTextEP : Endpoint<FreeTextDTO , MessageResponseDTO>
-//{
-//    FreeTextFDM _fdm = new FreeTextFDM();
-//    public override void Configure()
-//    {
-//        Post("Send/FreeText");
-//        AllowAnonymous();
-//    }
-
-//    public override Task<MessageResponseDTO> ExecuteAsync(FreeTextDTO req , CancellationToken ct)
-//    {
-//        return _fdm.SendFreeTextMessage(req);
-//    }
-//}
-//public class GetLastMessageBySender : Endpoint<SessionCheckRequestDTO , SessionCheckResponseDTO>
-//{
-//    FreeTextFDM _fdm = new FreeTextFDM();
-//    public override void Configure()
-//    {
-//        Post("Send/FreeText/IsIn24hSession");
-//        AllowAnonymous();
-//    }
-
-//    public override Task<SessionCheckResponseDTO> ExecuteAsync(SessionCheckRequestDTO req , CancellationToken ct)
-//    {
-//        return _fdm.Check24hSession(req.PhoneNumber);
-//    }
-//}
 public class TextEP : Endpoint<TextDTO , ChatMessageDTO>
 {
     FreeTextFDM _fdm = new FreeTextFDM();
@@ -62,6 +34,53 @@ public class DocumentEP : Endpoint<DocumentDTO , ChatMessageDTO>
     public override Task<ChatMessageDTO> ExecuteAsync(DocumentDTO req , CancellationToken ct)
     {
         return _fdm.SendDocumentMessage(req);
+    }
+}
+public class PhotoEP : Endpoint<PhotoDTO , ChatMessageDTO>
+{
+    FreeTextFDM _fdm = new FreeTextFDM();
+
+    public override void Configure()
+    {
+        Post("Messages/FreeText/Photo");
+        AllowAnonymous();
+    }
+
+    public override Task<ChatMessageDTO> ExecuteAsync(PhotoDTO req , CancellationToken ct)
+    {
+        return _fdm.SendImageMessage(req);
+    }
+}
+
+public class VideoEP : Endpoint<VideoDTO , ChatMessageDTO>
+{
+    FreeTextFDM _fdm = new FreeTextFDM();
+
+    public override void Configure()
+    {
+        Post("Messages/FreeText/Video");
+        AllowAnonymous();
+    }
+
+    public override Task<ChatMessageDTO> ExecuteAsync(VideoDTO req , CancellationToken ct)
+    {
+        return _fdm.SendVideoMessage(req);
+    }
+}
+
+public class AudioEP : Endpoint<AudioDTO , ChatMessageDTO>
+{
+    FreeTextFDM _fdm = new FreeTextFDM();
+
+    public override void Configure()
+    {
+        Post("Messages/FreeText/Audio");
+        AllowAnonymous();
+    }
+
+    public override Task<ChatMessageDTO> ExecuteAsync(AudioDTO req , CancellationToken ct)
+    {
+        return _fdm.SendAudioMessage(req);
     }
 }
 

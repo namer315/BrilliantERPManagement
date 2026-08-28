@@ -10,16 +10,44 @@ namespace WhatsAppData.DTO.FreeText;
 public class FreeTextDTO
 {
     public WhatsAppMessageTypes MessageType { get; set; }
-
     public string Phone { get; set; }
     public string Body { get; set; }
 
     public TextDocumentDTO Text { get; set; }
+    public FreeTextImageDTO Image { get; set; }
+    public FreeTextVideoDTO Video { get; set; }
+    public FreeTextAudioDTO Audio { get; set; }
     public FreeTextDocumentDTO Document { get; set; }
 }
 public class TextDocumentDTO
 {
     public bool PreviewURL { get; set; } = true;
+}
+public class FreeTextImageDTO
+{
+    [JsonIgnore]
+    public string Id { get; set; }
+    public byte[] FileBytes { get; set; }
+    public string FileName { get; set; }
+    public string MimeType { get; set; }
+    public string Caption { get; set; }
+}
+public class FreeTextVideoDTO
+{
+    [JsonIgnore]
+    public string Id { get; set; }
+    public byte[] FileBytes { get; set; }
+    public string FileName { get; set; }
+    public string MimeType { get; set; }
+    public string Caption { get; set; }
+}
+public class FreeTextAudioDTO
+{
+    [JsonIgnore]
+    public string Id { get; set; }
+    public byte[] FileBytes { get; set; }
+    public string FileName { get; set; }
+    public string MimeType { get; set; }
 }
 public class FreeTextDocumentDTO
 {

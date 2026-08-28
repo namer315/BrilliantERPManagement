@@ -20,11 +20,20 @@ public class FreeTextFDM
         return await _be.SendDocumentMessage(document);
     }
 
-    //public async Task<MessageResponseDTO> SendFreeTextMessage(FreeTextDTO req)
-    //{
-    //    throw new NotImplementedException();
-    //}
+    public async Task<ChatMessageDTO> SendImageMessage(PhotoDTO photo)
+    {
+        return await _be.SendImageMessage(photo);
+    }
 
+    public async Task<ChatMessageDTO> SendVideoMessage(VideoDTO video)
+    {
+        return await _be.SendVideoMessage(video);
+    }
+
+    public async Task<ChatMessageDTO> SendAudioMessage(AudioDTO audio)
+    {
+        return await _be.SendAudioMessage(audio);
+    }
     public async Task<ChatMessageDTO> SendTextMessage(TextDTO text)
     {
         return await _be.SendTextMessage(text);

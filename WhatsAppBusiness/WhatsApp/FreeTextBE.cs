@@ -53,14 +53,51 @@ public class FreeTextBE : WhatsAppBE
         MessageVO message = await _message.GetNew(freeText.MessageType);
         message.Content = freeText.Body;
 
-
-        //string payload = _payloadBuilder.BuildTextMessagePayload(text);
         string payload = null;
-        switch(freeText.MessageType)
+        switch (freeText.MessageType)
         {
             case MessageVO.WhatsAppMessageTypes.Text:
             {
                 payload = _payloadBuilder.BuildTextMessagePayload(freeText);
+            }
+            break;
+            case MessageVO.WhatsAppMessageTypes.Image:
+            {
+                message.Media = new MessageMediaVO();
+                message.Media.Message = message;
+                message.Media.MediaFile = freeText.Image.FileBytes;
+                message.Media.FileName = freeText.Image.FileName;
+                message.Media.Type = MessageMediaVO.MediaTypes.Image;
+
+                var mimeType = ResolveMimeType(freeText.Image.MimeType , freeText.Image.FileName , isDocument: false);
+                freeText.Image.Id = await UploadMediaAsync(freeText.Image.FileBytes , freeText.Image.FileName , mimeType);
+                payload = _payloadBuilder.BuildImageMessagePayload(freeText);
+            }
+            break;
+            case MessageVO.WhatsAppMessageTypes.Video:
+            {
+                message.Media = new MessageMediaVO();
+                message.Media.Message = message;
+                message.Media.MediaFile = freeText.Video.FileBytes;
+                message.Media.FileName = freeText.Video.FileName;
+                message.Media.Type = MessageMediaVO.MediaTypes.Video;
+
+                var mimeType = ResolveMimeType(freeText.Video.MimeType , freeText.Video.FileName , isDocument: false);
+                freeText.Video.Id = await UploadMediaAsync(freeText.Video.FileBytes , freeText.Video.FileName , mimeType);
+                payload = _payloadBuilder.BuildVideoMessagePayload(freeText);
+            }
+            break;
+            case MessageVO.WhatsAppMessageTypes.Audio:
+            {
+                message.Media = new MessageMediaVO();
+                message.Media.Message = message;
+                message.Media.MediaFile = freeText.Audio.FileBytes;
+                message.Media.FileName = freeText.Audio.FileName;
+                message.Media.Type = MessageMediaVO.MediaTypes.Audio;
+
+                var mimeType = ResolveMimeType(freeText.Audio.MimeType , freeText.Audio.FileName , isDocument: false);
+                freeText.Audio.Id = await UploadMediaAsync(freeText.Audio.FileBytes , freeText.Audio.FileName , mimeType);
+                payload = _payloadBuilder.BuildAudioMessagePayload(freeText);
             }
             break;
             case MessageVO.WhatsAppMessageTypes.Document:
@@ -81,37 +118,14 @@ public class FreeTextBE : WhatsAppBE
 
         MessageResponseDTO messageResponseDTO = await PostAsync<MessageResponseDTO>("messages" , payload);
 
-        //message.Status = messageResponseDTO.Messages[0]?.MessageStatus;
         message.MessageId = messageResponseDTO.Messages[0]?.Id;
 
         message.Receiver = await _contact.GetContactBy(messageResponseDTO.Contacts[0]?.WaId);
         if (string.IsNullOrEmpty(message.Receiver.PhoneNumber))
             message.Receiver.PhoneNumber = messageResponseDTO.Contacts[0]?.Input;
-        //message.UpdatedAt = DateTime.UtcNow;
 
         s = await _message.Persist(message , true);
         ChatMessageDTO chatMessageDTO = message.MapTo<ChatMessageDTO>();
-
-        /*ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
-        chatMessageDTO.Id = message.Id;
-        chatMessageDTO.MessageId = message.MessageId;
-        //chatMessageDTO.Timestamp = message.Timestamp;
-        chatMessageDTO.MessageDirection = ChatMessageDTO.MessageDirections.Outgoing;
-        chatMessageDTO.Body = message.Content;
-
-        chatMessageDTO.Contact = new WhatsAppData.DTO.Common.ContactDTO();
-        chatMessageDTO.Contact.Id = message.Receiver.Id;
-        chatMessageDTO.Contact.WaId = message.Receiver.WaId;
-
-        switch (message.Type)
-        {
-            case MessageVO.WhatsAppMessageTypes.Document:
-                chatMessageDTO.Media = new ChatMessageMediaDTO();
-                chatMessageDTO.Media.Id = message.Media.Id;
-                chatMessageDTO.Media.Type = message.Media.Type;
-                chatMessageDTO.Media.File = message.Media.File;
-                break;
-        }*/
 
         return chatMessageDTO;
     }
@@ -132,6 +146,55 @@ public class FreeTextBE : WhatsAppBE
         return await SendServiceMessage(freeText);
     }
 
+    public async Task<ChatMessageDTO> SendImageMessage(PhotoDTO photo)
+    {
+        FreeTextDTO freeText = new FreeTextDTO();
+        freeText.MessageType = MessageVO.WhatsAppMessageTypes.Image;
+
+        freeText.Phone = photo.Phone;
+        freeText.Body = photo.Body;
+
+        freeText.Image = new FreeTextImageDTO();
+        freeText.Image.FileBytes = photo.FileBytes;
+        freeText.Image.FileName = photo.FileName;
+        freeText.Image.MimeType = photo.MimeType;
+        freeText.Image.Caption = photo.Caption;
+
+        return await SendServiceMessage(freeText);
+    }
+
+    public async Task<ChatMessageDTO> SendVideoMessage(VideoDTO video)
+    {
+        FreeTextDTO freeText = new FreeTextDTO();
+        freeText.MessageType = MessageVO.WhatsAppMessageTypes.Video;
+
+        freeText.Phone = video.Phone;
+        freeText.Body = video.Body;
+
+        freeText.Video = new FreeTextVideoDTO();
+        freeText.Video.FileBytes = video.FileBytes;
+        freeText.Video.FileName = video.FileName;
+        freeText.Video.MimeType = video.MimeType;
+        freeText.Video.Caption = video.Caption;
+
+        return await SendServiceMessage(freeText);
+    }
+
+    public async Task<ChatMessageDTO> SendAudioMessage(AudioDTO audio)
+    {
+        FreeTextDTO freeText = new FreeTextDTO();
+        freeText.MessageType = MessageVO.WhatsAppMessageTypes.Audio;
+
+        freeText.Phone = audio.Phone;
+        freeText.Body = audio.Body;
+
+        freeText.Audio = new FreeTextAudioDTO();
+        freeText.Audio.FileBytes = audio.FileBytes;
+        freeText.Audio.FileName = audio.FileName;
+        freeText.Audio.MimeType = audio.MimeType;
+
+        return await SendServiceMessage(freeText);
+    }
     // Pick a sensible MIME type when the caller did not supply one.
     // The MIME is inferred from the file extension. If it can't be determined,
     // an exception is thrown so the mismatch fails loudly *before* hitting the
