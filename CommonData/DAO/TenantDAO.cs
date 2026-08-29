@@ -5,6 +5,7 @@ using NHibernate;
 using NHibernate.Criterion;
 using NLog;
 using Polly;
+using System.Xml.Linq;
 
 namespace CommonData.DAO;
 
@@ -75,6 +76,46 @@ public class TenantDAO : RepositoryBase
             .SetMaxResults(1);
 
         return await q.UniqueResultAsync<TenantVO>();
+    }
+
+    public bool IsBrilliantTokenExist(TenantVO tenant)
+    {
+        if (string.IsNullOrWhiteSpace(tenant.Token))
+            return true;
+
+        IQuery q = Session.CreateQuery(@"
+            SELECT 1
+            FROM TenantVO AS tenant
+            WHERE tenant.Token = :token
+                 AND tenant.Id<> :id
+            ")
+            .SetParameter("token" , tenant.Token.Trim())
+            .SetParameter("id" , tenant.Id)
+            .SetMaxResults(1);
+
+        var result = q.UniqueResult();
+
+        return result is not null;
+    }
+
+    public bool IsNameExist(TenantVO tenant)
+    {
+        if (string.IsNullOrWhiteSpace(tenant.Name))
+            return true;
+
+        IQuery q = Session.CreateQuery(@"
+            SELECT 1
+            FROM TenantVO AS tenant
+            WHERE tenant.Name = :name
+                AND tenant.Id <> :id
+            ")
+            .SetParameter("name" , tenant.Name.Trim())
+            .SetParameter("id" , tenant.Id)
+            .SetMaxResults(1);
+
+        var result = q.UniqueResult();
+
+        return result is not null;
     }
 
     /// <summary>

@@ -13,6 +13,7 @@
     <Project Path="CommonFDM/CommonFDM.csproj" Id="0176dde0-378c-481f-ada5-3ad5927a913a" />
   </Folder>
   <Folder Name="/WhatsApp/">
+    <Project Path="BrilliantWhatsAppWeb/BrilliantWhatsAppWeb.csproj" Id="d5db014a-4e2c-4160-bd9f-41b3ae98007b" />
     <Project Path="WhatsAppBusiness/WhatsAppBusiness.csproj" Id="3892c8db-5ec6-450a-ac46-021d6c661483" />
     <Project Path="WhatsAppData/WhatsAppData.csproj" Id="26b8fbab-183b-4a65-8c48-a24054baae87" />
     <Project Path="WhatsAppDTO/WhatsAppDTO.csproj" Id="a00487ba-ac68-47a9-9563-5712425aab5b" />
