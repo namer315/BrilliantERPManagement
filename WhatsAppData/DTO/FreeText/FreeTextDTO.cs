@@ -30,7 +30,7 @@ public class FreeTextImageDTO
     public byte[] FileBytes { get; set; }
     public string FileName { get; set; }
     public string MimeType { get; set; }
-    public string Caption { get; set; }
+    //public string Caption { get; set; }
 }
 public class FreeTextVideoDTO
 {
@@ -39,7 +39,7 @@ public class FreeTextVideoDTO
     public byte[] FileBytes { get; set; }
     public string FileName { get; set; }
     public string MimeType { get; set; }
-    public string Caption { get; set; }
+    //public string Caption { get; set; }
 }
 public class FreeTextAudioDTO
 {

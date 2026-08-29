@@ -158,7 +158,7 @@ public class FreeTextBE : WhatsAppBE
         freeText.Image.FileBytes = photo.FileBytes;
         freeText.Image.FileName = photo.FileName;
         freeText.Image.MimeType = photo.MimeType;
-        freeText.Image.Caption = photo.Caption;
+        //freeText.Image.Caption = photo.Caption;
 
         return await SendServiceMessage(freeText);
     }
@@ -175,7 +175,7 @@ public class FreeTextBE : WhatsAppBE
         freeText.Video.FileBytes = video.FileBytes;
         freeText.Video.FileName = video.FileName;
         freeText.Video.MimeType = video.MimeType;
-        freeText.Video.Caption = video.Caption;
+        //freeText.Video.Caption = video.Caption;
 
         return await SendServiceMessage(freeText);
     }
