@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using WhatsAppData.DTO.Chat;
+using WhatsAppData.DTO.Common;
 
 namespace WhatsAppData.DTO;
 
@@ -13,6 +14,7 @@ public class DTOHelper
         cfg.AddProfile<ChatMessageProfile>();
         cfg.AddProfile<ChatMessageMediaProfile>();
         cfg.AddProfile<ChatMessageButtonProfile>();
+        cfg.AddProfile<ContactProfile>();
     } , loggerFactory).CreateMapper();
 
 }
