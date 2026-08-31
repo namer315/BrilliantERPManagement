@@ -1,5 +1,6 @@
 using BrilliantWhatsAppWeb.Components;
 using CommonData.Session;
+using WhatsAppData.VO.WhatsApp;
 
 public partial class Program
 {
@@ -11,6 +12,11 @@ public partial class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
 
+        // Load the WhatsAppData assembly BEFORE NHibernate builds its persistence model.
+        // MappingCompiler scans already-loaded assemblies; without this, WhatsAppData isn't
+        // loaded yet and WhatsAppTenantMap is skipped → "WhatsAppTenantVO is not mapped".
+        _ = typeof(WhatsAppTenantVO).Assembly;
+        
         //connect to the database before starting the application
         await Connection.DataBaseConnect();
         var app = builder.Build();
