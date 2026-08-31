@@ -24,7 +24,7 @@ public class ContactMap : EntityWithIdMapping<ContactVO>
         //Map(x => x.Name).Not.Nullable();
 
 
-        References(x => x.Contact).Cascade.Merge();
+        References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.Merge();
     }
 }
 

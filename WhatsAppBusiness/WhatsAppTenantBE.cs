@@ -1,7 +1,8 @@
 using CommonBusiness;
+using CommonData.VO;
 using WhatsAppBusiness.WhatsApp;
 using WhatsAppData.DAO;
-using WhatsAppData.VO;
+using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness;
 
@@ -25,10 +26,10 @@ public class WhatsAppTenantBE
         tenantBE.Validation(whatsAppTenant.Tenant);
         contactBE.Persist(whatsAppTenant.Contact);
 
-        if (string.IsNullOrEmpty(whatsAppTenant.WABusinessAccountId))
-            throw new ArgumentException("The WhatsApp Business Account ID is required and must not be empty. Please provide a valid Business Account ID before proceeding.", nameof(whatsAppTenant.WABusinessAccountId));
-        if (string.IsNullOrEmpty(whatsAppTenant.WAAccessToken))
-            throw new ArgumentException("The WhatsApp Access Token is required and must not be empty. Please provide a valid Access Token to authenticate with the WhatsApp Business API.", nameof(whatsAppTenant.WAAccessToken));
+        if (string.IsNullOrEmpty(whatsAppTenant.WhatsAppCredentials.WABusinessAccountId))
+            throw new ArgumentException("The WhatsApp Business Account ID is required and must not be empty. Please provide a valid Business Account ID before proceeding.", nameof(whatsAppTenant.WhatsAppCredentials.WABusinessAccountId));
+        if (string.IsNullOrEmpty(whatsAppTenant.WhatsAppCredentials.WAAccessToken))
+            throw new ArgumentException("The WhatsApp Access Token is required and must not be empty. Please provide a valid Access Token to authenticate with the WhatsApp Business API.", nameof(whatsAppTenant.WhatsAppCredentials.WAAccessToken));
         if (string.IsNullOrEmpty(whatsAppTenant.WAPhoneNumberId))
             throw new ArgumentException("The WhatsApp Phone Number ID is required and must not be empty. Please provide the Phone Number ID associated with the registered WhatsApp Business account.", nameof(whatsAppTenant.WAPhoneNumberId));
 
@@ -42,21 +43,20 @@ public class WhatsAppTenantBE
         foreach (object[] item in rawData)
         {
             int index = 0;
-            var id = (Guid)item[index++];
-            var accountId = Convert.ToString(item[index++]);
-            var phoneId = Convert.ToString(item[index++]);
-            var tenantName = item[index++];
-            var contactName = item[index++];
-            var contactPhone = item[index++];
+            WhatsAppTenantVO whatsAppTenant = new WhatsAppTenantVO();
+            whatsAppTenant.Id = (Guid)item[index++];
+            whatsAppTenant.WhatsAppCredentials = new WhatsAppCredentialsVO();
+            whatsAppTenant.WhatsAppCredentials.WABusinessAccountId = Convert.ToString(item[index++]);
+            whatsAppTenant.WAPhoneNumberId = Convert.ToString(item[index++]);
 
-            tenants.Add(new WhatsAppTenantVO
-            {
-                Id = id,
-                WABusinessAccountId = accountId,
-                WAPhoneNumberId = phoneId,
-                Tenant = tenantName != null ? new CommonData.VO.TenantVO { Name = Convert.ToString(tenantName) } : null,
-                Contact = contactName != null ? new WhatsAppData.VO.WhatsApp.ContactVO { Name = Convert.ToString(contactName), PhoneNumber = Convert.ToString(contactPhone) } : null
-            });
+            whatsAppTenant.Tenant = new TenantVO();
+            whatsAppTenant.Tenant.Name = Convert.ToString(item[index++]);
+
+            whatsAppTenant.Contact = new ContactVO();
+            //whatsAppTenant.Contact.Name = Convert.ToString(item[index++]);
+            whatsAppTenant.Contact.WaId = Convert.ToString(item[index++]);
+
+            tenants.Add(whatsAppTenant);
         }
         
         return tenants;
@@ -65,5 +65,41 @@ public class WhatsAppTenantBE
     public async Task<WhatsAppTenantVO> GetWhatsAppTenantById(Guid id)
     {
         return await _dao.GetByIdAsync(id);
+    }
+
+    public async Task DisableWhatsAppTenant(Guid id)
+    {
+        var tenant = await _dao.GetByIdAsync(id);
+        if (tenant?.Tenant == null)
+            throw new ArgumentException("WhatsApp Tenant not found.", nameof(id));
+
+        tenant.Tenant.Active = false;
+        await _dao.PersistAsync(tenant);
+    }
+
+    public async Task EnableWhatsAppTenant(Guid id)
+    {
+        var tenant = await _dao.GetByIdAsync(id);
+        if (tenant?.Tenant == null)
+            throw new ArgumentException("WhatsApp Tenant not found.", nameof(id));
+
+        tenant.Tenant.Active = true;
+        await _dao.PersistAsync(tenant);
+    }
+
+    public async Task<IList<WhatsAppTenantVO>> GetAllActiveWhatsAppTenants()
+    {
+        return await _dao.GetAllActiveAsync();
+    }
+
+    public async Task<IList<WhatsAppTenantVO>> GetAllInactiveWhatsAppTenants()
+    {
+        return await _dao.GetAllInactiveAsync();
+    }
+
+    public async Task SaveOrUpdateTenet(WhatsAppTenantVO whatsAppTenant)
+    {
+        Validation(whatsAppTenant);
+        await _dao.PersistAsync(whatsAppTenant);
     }
 }
