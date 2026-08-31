@@ -5,6 +5,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonData\CommonData.csproj" />
+    <ProjectReference Include="..\CommonFDM\CommonFDM.csproj" />
+    <ProjectReference Include="..\WhatsAppData\WhatsAppData.csproj" />
+    <ProjectReference Include="..\WhatsAppFDM\WhatsAppFDM.csproj" />
+  </ItemGroup>
 
 </Project>

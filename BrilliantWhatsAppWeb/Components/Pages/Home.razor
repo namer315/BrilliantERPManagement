@@ -1,7 +1,35 @@
 ﻿@page "/"
+@* @rendermode InteractiveServer *@
+@using WhatsAppBusiness
+@inject NavigationManager NavManager
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="page-container">
+    <div class="page-header luxury-gradient">
+        <div>
+            <h1 class="page-title">Welcome to Brilliant WhatsApp Admin</h1>
+            <p class="page-subtitle">Quick overview and actions</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" @onclick="@(() => NavManager.NavigateTo("/whatsapp-tenants"))">Manage WhatsApp Tenants</button>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <div class="status-cards" style="margin-top:1.5rem;">
+        <div class="card status-card active">
+            <div class="card-icon">✓</div>
+            <div class="card-content">
+                <p class="card-label">Active Tenants</p>
+                <p class="card-value">--</p>
+            </div>
+        </div>
+        <div class="card status-card inactive">
+            <div class="card-icon">○</div>
+            <div class="card-content">
+                <p class="card-label">Disabled Tenants</p>
+                <p class="card-value">--</p>
+            </div>
+        </div>
+    </div>
+</div>

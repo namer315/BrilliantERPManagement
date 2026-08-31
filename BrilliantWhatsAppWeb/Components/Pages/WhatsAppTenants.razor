@@ -1,0 +1,360 @@
+@page "/whatsapp-tenants"
+@using WhatsAppData.VO
+@using WhatsAppData.VO.WhatsApp
+@using WhatsAppBusiness
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<PageTitle>WhatsApp Tenants</PageTitle>
+
+<div class="page-container">
+    <!-- Premium Header -->
+    <div class="page-header luxury-gradient">
+        <div class="header-content">
+            <h1 class="page-title">
+                <span class="icon">📱</span> WhatsApp Tenants
+            </h1>
+            <p class="page-subtitle">Manage your WhatsApp business accounts and integrations</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" @onclick="DisableSelected" disabled="@(selectedIds.Count == 0)">Disable Selected</button>
+            <button class="btn btn-primary btn-lg" @onclick="() => NavigateToCreate()">
+                <span class="icon">+</span> New Tenant
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-bar">
+        <div class="search-input-group">
+            <input type="text" 
+                   placeholder="Search by tenant name, contact, or phone..." 
+                   @bind="searchQuery" 
+                   @onkeyup="OnSearchKeyUp"
+                   class="form-control search-input" />
+            <span class="search-icon">🔍</span>
+        </div>
+        <div class="filter-group">
+            <select value="@selectedStatus" @onchange="OnStatusFilterChange" class="form-control filter-select">
+                <option value="0">All Tenants</option>
+                <option value="1">Active</option>
+                <option value="2">Inactive</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="status-cards">
+        <div class="card status-card active">
+            <div class="card-icon">✓</div>
+            <div class="card-content">
+                <p class="card-label">Active Tenants</p>
+                <p class="card-value">@activeTenantCount</p>
+            </div>
+        </div>
+        <div class="card status-card inactive">
+            <div class="card-icon">○</div>
+            <div class="card-content">
+                <p class="card-label">Disabled Tenants</p>
+                <p class="card-value">@inactiveTenantCount</p>
+            </div>
+        </div>
+        <div class="card status-card total">
+            <div class="card-icon">≡</div>
+            <div class="card-content">
+                <p class="card-label">Total Tenants</p>
+                <p class="card-value">@totalTenantCount</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tenant List -->
+    <div class="tenant-list">
+        @if (tenants == null)
+        {
+            <div class="loading-spinner">Loading tenants...</div>
+        }
+        else if (!tenants.Any())
+        {
+            <div class="empty-state">
+                <p class="empty-icon">📭</p>
+                <p class="empty-text">No tenants found</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var tenant in tenants)
+            {
+                <div class="tenant-card">
+                    <div class="card-header">
+                        <div class="tenant-info">
+                            <h3 class="tenant-name">@tenant.Tenant?.Name</h3>
+                            <p class="contact-name">📞 @tenant.Contact?.Name</p>
+                        </div>
+                        <div class="status-badge @(tenant.Tenant?.Active == true ? "active" : "inactive")">
+                            @(tenant.Tenant?.Active == true ? "Active" : "Inactive")
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="account-id">
+                            <span class="label">Business Account:</span>
+                            <span class="value">@tenant.WhatsAppCredentials.WABusinessAccountId</span>
+                        </p>
+                        <p class="phone-id">
+                            <span class="label">Phone ID:</span>
+                            <span class="value">@tenant.WAPhoneNumberId</span>
+                        </p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-action edit" @onclick="() => NavigateToEdit(tenant.Id)" title="Edit">✎ Edit</button>
+                        @if (tenant.Tenant?.Active == true)
+                        {
+                            <button class="btn-action disable" @onclick="() => ShowDisableModal(tenant.Id)" title="Disable">⊗ Disable</button>
+                        }
+                        else
+                        {
+                            <button class="btn-action enable" @onclick="() => EnableTenant(tenant.Id)" title="Enable">✓ Enable</button>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Disable Confirmation Modal -->
+@if (showDisableModal)
+{
+    <div class="modal-overlay" @onclick="CloseDisableModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Disable Tenant</h2>
+                <button class="btn-close" @onclick="CloseDisableModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to disable this WhatsApp tenant? It will no longer be active but can be re-enabled later.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDisableModal">Cancel</button>
+                <button class="btn btn-danger" @onclick="() => ConfirmDisableTenant(tenantToDisable)">Confirm Disable</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Notification Toast -->
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="toast @notificationClass">
+        @notificationMessage
+    </div>
+}
+
+@code {
+    private List<WhatsAppTenantVO>? tenants;
+    private WhatsAppTenantBE whatsAppTenantBE = new();
+    private string searchQuery = "";
+    private int selectedStatus = 0; // 0 = All, 1 = Active, 2 = Inactive
+    private int activeTenantCount = 0;
+    private int inactiveTenantCount = 0;
+    private int totalTenantCount = 0;
+    private bool showDisableModal = false;
+    private Guid tenantToDisable = Guid.Empty;
+    private string notificationMessage = "";
+    private string notificationClass = "";
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private List<WhatsAppTenantVO> pagedTenants = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTenants();
+    }
+
+    private async Task LoadTenants()
+    {
+        try
+        {
+            // Use BE to fetch all tenants (both active and inactive)
+            tenants = (List<WhatsAppTenantVO>)(await whatsAppTenantBE.GetAllWhatsAppTenants());
+            UpdateCounts();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Error loading tenants: {ex.Message}", "error");
+        }
+    }
+
+    private void UpdateCounts()
+    {
+        activeTenantCount = tenants?.Count(t => t.Tenant?.Active == true) ?? 0;
+        inactiveTenantCount = tenants?.Count(t => t.Tenant?.Active == false) ?? 0;
+        totalTenantCount = tenants?.Count ?? 0;
+    }
+
+    private void ApplyFilters()
+    {
+        if (tenants == null) return;
+
+        var filtered = tenants.AsEnumerable();
+
+        // Status filter
+        if (selectedStatus == 1)
+            filtered = filtered.Where(t => t.Tenant?.Active == true);
+        else if (selectedStatus == 2)
+            filtered = filtered.Where(t => t.Tenant?.Active == false);
+
+        // Search filter
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            var query = searchQuery.ToLower();
+            filtered = filtered.Where(t =>
+                t.Tenant?.Name?.ToLower().Contains(query) == true ||
+                t.Contact?.Name?.ToLower().Contains(query) == true ||
+                t.Contact?.PhoneNumber?.ToLower().Contains(query) == true
+            );
+        }
+
+        var filteredList = filtered.ToList();
+        // pagination
+        totalTenantCount = filteredList.Count;
+        UpdateCounts();
+        pagedTenants = filteredList.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    private void NextPage()
+    {
+        pageNumber++;
+        ApplyFilters();
+    }
+
+    private void PrevPage()
+    {
+        if (pageNumber > 1) pageNumber--;
+        ApplyFilters();
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        await LoadTenants();
+    }
+
+    private async Task OnStatusFilterChange(ChangeEventArgs e)
+    {
+        await LoadTenants();
+    }
+
+    private void NavigateToCreate()
+    {
+        NavManager.NavigateTo("/whatsapp-tenants/new");
+    }
+
+    private void NavigateToEdit(Guid id)
+    {
+        NavManager.NavigateTo($"/whatsapp-tenants/{id}");
+    }
+
+    private void ShowDisableModal(Guid id)
+    {
+        tenantToDisable = id;
+        showDisableModal = true;
+    }
+
+    private HashSet<Guid> selectedIds = new();
+
+    private void OnSelectTenant(ChangeEventArgs e, Guid id)
+    {
+        bool isChecked = e?.Value?.ToString() == "on" || e?.Value?.ToString() == "true";
+        if (isChecked) selectedIds.Add(id);
+        else selectedIds.Remove(id);
+    }
+
+    private async Task DisableSelected()
+    {
+        if (!selectedIds.Any()) return;
+        try
+        {
+            foreach (var id in selectedIds.ToList())
+            {
+                await whatsAppTenantBE.DisableWhatsAppTenant(id);
+            }
+            selectedIds.Clear();
+            ShowNotification("Selected tenants disabled", "success");
+            await LoadTenants();
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Error disabling selected: {ex.Message}", "error");
+        }
+    }
+
+    private void CloseDisableModal()
+    {
+        showDisableModal = false;
+        tenantToDisable = Guid.Empty;
+    }
+
+    private async Task ConfirmDisableTenant(Guid id)
+    {
+        bool? previous = null;
+        try
+        {
+            // optimistic UI: mark disabled locally first
+            var local = tenants?.FirstOrDefault(t => t.Id == id);
+            previous = local?.Tenant?.Active;
+            if (local?.Tenant != null) local.Tenant.Active = false;
+            StateHasChanged();
+
+            await whatsAppTenantBE.DisableWhatsAppTenant(id);
+            ShowNotification("Tenant disabled successfully", "success");
+            CloseDisableModal();
+            await LoadTenants();
+        }
+        catch (Exception ex)
+        {
+            // rollback optimistic change
+            var local = tenants?.FirstOrDefault(t => t.Id == id);
+            if (local?.Tenant != null) local.Tenant.Active = previous ?? true;
+            ShowNotification($"Error disabling tenant: {ex.Message}", "error");
+        }
+    }
+
+    private async Task EnableTenant(Guid id)
+    {
+
+        bool? previous = null;
+        try
+        {
+            // optimistic UI
+            var local = tenants?.FirstOrDefault(t => t.Id == id);
+            previous = local?.Tenant?.Active;
+            if (local?.Tenant != null) local.Tenant.Active = true;
+            StateHasChanged();
+
+            await whatsAppTenantBE.EnableWhatsAppTenant(id);
+            ShowNotification("Tenant enabled successfully", "success");
+            await LoadTenants();
+        }
+        catch (Exception ex)
+        {
+            var local = tenants?.FirstOrDefault(t => t.Id == id);
+            if (local?.Tenant != null) local.Tenant.Active = previous ?? false;
+            ShowNotification($"Error enabling tenant: {ex.Message}", "error");
+        }
+    }
+
+    private void ShowNotification(string message, string type)
+    {
+        notificationMessage = message;
+        notificationClass = type == "error" ? "toast-error" : "toast-success";
+        StateHasChanged();
+
+        Task.Delay(4000).ContinueWith(_ =>
+        {
+            notificationMessage = "";
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}
