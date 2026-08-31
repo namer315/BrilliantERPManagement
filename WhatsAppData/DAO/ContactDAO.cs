@@ -42,4 +42,17 @@ public class ContactDAO : RepositoryBase
 
         return await query.ListAsync<ContactVO>();
     }
+
+    public async Task<ContactVO> GetContactByPhoneNumberId(string phoneNumberId)
+    {
+        IQuery q = Session.CreateQuery(@"
+			FROM ContactVO as contact
+			WHERE
+			    contact.PhoneNumberId = :phoneNumberId
+			")
+             .SetParameter("phoneNumberId" , phoneNumberId)
+             .SetMaxResults(1);
+
+        return await q.UniqueResultAsync<ContactVO>();
+    }
 }

@@ -107,10 +107,10 @@
             {
                 formData.TenantName = currentVO.Tenant?.Name ?? "";
                 formData.ContactName = currentVO.Contact?.Name ?? "";
-                formData.ContactPhone = currentVO.Contact?.PhoneNumber ?? "";
+                formData.ContactPhone = currentVO.Contact?.Phone ?? "";
                 formData.WABusinessAccountId = currentVO.WhatsAppCredentials.WABusinessAccountId ?? "";
                 formData.WAAccessToken = currentVO.WhatsAppCredentials.WAAccessToken ?? "";
-                formData.WAPhoneNumberId = currentVO.WAPhoneNumberId ?? "";
+                formData.WAPhoneNumberId = currentVO.Contact.PhoneNumberId ?? "";
             }
         }
     }
@@ -129,9 +129,12 @@
                         WABusinessAccountId = formData.WABusinessAccountId ,
                         WAAccessToken = formData.WAAccessToken
                     } ,
-                    WAPhoneNumberId = formData.WAPhoneNumberId,
+
                     Tenant = new CommonData.VO.TenantVO { Name = formData.TenantName, Active = true },
-                    Contact = new WhatsAppData.VO.WhatsApp.ContactVO { Name = formData.ContactName, PhoneNumber = formData.ContactPhone }
+                    Contact = new ContactVO { 
+                        Phone = formData.ContactPhone,
+                        PhoneNumberId = formData.WAPhoneNumberId
+                    }
                 };
 
                 await whatsAppTenantBE.CreateNewTenet(vo);
@@ -142,12 +145,14 @@
                 {
                     currentVO.WhatsAppCredentials.WABusinessAccountId = formData.WABusinessAccountId;
                     currentVO.WhatsAppCredentials.WAAccessToken = formData.WAAccessToken;
-                    currentVO.WAPhoneNumberId = formData.WAPhoneNumberId;
-                    if (currentVO.Tenant == null) currentVO.Tenant = new CommonData.VO.TenantVO();
+                    
+                    currentVO.Tenant ??= new CommonData.VO.TenantVO();
                     currentVO.Tenant.Name = formData.TenantName;
-                    if (currentVO.Contact == null) currentVO.Contact = new WhatsAppData.VO.WhatsApp.ContactVO();
+                    
+                    currentVO.Contact ??= new WhatsAppData.VO.WhatsApp.ContactVO();
                     currentVO.Contact.Name = formData.ContactName;
-                    currentVO.Contact.PhoneNumber = formData.ContactPhone;
+                    currentVO.Contact.Phone = formData.ContactPhone;
+                    currentVO.Contact.PhoneNumberId = formData.WAPhoneNumberId;
 
                     await whatsAppTenantBE.SaveOrUpdateTenet(currentVO);
                 }

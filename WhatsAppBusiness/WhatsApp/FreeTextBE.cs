@@ -27,8 +27,8 @@ public class FreeTextBE : WhatsAppBE
         message.MessageId = messageResponseDTO.Messages[0]?.Id;
 
         message.Receiver = await _contact.GetContactBy(messageResponseDTO.Contacts[0]?.WaId);
-        if (string.IsNullOrEmpty(message.Receiver.PhoneNumber))
-            message.Receiver.PhoneNumber = messageResponseDTO.Contacts[0]?.Input;
+        if (string.IsNullOrEmpty(message.Receiver.Phone))
+            message.Receiver.Phone = messageResponseDTO.Contacts[0]?.Input;
         //message.UpdatedAt = DateTime.UtcNow;
 
         s = await _message.Persist(message, true);
@@ -121,8 +121,8 @@ public class FreeTextBE : WhatsAppBE
         message.MessageId = messageResponseDTO.Messages[0]?.Id;
 
         message.Receiver = await _contact.GetContactBy(messageResponseDTO.Contacts[0]?.WaId);
-        if (string.IsNullOrEmpty(message.Receiver.PhoneNumber))
-            message.Receiver.PhoneNumber = messageResponseDTO.Contacts[0]?.Input;
+        if (string.IsNullOrEmpty(message.Receiver.Phone))
+            message.Receiver.Phone = messageResponseDTO.Contacts[0]?.Input;
 
         s = await _message.Persist(message , true);
         ChatMessageDTO chatMessageDTO = message.MapTo<ChatMessageDTO>();

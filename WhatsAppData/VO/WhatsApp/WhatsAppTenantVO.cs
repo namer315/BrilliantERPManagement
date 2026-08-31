@@ -6,7 +6,7 @@ public class WhatsAppTenantVO : EntityBase
 {
     //    public string WABusinessAccountId { get; set; }
     //    public string WAAccessToken { get; set; }
-    public virtual string WAPhoneNumberId { get; set; }
+    //public virtual string WAPhoneNumberId { get; set; }
 
     public virtual WhatsAppCredentialsVO WhatsAppCredentials { get; set; }
     public virtual ContactVO Contact { get; set; }
@@ -19,7 +19,7 @@ public class WhatsAppTenantMap : EntityWithCreatedAtMapping<WhatsAppTenantVO>
     {
         //Map(x => x.WABusinessAccountId);
         //Map(x => x.WAAccessToken);
-        Map(x => x.WAPhoneNumberId);
+        //Map(x => x.WAPhoneNumberId);
 
 
         References(x => x.Contact, "Contact").Cascade.Merge();

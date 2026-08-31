@@ -7,10 +7,14 @@ namespace WhatsAppData.DAO;
 
 public class WhatsAppTenantDAO : RepositoryBase
 {
-     public async Task<IList> GetAllAsync()
+    public async Task<IList> GetAllAsync()
     {
         IQuery q = Session.CreateQuery(@"
-            SELECT whatsappTenant.Id, whatsapp.WABusinessAccountId, whatsappTenant.WAPhoneNumberId, tenant.Name, contact.WaId
+            SELECT 
+                whatsappTenant.Id,
+                whatsapp.WABusinessAccountId,
+                tenant.Name, 
+                contact.WaId , contact.PhoneNumberId
             FROM WhatsAppTenantVO as whatsappTenant
             LEFT JOIN whatsappTenant.Tenant as tenant
             LEFT JOIN whatsappTenant.Contact as contact
@@ -56,7 +60,7 @@ public class WhatsAppTenantDAO : RepositoryBase
             WHERE whatsappTenant.Id = :id
             AND whatsappTenant.Tenant.Active = true
         ")
-        .SetParameter("id", id)
+        .SetParameter("id" , id)
         .SetMaxResults(1);
 
         return await q.UniqueResultAsync<WhatsAppTenantVO>();

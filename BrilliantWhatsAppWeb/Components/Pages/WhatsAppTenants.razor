@@ -103,7 +103,7 @@
                         </p>
                         <p class="phone-id">
                             <span class="label">Phone ID:</span>
-                            <span class="value">@tenant.WAPhoneNumberId</span>
+                            <span class="value">@tenant.Contact.PhoneNumberId</span>
                         </p>
                     </div>
                     <div class="card-actions">
@@ -213,7 +213,7 @@
             filtered = filtered.Where(t =>
                 t.Tenant?.Name?.ToLower().Contains(query) == true ||
                 t.Contact?.Name?.ToLower().Contains(query) == true ||
-                t.Contact?.PhoneNumber?.ToLower().Contains(query) == true
+                t.Contact?.Phone?.ToLower().Contains(query) == true
             );
         }
 
