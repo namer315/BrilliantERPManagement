@@ -89,12 +89,12 @@ public class WhatsAppTenantBE
 
     public async Task<IList<WhatsAppTenantVO>> GetAllActiveWhatsAppTenants()
     {
-        return await _dao.GetAllActiveAsync();
+        return await _dao.GetByActiveAsync(true);
     }
 
     public async Task<IList<WhatsAppTenantVO>> GetAllInactiveWhatsAppTenants()
     {
-        return await _dao.GetAllInactiveAsync();
+        return await _dao.GetByActiveAsync(false);
     }
 
     public async Task SaveOrUpdateTenet(WhatsAppTenantVO whatsAppTenant)

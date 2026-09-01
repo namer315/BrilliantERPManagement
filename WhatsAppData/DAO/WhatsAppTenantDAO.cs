@@ -35,21 +35,13 @@ public class WhatsAppTenantDAO : RepositoryBase
         return await q.UniqueResultAsync<WhatsAppTenantVO>();
     }
 
-    public async Task<IList<WhatsAppTenantVO>> GetAllActiveAsync()
+    public async Task<IList<WhatsAppTenantVO>> GetByActiveAsync(bool active)
     {
         IQuery q = Session.CreateQuery(@"
             FROM WhatsAppTenantVO as whatsappTenant
-            WHERE whatsappTenant.Tenant.Active = true
-        ");
-        return await q.ListAsync<WhatsAppTenantVO>();
-    }
-
-    public async Task<IList<WhatsAppTenantVO>> GetAllInactiveAsync()
-    {
-        IQuery q = Session.CreateQuery(@"
-            FROM WhatsAppTenantVO as whatsappTenant
-            WHERE whatsappTenant.Tenant.Active = false
-        ");
+            WHERE whatsappTenant.Tenant.Active = :active
+        ")
+        .SetParameter("active" , active);
         return await q.ListAsync<WhatsAppTenantVO>();
     }
 

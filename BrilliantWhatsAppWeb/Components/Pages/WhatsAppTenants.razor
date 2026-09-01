@@ -1,4 +1,4 @@
-@page "/whatsapp-tenants"
+@page "/WhatsAppTenants"
 @using WhatsAppData.VO
 @using WhatsAppData.VO.WhatsApp
 @using WhatsAppBusiness
@@ -294,12 +294,12 @@
 
     private void NavigateToCreate()
     {
-        NavManager.NavigateTo("/whatsapp-tenants/new");
+        NavManager.NavigateTo("/WhatsAppTenants/New");
     }
 
     private void NavigateToEdit(Guid id)
     {
-        NavManager.NavigateTo($"/whatsapp-tenants/{id}");
+        NavManager.NavigateTo($"/WhatsAppTenants/{id}");
     }
 
     private void ShowDisableModal(Guid id)

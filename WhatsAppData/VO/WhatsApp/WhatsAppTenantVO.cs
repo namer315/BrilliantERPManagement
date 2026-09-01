@@ -11,6 +11,8 @@ public class WhatsAppTenantVO : EntityBaseWithCode
     public virtual WhatsAppCredentialsVO WhatsAppCredentials { get; set; } = new WhatsAppCredentialsVO();
     public virtual ContactVO Contact { get; set; } = new ContactVO();
     public virtual TenantVO Tenant { get; set; } = new TenantVO();
+
+    public virtual bool IsPublicNumber { get; set; }
 }
 
 public class WhatsAppTenantMap : EntityCodeWithCreatedAtMapping<WhatsAppTenantVO>

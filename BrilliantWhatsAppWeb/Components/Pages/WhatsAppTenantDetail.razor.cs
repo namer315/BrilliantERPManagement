@@ -52,7 +52,7 @@ public partial class WhatsAppTenantDetail
         try
         {
             await EndEdit();
-            NavManager.NavigateTo("/whatsapp-tenants");
+            NavManager.NavigateTo("/WhatsAppTenants");
         }
         catch (Exception ex)
         {
@@ -68,7 +68,7 @@ public partial class WhatsAppTenantDetail
 
     private void GoBack()
     {
-        NavManager.NavigateTo("/whatsapp-tenants");
+        NavManager.NavigateTo("/WhatsAppTenants");
     }
 
     private void ToggleTokenVisibility() => showToken = !showToken;

@@ -1,6 +1,9 @@
 ﻿@page "/"
 @inject NavigationManager NavManager
 
+@using WhatsAppFDM
+@rendermode InteractiveServer
+
 <PageTitle>Home</PageTitle>
 
 <div class="page-container">
@@ -16,7 +19,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-primary" @onclick="@(() => NavManager.NavigateTo("/whatsapp-tenants"))">Manage WhatsApp Tenants</button>
+            <button class="btn btn-primary" @onclick="@(() => NavManager.NavigateTo("/WhatsAppTenants"))">Manage WhatsApp Tenants</button>
         </div>
     </div>
 
@@ -25,15 +28,37 @@
             <div class="card-icon">✓</div>
             <div class="card-content">
                 <p class="card-label">Active Tenants</p>
-                <p class="card-value">--</p>
+                <p class="card-value">@activeTenants</p>
             </div>
         </div>
         <div class="card status-card inactive">
             <div class="card-icon">○</div>
             <div class="card-content">
                 <p class="card-label">Disabled Tenants</p>
-                <p class="card-value">--</p>
+                <p class="card-value">@inactiveTenants</p>
             </div>
         </div>
     </div>
 </div>
+
+@code {
+    private int activeTenants;
+    private int inactiveTenants;
+    private WhatsAppTenantFDM _fdm = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            IList<WhatsAppData.VO.WhatsApp.WhatsAppTenantVO>? active = await _fdm.GetAllActiveWhatsAppTenants();
+            IList<WhatsAppData.VO.WhatsApp.WhatsAppTenantVO>? inactive = await _fdm.GetAllInactiveWhatsAppTenants();
+            activeTenants = active?.Count ?? 0;
+            inactiveTenants = inactive?.Count ?? 0;
+        }
+        catch (Exception ex)
+        {
+            // Keep the page usable even if loading counts fails.
+            Console.WriteLine($"Error loading tenant counts: {ex.Message}");
+        }
+    }
+}

@@ -12,4 +12,8 @@ public class WhatsAppTenantFDM
     public async Task<WhatsAppTenantVO> GetNew() => await _be.GetNew();
 
     public async Task Persist(WhatsAppTenantVO whatsAppTenant) => await _be.Persist(whatsAppTenant);
+
+    public async Task<IList<WhatsAppTenantVO>> GetAllActiveWhatsAppTenants() => await _be.GetAllActiveWhatsAppTenants();
+
+    public async Task<IList<WhatsAppTenantVO>> GetAllInactiveWhatsAppTenants() => await _be.GetAllInactiveWhatsAppTenants();
 }
