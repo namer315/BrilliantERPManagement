@@ -1,5 +1,6 @@
 @page "/whatsapp-tenants/new"
 @page "/whatsapp-tenants/{TenantId:guid}"
+
 @using WhatsAppData.VO
 @using WhatsAppData.VO.WhatsApp
 @using WhatsAppBusiness
@@ -24,20 +25,20 @@
             </div>
         </div>
     </div>
-    @if (currentVO != null)
+    @if (_whatsAppTenant != null)
     {
         <div class="audit-info" style="margin-bottom:1rem;color:var(--text-muted);">
-            <small>Created: @currentVO.CreatedAt.ToLocalTime()</small>
-            @if (currentVO.UpdatedAt.HasValue)
+            <small>Created: @_whatsAppTenant.CreatedAt.ToLocalTime()</small>
+            @if (_whatsAppTenant.UpdatedAt.HasValue)
             {
-                <span style="margin-left:1rem;">Last Modified: @currentVO.UpdatedAt.Value.ToLocalTime()</span>
+                <span style="margin-left:1rem;">Last Modified: @_whatsAppTenant.UpdatedAt.Value.ToLocalTime()</span>
             }
         </div>
     }
 
     <!-- Form Card -->
     <div class="form-card">
-        <EditForm Model="formData" OnValidSubmit="HandleSubmit">
+        <EditForm Model="_whatsAppTenant" OnValidSubmit="HandleValidSubmit">
             <DataAnnotationsValidator />
 
             <!-- Tenant Section -->
@@ -45,8 +46,8 @@
                 <h3 class="section-title">Tenant Information</h3>
                 <div class="form-group">
                     <label>Tenant Name *</label>
-                    <InputText @bind-Value="formData.TenantName" class="form-control" placeholder="Enter tenant name" />
-                    <ValidationMessage For="@(() => formData.TenantName)" />
+                    <InputText @bind-Value="_whatsAppTenant.Tenant.Name" class="form-control" placeholder="Enter tenant name" />
+                    <ValidationMessage For="@(() => _whatsAppTenant.Tenant.Name)" />
                 </div>
             </div>
 
@@ -56,13 +57,18 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Contact Name *</label>
-                        <InputText @bind-Value="formData.ContactName" class="form-control" placeholder="Enter contact name" />
-                        <ValidationMessage For="@(() => formData.ContactName)" />
+                        <InputText @bind-Value="_whatsAppTenant.Contact.Name" class="form-control" placeholder="Enter contact name" />
+                        <ValidationMessage For="@(() => _whatsAppTenant.Contact.Name)" />
                     </div>
-                    <div class="form-group">
+                    @* <div class="form-group">
                         <label>Contact Phone *</label>
-                        <InputText @bind-Value="formData.ContactPhone" class="form-control" placeholder="Enter phone number" />
-                        <ValidationMessage For="@(() => formData.ContactPhone)" />
+                        <InputText @bind-Value="_whatsAppTenant.Contact.Phone" class="form-control" placeholder="Enter phone number" />
+                        <ValidationMessage For="@(() => _whatsAppTenant.Contact.Phone)" />
+                    </div> *@
+                    <div class="form-group">
+                        <label>WhatsApp ID *</label>
+                        <InputText @bind-Value="_whatsAppTenant.Contact.WaId" class="form-control" placeholder="Enter WhatsApp ID" />
+                        <ValidationMessage For="@(() => _whatsAppTenant.Contact.WaId)" />
                     </div>
                 </div>
             </div>
@@ -72,24 +78,29 @@
                 <h3 class="section-title">WhatsApp Business Account</h3>
                 <div class="form-group">
                     <label>Business Account ID *</label>
-                    <InputText @bind-Value="formData.WABusinessAccountId" class="form-control" placeholder="Enter WhatsApp Business Account ID" />
-                    <ValidationMessage For="@(() => formData.WABusinessAccountId)" />
+                    <InputText @bind-Value="_whatsAppTenant.WhatsAppCredentials.WABusinessAccountId" class="form-control" placeholder="Enter WhatsApp Business Account ID" />
+                    <ValidationMessage For="@(() => _whatsAppTenant.WhatsAppCredentials.WABusinessAccountId)" />
                 </div>
                 <div class="form-group">
                     <label>Access Token *</label>
                     <div class="token-input-group">
-                        <InputText @bind-Value="formData.WAAccessToken" class="form-control" type="@(showToken ? "text" : "password")" placeholder="Enter WhatsApp Access Token" />
+                        <InputText @bind-Value="_whatsAppTenant.WhatsAppCredentials.WAAccessToken" class="form-control" type="@(showToken ? "text" : "password")" placeholder="Enter WhatsApp Access Token" />
                         <button type="button" class="btn btn-secondary token-toggle" @onclick="ToggleTokenVisibility" title="@(showToken ? "Hide token" : "Show token")">
                             @(showToken ? "Hide" : "Show")
                         </button>
                     </div>
-                    <ValidationMessage For="@(() => formData.WAAccessToken)" />
+                    <ValidationMessage For="@(() => _whatsAppTenant.WhatsAppCredentials.WAAccessToken)" />
                 </div>
                 <div class="form-group">
                     <label>Phone Number ID *</label>
-                    <InputText @bind-Value="formData.WAPhoneNumberId" class="form-control" placeholder="Enter Phone Number ID" />
-                    <ValidationMessage For="@(() => formData.WAPhoneNumberId)" />
+                    <InputText @bind-Value="_whatsAppTenant.Contact.PhoneNumberId" class="form-control" placeholder="Enter Phone Number ID" />
+                    <ValidationMessage For="@(() => _whatsAppTenant.Contact.PhoneNumberId)" />
                 </div>
+                @* <div class="form-group">
+                    <label>WhatsApp ID *</label>
+                    <InputText @bind-Value="_whatsAppTenant.Contact.WaId" class="form-control" placeholder="Enter WhatsApp ID" />
+                    <ValidationMessage For="@(() => _whatsAppTenant.Contact.WaId)" />
+                </div> *@
             </div>
 
             <!-- Form Actions -->
@@ -109,126 +120,4 @@
     <div class="toast @notificationClass">
         @notificationMessage
     </div>
-}
-
-@code {
-    [Parameter]
-    public Guid TenantId { get; set; }
-
-    private WhatsAppTenantFormData formData = new();
-    private WhatsAppTenantBE whatsAppTenantBE = new();
-    private WhatsAppTenantVO? currentVO;
-    private bool showToken = false;
-    private string notificationMessage = "";
-    private string notificationClass = "";
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (TenantId != Guid.Empty)
-        {
-            currentVO = await whatsAppTenantBE.GetWhatsAppTenantById(TenantId);
-            if (currentVO != null)
-            {
-                formData.TenantName = currentVO.Tenant?.Name ?? "";
-                formData.ContactName = currentVO.Contact?.Name ?? "";
-                formData.ContactPhone = currentVO.Contact?.Phone ?? "";
-                formData.WABusinessAccountId = currentVO.WhatsAppCredentials.WABusinessAccountId ?? "";
-                formData.WAAccessToken = currentVO.WhatsAppCredentials.WAAccessToken ?? "";
-                formData.WAPhoneNumberId = currentVO.Contact.PhoneNumberId ?? "";
-            }
-        }
-    }
-
-    private async Task HandleSubmit()
-    {
-        try
-        {
-            if (TenantId == Guid.Empty)
-            {
-                var vo = new WhatsAppTenantVO
-                {
-                    Id = Guid.NewGuid(),
-                    WhatsAppCredentials = new WhatsAppCredentialsVO()
-                    {
-                        WABusinessAccountId = formData.WABusinessAccountId ,
-                        WAAccessToken = formData.WAAccessToken
-                    } ,
-
-                    Tenant = new CommonData.VO.TenantVO { Name = formData.TenantName, Active = true },
-                    Contact = new ContactVO { 
-                        Name = formData.ContactName,
-                        Phone = formData.ContactPhone,
-                        PhoneNumberId = formData.WAPhoneNumberId
-                    }
-                };
-
-                await whatsAppTenantBE.CreateNewTenet(vo);
-            }
-            else
-            {
-                if (currentVO != null)
-                {
-                    currentVO.WhatsAppCredentials.WABusinessAccountId = formData.WABusinessAccountId;
-                    currentVO.WhatsAppCredentials.WAAccessToken = formData.WAAccessToken;
-                    
-                    currentVO.Tenant ??= new CommonData.VO.TenantVO();
-                    currentVO.Tenant.Name = formData.TenantName;
-                    
-                    currentVO.Contact ??= new WhatsAppData.VO.WhatsApp.ContactVO();
-                    currentVO.Contact.Name = formData.ContactName;
-                    currentVO.Contact.Phone = formData.ContactPhone;
-                    currentVO.Contact.PhoneNumberId = formData.WAPhoneNumberId;
-
-                    await whatsAppTenantBE.SaveOrUpdateTenet(currentVO);
-                }
-            }
-
-            NavManager.NavigateTo("/whatsapp-tenants");
-        }
-        catch (Exception ex)
-        {
-            ShowNotification($"Error saving tenant: {ex.Message}", "error");
-        }
-    }
-
-    private void GoBack()
-    {
-        NavManager.NavigateTo("/whatsapp-tenants");
-    }
-
-    private void ToggleTokenVisibility() => showToken = !showToken;
-
-    private void ShowNotification(string message, string type)
-    {
-        notificationMessage = message;
-        notificationClass = type == "error" ? "toast-error" : "toast-success";
-        StateHasChanged();
-
-        Task.Delay(4000).ContinueWith(_ =>
-        {
-            notificationMessage = "";
-            InvokeAsync(StateHasChanged);
-        });
-    }
-
-    public class WhatsAppTenantFormData
-    {
-        [Required]
-        public string TenantName { get; set; } = "";
-
-        [Required]
-        public string ContactName { get; set; } = "";
-
-        [Required]
-        public string ContactPhone { get; set; } = "";
-
-        [Required]
-        public string WABusinessAccountId { get; set; } = "";
-
-        [Required]
-        public string WAAccessToken { get; set; } = "";
-
-        [Required]
-        public string WAPhoneNumberId { get; set; } = "";
-    }
 }

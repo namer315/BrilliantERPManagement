@@ -25,7 +25,7 @@ public class ContactMap : EntityBaseCodeWithIdMapping<ContactVO>
         Map(x => x.PhoneNumberId).Nullable();
 
 
-        References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.None();
+        References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.None().Nullable();
     }
 }
 
