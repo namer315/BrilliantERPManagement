@@ -47,9 +47,10 @@ public class WhatsAppTenantBE
         var rawData = await _dao.GetAllAsync();
         IList<WhatsAppTenantVO> tenants = new List<WhatsAppTenantVO>();
         
+        int index = 0;
         foreach (object[] item in rawData)
         {
-            int index = 0;
+            index = 0;
             WhatsAppTenantVO whatsAppTenant = new WhatsAppTenantVO();
             whatsAppTenant.Id = (Guid)item[index++];
 

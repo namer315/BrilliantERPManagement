@@ -13,4 +13,9 @@ public class WhatsAppCredentialsBE
 
         return whatsAppCredentials;
     }
+
+    public async Task<IList<WhatsAppCredentialsVO>> GetAllWhatsAppCredentials()
+    {
+        return await _dao.GetAllWhatsAppCredentials();
+    }
 }
