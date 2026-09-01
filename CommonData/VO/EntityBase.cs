@@ -40,7 +40,21 @@ public class EntityWithIdMapping<T> : ClassMap<T> where T : EntityBase
         OptimisticLock.Version().DynamicUpdate();
     }
 }
+public class EntityBaseCodeWithIdMapping<T> : ClassMap<T> where T : EntityBaseWithCode
+{
+    public EntityBaseCodeWithIdMapping()
+    {
+        base.Cache.NonStrictReadWrite();
 
+        Id(e => e.Id)
+            .GeneratedBy.GuidComb();
+
+        Map(e => e.Code).Not.Nullable();
+        Map(e => e.Number).Not.Nullable();
+
+        OptimisticLock.Version().DynamicUpdate();
+    }
+}
 /// <summary>
 /// Base mapping for entities deriving from <see cref="EntityBase"/> that also
 /// expose the CreatedAt / UpdatedAt audit columns on their table. Maps the Guid
@@ -60,6 +74,14 @@ public class EntityWithDatesMapping<T> : ClassMap<T> where T : EntityBase
         Map(e => e.UpdatedAt).Nullable();
 
         OptimisticLock.Version().DynamicUpdate();
+    }
+}
+public class EntityCodeWithDatesMapping<T> : EntityBaseCodeWithIdMapping<T> where T : EntityBaseWithCode
+{
+    public EntityCodeWithDatesMapping()
+    {
+        Map(e => e.CreatedAt).Not.Nullable().Default("CURRENT_TIMESTAMP");
+        Map(e => e.UpdatedAt).Nullable();
     }
 }
 
@@ -82,6 +104,13 @@ public class EntityWithCreatedAtMapping<T> : ClassMap<T> where T : EntityBase
         OptimisticLock.Version().DynamicUpdate();
     }
 }
+public class EntityCodeWithCreatedAtMapping<T> : EntityBaseCodeWithIdMapping<T> where T : EntityBaseWithCode
+{
+    public EntityCodeWithCreatedAtMapping()
+    {
+        Map(e => e.CreatedAt).Not.Nullable().Default("CURRENT_TIMESTAMP");
+    }
+}
 
 /// <summary>
 /// Reusable base mapping for entities deriving from <see cref="EntityBaseWithCode"/>.
@@ -90,17 +119,17 @@ public class EntityWithCreatedAtMapping<T> : ClassMap<T> where T : EntityBase
 /// their own columns plus their Table in their own mapping class.
 /// </summary>
 /// <typeparam name="T">A concrete entity type deriving from EntityBaseWithCode.</typeparam>
-public class EntityWithCodeMapping<T> : ClassMap<T> where T : EntityBaseWithCode
-{
-    public EntityWithCodeMapping()
-    {
-        base.Cache.NonStrictReadWrite();
+//public class EntityWithCodeMapping<T> : ClassMap<T> where T : EntityBaseWithCode
+//{
+//    public EntityWithCodeMapping()
+//    {
+//        base.Cache.NonStrictReadWrite();
 
-        Id(e => e.Id).GeneratedBy.GuidComb();
+//        Id(e => e.Id).GeneratedBy.GuidComb();
 
-        Map(e => e.Code);
-        Map(e => e.Number);
+//        Map(e => e.Code);
+//        Map(e => e.Number);
 
-        OptimisticLock.Version().DynamicUpdate();
-    }
-}
+//        OptimisticLock.Version().DynamicUpdate();
+//    }
+//}

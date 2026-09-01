@@ -457,7 +457,7 @@ public class RepositoryBase
                 // Perform the merge and flush operations
                 var mergedEntity = await session.MergeAsync(entity , ct).ConfigureAwait(false);
                 await session.FlushAsync(ct).ConfigureAwait(false);
-
+                entity.Id = mergedEntity.Id;
                 return mergedEntity;
             } ,
             cancellationToken ,

@@ -15,6 +15,9 @@ public class ContactDAO : RepositoryBase
 {
     public async Task<ContactVO> GetContactBy(string waId)
     {
+        if (string.IsNullOrEmpty(waId))
+            return null;
+
         IQuery q = Session.CreateQuery(@"
 			FROM ContactVO as contact
 			WHERE

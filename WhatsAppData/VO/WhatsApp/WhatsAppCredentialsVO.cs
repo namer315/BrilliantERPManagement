@@ -5,13 +5,13 @@ using System.Text;
 
 namespace WhatsAppData.VO.WhatsApp;
 
-public class WhatsAppCredentialsVO : EntityBase
+public class WhatsAppCredentialsVO : EntityBaseWithCode
 {
     public virtual string WABusinessAccountId { get; set; }
     public virtual string WAAccessToken { get; set; }
     //public string WAPhoneNumberId { get; set; }
 }
-public class WhatsAppCredentialsMap : EntityWithCreatedAtMapping<WhatsAppCredentialsVO>
+public class WhatsAppCredentialsMap : EntityCodeWithCreatedAtMapping<WhatsAppCredentialsVO>
 {
     public WhatsAppCredentialsMap()
     {

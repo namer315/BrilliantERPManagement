@@ -15,17 +15,17 @@ public class ContactVO : EntityBaseWithCode
     public virtual WhatsAppTenantVO WhatsAppTenant { get; set; }
 }
 
-public class ContactMap : EntityWithIdMapping<ContactVO>
+public class ContactMap : EntityBaseCodeWithIdMapping<ContactVO>
 {
     public ContactMap()
     {
         Map(x => x.Phone).Nullable();
         Map(x => x.WaId).Not.Nullable();
-        //Map(x => x.Name).Not.Nullable();
+        Map(x => x.Name).Nullable();
         Map(x => x.PhoneNumberId).Nullable();
 
 
-        References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.Merge();
+        References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.None();
     }
 }
 

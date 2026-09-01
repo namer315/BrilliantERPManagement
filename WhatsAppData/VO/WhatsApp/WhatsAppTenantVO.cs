@@ -2,7 +2,7 @@
 
 namespace WhatsAppData.VO.WhatsApp;
 
-public class WhatsAppTenantVO : EntityBase
+public class WhatsAppTenantVO : EntityBaseWithCode
 {
     //    public string WABusinessAccountId { get; set; }
     //    public string WAAccessToken { get; set; }
@@ -13,7 +13,7 @@ public class WhatsAppTenantVO : EntityBase
     public virtual TenantVO Tenant { get; set; }
 }
 
-public class WhatsAppTenantMap : EntityWithCreatedAtMapping<WhatsAppTenantVO>
+public class WhatsAppTenantMap : EntityCodeWithCreatedAtMapping<WhatsAppTenantVO>
 {
     public WhatsAppTenantMap()
     {
