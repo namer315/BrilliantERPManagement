@@ -3,32 +3,35 @@ using CommonData.VO;
 using WhatsAppBusiness.WhatsApp;
 using WhatsAppData.DAO;
 using WhatsAppData.VO.WhatsApp;
+using CommonBusiness.Extensions;
 
 namespace WhatsAppBusiness;
 
 public class WhatsAppTenantBE
 {
-    public WhatsAppTenantDAO _dao = new WhatsAppTenantDAO();
-    public TenantBE tenantBE = new TenantBE();
-    public ContactBE contactBE = new ContactBE();
-    public async Task CreateNewTenet(WhatsAppTenantVO whatsAppTenant)
+    private WhatsAppTenantDAO _dao = new WhatsAppTenantDAO();
+    private TenantBE _tenantBE = new TenantBE();
+    private ContactBE _contactBE = new ContactBE();
+    private WhatsAppCredentialsBE _whatsAppCredentialsBE = new WhatsAppCredentialsBE();
+
+    public async Task Persist(WhatsAppTenantVO whatsAppTenant)
     {
-        Validation(whatsAppTenant);
+        await Validation(whatsAppTenant);
         //WhatsAppTenantVO whatsAppTenant = new WhatsAppTenantVO();
         //whatsAppTenant.MapTo<WhatsAppTenantVO>();
 
-        await _dao.PersistAsync(whatsAppTenant);
+        await _dao.MergeAsync(whatsAppTenant);
     }
 
     private async Task Validation(WhatsAppTenantVO whatsAppTenant)
     {
         //check if name is exist in the DataBase
-        tenantBE.Validation(whatsAppTenant.Tenant);
+        _tenantBE.Validation(whatsAppTenant.Tenant);
 
-        if (await new ContactDAO().GetContactByPhoneNumberId(whatsAppTenant.Contact.PhoneNumberId) is ContactVO contact)
+        if (await new ContactDAO().GetContactBy(whatsAppTenant.Contact.WaId) is ContactVO contact)
             whatsAppTenant.Contact = contact;
 
-        contactBE.Persist(whatsAppTenant.Contact);
+        _contactBE.Persist(whatsAppTenant.Contact);
 
         if (string.IsNullOrEmpty(whatsAppTenant.WhatsAppCredentials.WABusinessAccountId))
             throw new ArgumentException("The WhatsApp Business Account ID is required and must not be empty. Please provide a valid Business Account ID before proceeding.", nameof(whatsAppTenant.WhatsAppCredentials.WABusinessAccountId));
@@ -106,5 +109,17 @@ public class WhatsAppTenantBE
     {
         Validation(whatsAppTenant);
         await _dao.PersistAsync(whatsAppTenant);
+    }
+
+    public async Task<WhatsAppTenantVO> GetNew()
+    {
+        WhatsAppTenantVO whatsAppTenant = await _dao.GetNextCodeNumber<WhatsAppTenantVO>();
+        
+        // Ensure nested objects are initialized
+        whatsAppTenant.Tenant = await _tenantBE.GetNew();
+        whatsAppTenant.Contact = await _contactBE.GetContactBy("");
+        whatsAppTenant.WhatsAppCredentials = await _whatsAppCredentialsBE.GetNew();
+
+        return whatsAppTenant;
     }
 }

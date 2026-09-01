@@ -1,11 +1,8 @@
+using CommonBusiness.Extensions;
 using CommonData.DAO;
-using CommonData.DTO;
 using CommonData.Managers;
 using CommonData.VO;
-using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace CommonBusiness;
 
@@ -73,5 +70,12 @@ public class TenantBE
         {
             tenant.Token = GenerateApiToken();
         }
+    }
+
+    public async Task<TenantVO> GetNew()
+    {
+        TenantVO tenant = await _dao.GetNextCodeNumber<TenantVO>();
+
+        return tenant;
     }
 }

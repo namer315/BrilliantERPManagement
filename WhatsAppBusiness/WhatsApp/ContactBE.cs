@@ -1,4 +1,5 @@
-﻿using WhatsAppData.DAO;
+﻿using CommonBusiness.Extensions;
+using WhatsAppData.DAO;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
@@ -30,9 +31,9 @@ public class ContactBE
 
     }
 
-    private async Task<ContactVO> GetNew(string waId , string Name = null)
+    private async Task<ContactVO> GetNew(string waId = "" , string Name = null)
     {
-        ContactVO contact = new ContactVO();
+        ContactVO contact = await _dao.GetNextCodeNumber<ContactVO>();
 
         //contact.PhoneNumber = phoneNumber;
         contact.WaId = waId;

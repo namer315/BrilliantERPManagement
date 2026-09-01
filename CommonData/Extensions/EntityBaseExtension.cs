@@ -37,7 +37,7 @@ public static class EntityBaseExtension
         else
         {
             entity.Code = "";
-            entity.Number = 0   ;
+            entity.Number = 0;
         }
         // Return a new instance if nothing found
         return entity;
@@ -97,3 +97,4 @@ public static class EntityBaseExtension
         return result.HasValue;
 
     }
+}
