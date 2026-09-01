@@ -13,7 +13,7 @@ public class WhatsAppTenantDAO : RepositoryBase
             SELECT 
                 whatsappTenant.Id,
                 whatsapp.WABusinessAccountId,
-                tenant.Name, 
+                tenant.Name, tenant.Active,
                 contact.WaId , contact.PhoneNumberId
             FROM WhatsAppTenantVO as whatsappTenant
             LEFT JOIN whatsappTenant.Tenant as tenant

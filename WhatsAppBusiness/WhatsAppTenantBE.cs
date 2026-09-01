@@ -59,6 +59,7 @@ public class WhatsAppTenantBE
 
             whatsAppTenant.Tenant = new TenantVO();
             whatsAppTenant.Tenant.Name = Convert.ToString(item[index++]);
+            whatsAppTenant.Tenant.Active = Convert.ToBoolean(item[index++]);
 
             whatsAppTenant.Contact = new ContactVO();
             //whatsAppTenant.Contact.Name = Convert.ToString(item[index++]);
