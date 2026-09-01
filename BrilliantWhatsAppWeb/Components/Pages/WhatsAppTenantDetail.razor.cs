@@ -3,6 +3,7 @@ using CommonData.VO;
 using Microsoft.AspNetCore.Components;
 using System.ComponentModel.DataAnnotations;
 using WhatsAppBusiness;
+using WhatsAppData.DAO;
 using WhatsAppData.VO.WhatsApp;
 using WhatsAppFDM;
 
@@ -21,6 +22,17 @@ public partial class WhatsAppTenantDetail
     private string notificationMessage = "";
     private string notificationClass = "";
 
+    // Field editability controls (progressive form)
+    private bool _isEditingExisting;
+    private bool _canEditContactName;
+    private bool _canEditPhoneNumberId;
+    private bool _canEditBusinessAccountId;
+    private bool _canEditAccessToken;
+
+    // Read-only lookups that were auto-filled from the database
+    private bool _waIdFound;
+    private bool _businessAccountFound;
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -37,13 +49,140 @@ public partial class WhatsAppTenantDetail
     {
         if (TenantId == Guid.Empty)
         {
-            // Get a new instance for creation
+            // Get a new instance for creation - only Tenant Name and WhatsApp ID are enabled initially.
+            _isEditingExisting = false;
             _whatsAppTenant = await _fdm.GetNew();
+            ResetFieldEditability();
         }
         else
         {
-            // Load existing tenant
+            // Load existing tenant - all fields read-only (auto-filled from the database).
+            _isEditingExisting = true;
             _whatsAppTenant = await _fdm.GetBy(TenantId);
+            LockAllFields();
+        }
+    }
+
+    private void ResetFieldEditability()
+    {
+        _canEditContactName = false;
+        _canEditPhoneNumberId = false;
+        _canEditBusinessAccountId = false;
+        _canEditAccessToken = false;
+        _waIdFound = false;
+        _businessAccountFound = false;
+    }
+
+    private void LockAllFields()
+    {
+        _canEditContactName = false;
+        _canEditPhoneNumberId = false;
+        _canEditBusinessAccountId = false;
+        _canEditAccessToken = false;
+    }
+
+    private void EnableNewContactFields()
+    {
+        _canEditContactName = true;
+        _canEditPhoneNumberId = true;
+        _canEditBusinessAccountId = true;
+        _canEditAccessToken = false;
+    }
+
+    /// <summary>
+    /// Triggered when the user leaves the WhatsApp ID field.
+    /// If the WhatsApp ID exists in the database, auto-fill and lock the linked
+    /// Contact and WhatsApp Business Account fields; otherwise unlock them for entry.
+    /// </summary>
+    private async Task OnWaIdBlur()
+    {
+        if (_isEditingExisting)
+            return;
+
+        var waId = _whatsAppTenant?.Contact?.WaId;
+        if (string.IsNullOrWhiteSpace(waId))
+            return;
+
+        try
+        {
+            var contact = await new ContactDAO().GetContactBy(waId.Trim());
+            if (contact == null)
+            {
+                _waIdFound = false;
+                _businessAccountFound = false;
+                EnableNewContactFields();
+            }
+            else
+            {
+                _waIdFound = true;
+                AutoFillFromContact(contact);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Error checking WhatsApp ID: {ex.Message}" , "error");
+        }
+    }
+
+    /// <summary>
+    /// Auto-fills Contact and WhatsApp Business Account fields from an existing Contact record.
+    /// </summary>
+    private void AutoFillFromContact(ContactVO contact)
+    {
+        _whatsAppTenant.Contact ??= new ContactVO();
+        _whatsAppTenant.Contact.Name = contact.Name;
+        _whatsAppTenant.Contact.PhoneNumberId = contact.PhoneNumberId;
+        _whatsAppTenant.Contact.WaId = contact.WaId;
+
+        // Resolve credentials from the contact's linked tenant (if any).
+        _whatsAppTenant.WhatsAppCredentials ??= new WhatsAppCredentialsVO();
+        var linkedTenant = contact.WhatsAppTenant;
+        if (linkedTenant?.WhatsAppCredentials != null)
+        {
+            _whatsAppTenant.WhatsAppCredentials.WABusinessAccountId = linkedTenant.WhatsAppCredentials.WABusinessAccountId;
+            _whatsAppTenant.WhatsAppCredentials.WAAccessToken = linkedTenant.WhatsAppCredentials.WAAccessToken;
+            _businessAccountFound = !string.IsNullOrEmpty(linkedTenant.WhatsAppCredentials.WABusinessAccountId);
+        }
+        else
+        {
+            _businessAccountFound = false;
+        }
+
+        LockAllFields();
+    }
+
+    /// <summary>
+    /// Triggered when the user leaves the Business Account ID field.
+    /// If the Business Account ID exists in the database, auto-fill and lock the Access Token.
+    /// </summary>
+    private async Task OnBusinessAccountIdBlur()
+    {
+        if (_isEditingExisting)
+            return;
+
+        var businessAccountId = _whatsAppTenant?.WhatsAppCredentials?.WABusinessAccountId;
+        if (string.IsNullOrWhiteSpace(businessAccountId))
+            return;
+
+        try
+        {
+            var credentials = await new WhatsAppCredentialsBE().GetWhatsAppCredentialsByBusinessAccountId(businessAccountId.Trim());
+            if (credentials == null)
+            {
+                _businessAccountFound = false;
+                _canEditAccessToken = true;
+            }
+            else
+            {
+                _businessAccountFound = true;
+                _whatsAppTenant.WhatsAppCredentials ??= new WhatsAppCredentialsVO();
+                _whatsAppTenant.WhatsAppCredentials.WAAccessToken = credentials.WAAccessToken;
+                _canEditAccessToken = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Error checking Business Account ID: {ex.Message}" , "error");
         }
     }
 

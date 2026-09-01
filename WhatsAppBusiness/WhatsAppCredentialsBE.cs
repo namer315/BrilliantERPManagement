@@ -18,4 +18,9 @@ public class WhatsAppCredentialsBE
     {
         return await _dao.GetAllWhatsAppCredentials();
     }
+
+    public async Task<WhatsAppCredentialsVO> GetWhatsAppCredentialsByBusinessAccountId(string wABusinessAccountId)
+    {
+        return await _dao.GetWhatsAppCredentialsByBusinessAccountId(wABusinessAccountId);
+    }
 }

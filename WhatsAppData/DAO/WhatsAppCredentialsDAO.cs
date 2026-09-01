@@ -35,4 +35,25 @@ public class WhatsAppCredentialsDAO : RepositoryBase
 
         return await q.ListAsync<WhatsAppCredentialsVO>();
     }
+
+    /// <summary>
+    /// Gets a single WhatsAppCredentialsVO by its WhatsApp Business Account ID.
+    /// Returns null when no matching record is found.
+    /// </summary>
+    /// <param name="wABusinessAccountId">The WhatsApp Business Account ID to search for.</param>
+    public async Task<WhatsAppCredentialsVO> GetWhatsAppCredentialsByBusinessAccountId(string wABusinessAccountId)
+    {
+        if (string.IsNullOrEmpty(wABusinessAccountId))
+            return null;
+
+        IQuery q = Session.CreateQuery(@"
+			FROM WhatsAppCredentialsVO as credentials
+			WHERE
+			    credentials.WABusinessAccountId = :wABusinessAccountId
+			")
+            .SetParameter("wABusinessAccountId" , wABusinessAccountId)
+            .SetMaxResults(1);
+
+        return await q.UniqueResultAsync<WhatsAppCredentialsVO>();
+    }
 }

@@ -142,6 +142,8 @@ html, body {
 .token-input-group { display: flex; gap: 0.5rem; align-items: center; }
 .token-input-group .form-control { flex: 1; }
 .token-toggle { white-space: nowrap; }
+.field-note { font-size: 0.78rem; color: var(--text-muted); font-style: italic; }
+.form-control:disabled { background: var(--surface-muted, #f2f5f7); color: var(--text-muted); cursor: not-allowed; opacity: 0.9; }
 
 /* ---------- Hero / brand ---------- */
 .hero-brand { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }

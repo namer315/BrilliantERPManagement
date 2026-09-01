@@ -46,7 +46,7 @@
                 <h3 class="section-title">Tenant Information</h3>
                 <div class="form-group">
                     <label>Tenant Name *</label>
-                    <InputText @bind-Value="_whatsAppTenant.Tenant.Name" class="form-control" placeholder="Enter tenant name" />
+                    <InputText @bind-Value="_whatsAppTenant.Tenant.Name" class="form-control" placeholder="Enter tenant name" disabled="@_isEditingExisting" />
                     <ValidationMessage For="@(() => _whatsAppTenant.Tenant.Name)" />
                 </div>
             </div>
@@ -57,7 +57,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Contact Name *</label>
-                        <InputText @bind-Value="_whatsAppTenant.Contact.Name" class="form-control" placeholder="Enter contact name" />
+                        <InputText @bind-Value="_whatsAppTenant.Contact.Name" class="form-control" placeholder="Enter contact name" disabled="@(!_canEditContactName)" />
+                        @if (_waIdFound)
+                        {
+                            <small class="field-note">Loaded from database</small>
+                        }
                         <ValidationMessage For="@(() => _whatsAppTenant.Contact.Name)" />
                     </div>
                     @* <div class="form-group">
@@ -67,7 +71,7 @@
                     </div> *@
                     <div class="form-group">
                         <label>WhatsApp ID *</label>
-                        <InputText @bind-Value="_whatsAppTenant.Contact.WaId" class="form-control" placeholder="Enter WhatsApp ID" />
+                        <InputText @bind-Value="_whatsAppTenant.Contact.WaId" class="form-control" placeholder="Enter WhatsApp ID" disabled="@_isEditingExisting" @onblur="OnWaIdBlur" />
                         <ValidationMessage For="@(() => _whatsAppTenant.Contact.WaId)" />
                     </div>
                 </div>
@@ -78,22 +82,37 @@
                 <h3 class="section-title">WhatsApp Business Account</h3>
                 <div class="form-group">
                     <label>Business Account ID *</label>
-                    <InputText @bind-Value="_whatsAppTenant.WhatsAppCredentials.WABusinessAccountId" class="form-control" placeholder="Enter WhatsApp Business Account ID" />
+                    <InputText @bind-Value="_whatsAppTenant.WhatsAppCredentials.WABusinessAccountId" class="form-control" placeholder="Enter WhatsApp Business Account ID" disabled="@(!_canEditBusinessAccountId)" @onblur="OnBusinessAccountIdBlur" />
+                    @if (_businessAccountFound)
+                    {
+                        <small class="field-note">Loaded from database</small>
+                    }
                     <ValidationMessage For="@(() => _whatsAppTenant.WhatsAppCredentials.WABusinessAccountId)" />
                 </div>
                 <div class="form-group">
                     <label>Access Token *</label>
                     <div class="token-input-group">
-                        <InputText @bind-Value="_whatsAppTenant.WhatsAppCredentials.WAAccessToken" class="form-control" type="@(showToken ? "text" : "password")" placeholder="Enter WhatsApp Access Token" />
-                        <button type="button" class="btn btn-secondary token-toggle" @onclick="ToggleTokenVisibility" title="@(showToken ? "Hide token" : "Show token")">
-                            @(showToken ? "Hide" : "Show")
-                        </button>
+                        <InputText @bind-Value="_whatsAppTenant.WhatsAppCredentials.WAAccessToken" class="form-control" type="@(showToken ? "text" : "password")" placeholder="Enter WhatsApp Access Token" disabled="@(!_canEditAccessToken)" />
+                        @if (!_canEditAccessToken)
+                        {
+                            <button type="button" class="btn btn-secondary token-toggle" @onclick="ToggleTokenVisibility" title="@(showToken ? "Hide token" : "Show token")" disabled="@(!_canEditAccessToken)">
+                                @(showToken ? "Hide" : "Show")
+                            </button>
+                        }
                     </div>
+                    @if (_businessAccountFound)
+                    {
+                        <small class="field-note">Loaded from database</small>
+                    }
                     <ValidationMessage For="@(() => _whatsAppTenant.WhatsAppCredentials.WAAccessToken)" />
                 </div>
                 <div class="form-group">
                     <label>Phone Number ID *</label>
-                    <InputText @bind-Value="_whatsAppTenant.Contact.PhoneNumberId" class="form-control" placeholder="Enter Phone Number ID" />
+                    <InputText @bind-Value="_whatsAppTenant.Contact.PhoneNumberId" class="form-control" placeholder="Enter Phone Number ID" disabled="@(!_canEditPhoneNumberId)" />
+                    @if (_waIdFound)
+                    {
+                        <small class="field-note">Loaded from database</small>
+                    }
                     <ValidationMessage For="@(() => _whatsAppTenant.Contact.PhoneNumberId)" />
                 </div>
                 @* <div class="form-group">
