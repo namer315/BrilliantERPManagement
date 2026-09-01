@@ -341,7 +341,7 @@
         {
             foreach (var id in selectedIds.ToList())
             {
-                await whatsAppTenantBE.DisableWhatsAppTenant(id);
+                await whatsAppTenantBE.SetWhatsAppTenantActive(id, false);
             }
             selectedIds.Clear();
             ShowNotification("Selected tenants disabled", "success");
@@ -370,7 +370,7 @@
             if (local?.Tenant != null) local.Tenant.Active = false;
             StateHasChanged();
 
-            await whatsAppTenantBE.DisableWhatsAppTenant(id);
+            await whatsAppTenantBE.SetWhatsAppTenantActive(id, false);
             ShowNotification("Tenant disabled successfully", "success");
             CloseDisableModal();
             await LoadTenants();
@@ -396,7 +396,7 @@
             if (local?.Tenant != null) local.Tenant.Active = true;
             StateHasChanged();
 
-            await whatsAppTenantBE.EnableWhatsAppTenant(id);
+            await whatsAppTenantBE.SetWhatsAppTenantActive(id, true);
             ShowNotification("Tenant enabled successfully", "success");
             await LoadTenants();
         }

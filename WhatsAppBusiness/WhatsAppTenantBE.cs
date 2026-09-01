@@ -31,7 +31,7 @@ public class WhatsAppTenantBE
         if (await new ContactDAO().GetContactBy(whatsAppTenant.Contact.WaId) is ContactVO contact)
             whatsAppTenant.Contact = contact;
 
-        _contactBE.Persist(whatsAppTenant.Contact);
+        //_contactBE.Persist(whatsAppTenant.Contact);
 
         if (string.IsNullOrEmpty(whatsAppTenant.WhatsAppCredentials.WABusinessAccountId))
             throw new ArgumentException("The WhatsApp Business Account ID is required and must not be empty. Please provide a valid Business Account ID before proceeding.", nameof(whatsAppTenant.WhatsAppCredentials.WABusinessAccountId));
@@ -77,24 +77,14 @@ public class WhatsAppTenantBE
         return await _dao.GetByIdAsync(id);
     }
 
-    public async Task DisableWhatsAppTenant(Guid id)
+    public async Task SetWhatsAppTenantActive(Guid id, bool active)
     {
         var tenant = await _dao.GetByIdAsync(id);
         if (tenant?.Tenant == null)
             throw new ArgumentException("WhatsApp Tenant not found.", nameof(id));
 
-        tenant.Tenant.Active = false;
-        await _dao.PersistAsync(tenant);
-    }
-
-    public async Task EnableWhatsAppTenant(Guid id)
-    {
-        var tenant = await _dao.GetByIdAsync(id);
-        if (tenant?.Tenant == null)
-            throw new ArgumentException("WhatsApp Tenant not found.", nameof(id));
-
-        tenant.Tenant.Active = true;
-        await _dao.PersistAsync(tenant);
+        tenant.Tenant.Active = active;
+        await Persist(tenant);
     }
 
     public async Task<IList<WhatsAppTenantVO>> GetAllActiveWhatsAppTenants()
