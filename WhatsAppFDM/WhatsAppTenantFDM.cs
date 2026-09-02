@@ -9,6 +9,8 @@ public class WhatsAppTenantFDM
     WhatsAppTenantBE _be = new WhatsAppTenantBE();
     public async Task<WhatsAppTenantVO> GetBy(Guid id) => await new WhatsAppTenantDAO().GetByIdAsync(id);
 
+    public async Task<WhatsAppTenantVO> GetByTenantId(Guid tenantId) => await new WhatsAppTenantDAO().GetByTenantIdAsync(tenantId);
+
     public async Task<WhatsAppTenantVO> GetNew() => await _be.GetNew();
 
     public async Task Persist(WhatsAppTenantVO whatsAppTenant) => await _be.Persist(whatsAppTenant);

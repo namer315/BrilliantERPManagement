@@ -4,6 +4,7 @@ using CommonData.Session;
 using CommonData.VO;
 using CommonFDM;
 using FastEndpoints;
+using WhatsAppData.Managers;
 
 namespace BrilliantWhatsAppAPI.Processors;
 
@@ -57,6 +58,11 @@ public class TokenPreProcessor : IGlobalPreProcessor
                 // TenantContext so it is readable from any method in the solution.
                 context.HttpContext.Items[NameKeys.TenantKey] = tenantVO.Token;
                 TenantContext.CurrentTenant = tenantVO; 
+
+                // Load the full WhatsApp tenant model (credentials, contact and
+                // tenant) and register it so the rest of the solution can read the
+                // current WhatsApp tenant from memory via WhatsAppTenantManager.
+                await WhatsAppTenantManager.GetWhatsAppTenantByTenant(tenantVO);
             }
             else
             {
