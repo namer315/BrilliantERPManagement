@@ -35,6 +35,8 @@ public class TenantBE
 
         if (!tenant.Active) 
             throw new Exception($"The tenant {tenant.Name} is not active. Please contact the system administrator.");
+        if (!tenant.Active)
+            throw new UnauthorizedAccessException($"The tenant {tenant.Name} is not active. Please contact the system administrator.");
 
         return tenant;
     }
