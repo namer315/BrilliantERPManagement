@@ -13,13 +13,13 @@ public class FreeTextDTO
     public string Phone { get; set; }
     public string Body { get; set; }
 
-    public TextDocumentDTO Text { get; set; }
+    public FreeTextTextDTO Text { get; set; }
     public FreeTextImageDTO Image { get; set; }
     public FreeTextVideoDTO Video { get; set; }
     public FreeTextAudioDTO Audio { get; set; }
     public FreeTextDocumentDTO Document { get; set; }
 }
-public class TextDocumentDTO
+public class FreeTextTextDTO
 {
     public bool PreviewURL { get; set; } = true;
 }

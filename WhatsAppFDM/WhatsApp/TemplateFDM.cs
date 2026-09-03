@@ -16,7 +16,7 @@ public class TemplateFDM
 
     public async Task<ChatMessageDTO> SendTemplateMessage(TemplateSendDTO templateSend) => await _be.SendTemplateMessage(templateSend);
 
-    public async Task<ChatMessageDTO> ResendFreeTextAsTemplateBy(string messageId , TemplateParameterDTO req)
-        => await new TemplateBE().ResendFreeTextAsTemplateBy(messageId , req);
+    //public async Task<ChatMessageDTO> ResendFreeTextAsTemplateBy(string messageId , TemplateParameterDTO req)
+    //    => await new TemplateBE().ResendFreeTextAsTemplateBy(messageId , req);
     
 }

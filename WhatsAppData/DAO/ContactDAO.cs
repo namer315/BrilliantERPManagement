@@ -1,12 +1,7 @@
 ﻿using CommonData.DAO;
 using CommonData.Managers;
-using CommonData.VO;
-using MySqlX.XDevAPI;
 using NHibernate;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+using WhatsAppData.Managers;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppData.DAO;
@@ -32,16 +27,18 @@ public class ContactDAO : RepositoryBase
     public async Task<IList<ContactVO>> GetChatListContacts()
     {
         IQuery query = Session.CreateQuery(@"
-        SELECT DISTINCT contact
-        FROM ContactVO AS contact
-        WHERE EXISTS (
-            FROM MessageVO AS message
-            WHERE message.Tenant.Id = :tenantId
-              AND (message.Sender = contact OR message.Receiver = contact)
-        )
-        ORDER BY contact.WaId
-    ")
-    .SetParameter("tenantId" , TenantManager.CurrentTenant.Id);
+            SELECT DISTINCT contact
+            FROM ContactVO AS contact
+            WHERE EXISTS (
+                FROM MessageVO AS message
+                WHERE message.Tenant.Id = :tenantId
+                  AND (message.Sender = contact OR message.Receiver = contact)
+            )
+            AND contact.Id <> :contactId
+            ORDER BY contact.WaId
+        ")
+            .SetParameter("tenantId" , TenantManager.CurrentTenant.Id)
+            .SetParameter("contactId" , WhatsAppTenantManager.CurrentContact.Id);
 
         return await query.ListAsync<ContactVO>();
     }

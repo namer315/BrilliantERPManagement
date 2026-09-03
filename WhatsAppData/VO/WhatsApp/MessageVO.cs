@@ -13,7 +13,7 @@ public class MessageVO : EntityBaseWithCode
 
     public virtual WhatsAppMessageTypes Type { get; set; }
 
-    public virtual MessageDirections MessageDirection => Receiver is null ? MessageDirections.Incoming : MessageDirections.Outgoing;
+    public virtual MessageDirections MessageDirection { get; set; }
 
     // Relationship
     public virtual ContactVO Sender { get; set; }
@@ -60,6 +60,7 @@ public class MessageMap : EntityWithDatesMapping<MessageVO>
         Map(x => x.Status);
         Map(x => x.Timestamp).Nullable();
         Map(x => x.Type).Not.Nullable();
+        Map(x => x.MessageDirection).Not.Nullable();
 
         References(x => x.Tenant).Column("Tenant")/*.Not.Nullable()*/.Cascade.None();
         References(x => x.Receiver).Column("Receiver")/*.Not.Nullable()*/.Cascade.Merge();

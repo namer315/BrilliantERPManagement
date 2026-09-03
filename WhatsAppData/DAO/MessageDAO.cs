@@ -1,11 +1,9 @@
 ﻿using CommonData.DAO;
-using CommonData.Search;
+using CommonData.Managers;
 using CommonData.VO;
 using NHibernate;
-using System.Collections;
 using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
-using static Mysqlx.Expect.Open.Types;
 
 namespace WhatsAppData.DAO;
 
@@ -81,12 +79,15 @@ public class MessageDAO : RepositoryBase
         FROM MessageVO as message
             LEFT OUTER JOIN FETCH message.Sender as sender
             LEFT OUTER JOIN FETCH message.Receiver as receiver
+            LEFT OUTER JOIN FETCH message.Tenant as tenent
         WHERE
             (sender.Id = :id OR receiver.Id = :id)
+            AND (tenent IS NOT NULL AND tenent.Id = :tenentId)
             {whereCondition}
         ORDER BY message.CreatedAt DESC"
         )
         .SetParameter("id" , id)
+        .SetParameter("tenentId" , TenantManager.CurrentTenant.Id)
         .SetFirstResult(chatHistorySH.Offset)       // use model property
         .SetMaxResults(chatHistorySH.PageSize);     // use model property
 
