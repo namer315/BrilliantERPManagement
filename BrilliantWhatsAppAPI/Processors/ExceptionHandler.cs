@@ -1,8 +1,4 @@
-﻿//using AutoMapper;
-//using Business;
-//using Data;
-//using Data.VO.Commons;
-//using DTO.Common.Permission;
+﻿using CommonData.Exceptions;
 using FastEndpoints;
 using FluentValidation.Results;
 using System.Text.Json;
@@ -53,7 +49,16 @@ namespace BrilliantWhatsAppAPI.Processors
                     response.StatusCode = StatusCodes.Status401Unauthorized;
                     response.ContentType = "application/json";
 
-                    var body = JsonSerializer.Serialize(new { error = ex.Message });
+                    //var body = JsonSerializer.Serialize(new { error = ex.Message });
+                    var body = JsonSerializer.Serialize(new
+                    {
+                        error = ex.Message ,
+                        //code = ex.Code ,
+                        type = AppErrorType.Authentication.ToString() ,
+                        //details = ex.Details ,
+                        occurredAtUtc = DateTime.UtcNow ,
+                        StatusCode = response.StatusCode
+                    });
 
                     await response.WriteAsync(body , ct);
                 }
