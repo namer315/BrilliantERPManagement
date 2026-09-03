@@ -19,7 +19,7 @@ public class ChatBE
         if (string.IsNullOrEmpty(chatHistorySH.WaId))
             throw new ArgumentNullException(nameof(chatHistorySH.WaId) , "WhatsApp ID is required.");
 
-        ContactVO contact = await new ContactBE().GetContactBy(chatHistorySH.WaId);
+        ContactVO contact = await new ContactDAO().GetContactBy(chatHistorySH.WaId);//await new ContactBE().GetContactBy(chatHistorySH.WaId);
 
         ChatHistoryDTO chatHistory = new ChatHistoryDTO();
         chatHistory.Chat = new ChatDTO()

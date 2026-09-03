@@ -28,6 +28,8 @@ public class ContactBE
 
     private void Validation(ContactVO contact)
     {
+        if (string.IsNullOrEmpty(contact.WaId))
+            throw new ArgumentException("WhatsApp ID (WaId) cannot be null or empty." , nameof(contact.WaId));
 
     }
 

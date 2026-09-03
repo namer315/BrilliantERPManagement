@@ -2,6 +2,8 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using WhatsAppData.DTO.Webhooks;
+using WhatsAppData.Managers;
+using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
 
@@ -21,15 +23,16 @@ public class WhatsAppBE
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task<HttpResponseMessage> PostAsync(string subURL , string jsonPayload)
+    public async Task<HttpResponseMessage> PostAsync(string subURL , string jsonPayload, WhatsAppTenantVO whatsAppTenant)
     {
-        string url = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/{subURL}";
+        whatsAppTenant ??= WhatsAppTenantManager.CurrentWhatsAppTenant;
+        string url = $"https://graph.facebook.com/v22.0/{whatsAppTenant.Contact.PhoneNumberId}/{subURL}";
 
-        return await _HTTPService.PostAsync(url , jsonPayload , new AuthenticationHeaderValue("Bearer" , _accessToken));
+        return await _HTTPService.PostAsync(url , jsonPayload , new AuthenticationHeaderValue("Bearer" , whatsAppTenant.WhatsAppCredentials.WAAccessToken));
     }
-    public async Task<T> PostAsync<T>(string subURL , string jsonPayload)
+    public async Task<T> PostAsync<T>(string subURL , string jsonPayload , WhatsAppTenantVO whatsAppTenant = null)
     {
-        HttpResponseMessage response = await PostAsync(subURL , jsonPayload);
+        HttpResponseMessage response = await PostAsync(subURL , jsonPayload, whatsAppTenant);
         string responseBody = await response.Content.ReadAsStringAsync();
 
         #if DEBUG

@@ -41,7 +41,8 @@ public class TemplateBE : WhatsAppBE
         string s = await _messageBE.Persist(message);
 
         string payload = _payloadBuilder.BuildTemplateMessagePayload(templateSend);
-        MessageResponseDTO messageResponseDTO = await PostAsync<MessageResponseDTO>("messages" , payload);
+
+        MessageResponseDTO messageResponseDTO = await PostAsync<MessageResponseDTO>("messages" , payload, whatsAppTenant);
 
         message.Status = messageResponseDTO.Messages[0]?.MessageStatus;
         message.MessageId = messageResponseDTO.Messages[0]?.Id;
