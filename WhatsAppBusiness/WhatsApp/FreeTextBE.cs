@@ -15,7 +15,18 @@ public class FreeTextBE : WhatsAppBE
 
     public async Task<ChatMessageDTO> SendTextMessage(TextDTO text)
     {
-        MessageVO message = await _message.GetNew(MessageVO.WhatsAppMessageTypes.Text);
+        FreeTextDTO freeText = new FreeTextDTO();
+        freeText.MessageType = MessageVO.WhatsAppMessageTypes.Text;
+
+        freeText.Phone = text.PhoneNumber;
+        freeText.Body = text.Message;
+        freeText.Text = new FreeTextTextDTO()
+        {
+            PreviewURL = true
+        };
+
+        return await SendServiceMessage(freeText);
+        /*MessageVO message = await _message.GetNew(MessageVO.WhatsAppMessageTypes.Text , ChatMessageDTO.MessageDirections.Outgoing);
         message.Content = text.Message;
 
         string s = await _message.Persist(message);
@@ -44,13 +55,13 @@ public class FreeTextBE : WhatsAppBE
         chatMessageDTO.Contact.Id = message.Receiver.Id;
         chatMessageDTO.Contact.WaId = message.Receiver.WaId;
 
-        return chatMessageDTO;
+        return chatMessageDTO;*/
     }
 
 
     public async Task<ChatMessageDTO> SendServiceMessage(FreeTextDTO freeText)
     {
-        MessageVO message = await _message.GetNew(freeText.MessageType);
+        MessageVO message = await _message.GetNew(freeText.MessageType , ChatMessageDTO.MessageDirections.Outgoing);
         message.Content = freeText.Body;
 
         string payload = null;

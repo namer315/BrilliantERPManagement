@@ -2,7 +2,9 @@
 using CommonData.VO;
 using WhatsAppData.DAO;
 using WhatsAppData.DTO.WhatsApp.FreeText;
+using WhatsAppData.Managers;
 using WhatsAppData.VO.WhatsApp;
+using static WhatsAppData.DTO.Chat.ChatMessageDTO;
 
 namespace WhatsAppBusiness.WhatsApp;
 
@@ -23,12 +25,25 @@ public class MessageBE
         return message;
     }
 
-    internal async Task<MessageVO> GetNew(MessageVO.WhatsAppMessageTypes type , string messageId = null  , TenantVO tenant = null)
+    internal async Task<MessageVO> GetNew(MessageVO.WhatsAppMessageTypes type , MessageDirections direction , ContactVO contact = null! , string messageId = null! , TenantVO tenant = null!)
     {
         MessageVO message = new MessageVO();
 
         message.MessageId = messageId;
         message.Type = type;
+
+        message.MessageDirection = direction;
+
+        if (direction == MessageDirections.Incoming)
+            message.Receiver = contact;
+        else
+        {
+            if(WhatsAppTenantManager.IskeyExist)
+                message.Sender = WhatsAppTenantManager.CurrentContact;
+            else
+                message.Sender = contact;
+        }
+
         if (TenantManager.IskeyExist)
             message.Tenant = TenantManager.CurrentTenant;
         else if (tenant is not null)
@@ -40,7 +55,7 @@ public class MessageBE
     internal async Task<string> Persist(MessageVO message , bool merge = false)
     {
         Validation(message);
-        
+
         return await _dao.MergeAsync(message);
     }
 
@@ -49,7 +64,16 @@ public class MessageBE
         if (message.Id != Guid.Empty)
         {
             message.UpdatedAt = DateTime.UtcNow;
-    }
+        }
+        if(message.MessageDirection == MessageDirections.Incoming && message.Sender is null)
+            throw new ArgumentException("Incoming messages must have a Sender contact." , nameof(message));
+
+        //if(message.MessageDirection == MessageDirections.Outgoing && message.Receiver is null)
+        //    throw new ArgumentException("Outgoing messages must have a Receiver contact." , nameof(message));
+        if(message.MessageDirection == MessageDirections.Outgoing && message.Sender is null)
+            throw new ArgumentException("Outgoing messages must have a Sender contact." , nameof(message));
+        if (message.MessageDirection == MessageDirections.Outgoing && message.Tenant is null)
+            throw new ArgumentException("Outgoing messages must have a Tenant." , nameof(message));
     }
 
     public async Task<MessageVO> GetLastMessageBySender(string number)
@@ -116,7 +140,7 @@ public class MessageBE
     {
         MessageVO lastMessage = await GetLastMessageBySender(phone);
 
-        if(lastMessage is null || lastMessage.Timestamp is null)
+        if (lastMessage is null || lastMessage.Timestamp is null)
         {
             return new SessionCheckResponseDTO
             {
@@ -131,7 +155,7 @@ public class MessageBE
         {
             Phone = phone ,
             IsIn24hSession = isInSession ,
-            LastMessageAt = isInSession && lastMessage.Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(lastMessage.Timestamp.Value) : null        
+            LastMessageAt = isInSession && lastMessage.Timestamp.HasValue ? DateTimeOffset.FromUnixTimeSeconds(lastMessage.Timestamp.Value) : null
         };
     }
 
@@ -140,7 +164,7 @@ public class MessageBE
         if (sender is null)
             throw new ArgumentNullException(nameof(sender));
         if (sender.Id == Guid.Empty)
-            throw new ArgumentException("Sender's Id cannot be empty.", nameof(sender));
+            throw new ArgumentException("Sender's Id cannot be empty." , nameof(sender));
 
         IList<TenantVO> tenantList = await _dao.GetTenantsByContact(sender);
         if (tenantList is { Count: > 0 })

@@ -178,7 +178,8 @@ public class WebhookBE
                                         //case null:
                                         //    break;
                                     }
-                                    MessageVO message = await _messageBE.GetNew(messageType , msg.Id);
+                                    MessageVO message = await _messageBE.GetNew(messageType , ChatMessageDTO.MessageDirections.Incoming , messageId: msg.Id);
+
                                     message.Button = button;
 
                                     message.Sender = await _contactBE.GetContactBy(msg.From);

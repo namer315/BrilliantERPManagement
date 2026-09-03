@@ -2,6 +2,7 @@
 using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
+using WhatsAppData.Managers;
 using WhatsAppData.VO.WhatsApp;
 
 namespace WhatsAppBusiness.WhatsApp;
@@ -17,8 +18,11 @@ public class TemplateBE : WhatsAppBE
     {
         //if (templateSend.TemplateName.Equals("order_confirmed"))
         //    templateSend.LanguageCode = "en_US";
+        WhatsAppTenantVO whatsAppTenant = WhatsAppTenantManager.IskeyExist
+            ? WhatsAppTenantManager.CurrentWhatsAppTenant
+            : await WhatsAppTenantManager.GetWhatsAppTenantByTenant(tenant);
 
-        MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Template, tenant: tenant);
+        MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Template , ChatMessageDTO.MessageDirections.Outgoing , whatsAppTenant.Contact , tenant: tenant);
         //message.Receiver = await _contact.GetContactBy(templateSend.RecipientPhoneNumber);
         //message_templates?name=order_confirmed
         TemplatesResponseDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
@@ -26,7 +30,8 @@ public class TemplateBE : WhatsAppBE
         if(templatesResponseDTO.Data is not { Count:>0} || templatesResponseDTO.Data[0].Components is not { Count: > 0 })
             throw new InvalidOperationException( $"Template '{templateSend.TemplateName}' was not found or contains no components.");
 
-        message.Content = templatesResponseDTO.Data[0].Components[0].Text;
+        //message.Content = templatesResponseDTO.Data[0].Components[0].Text;
+        message.Content = templatesResponseDTO.Data[0].Components.FirstOrDefault(x => x.Type.Equals("BODY"))?.Text ?? "";
         templateSend.LanguageCode = templatesResponseDTO.Data[0].Language;
         foreach (TemplateParameterDTO parameter in templateSend.ParameterList)
         {
@@ -88,7 +93,7 @@ public class TemplateBE : WhatsAppBE
 
         return chatMessage;
     }
-    public async Task<ChatMessageDTO> ResendFreeTextAsTemplateBy(string messageId, TemplateParameterDTO parameterCompany)
+    /*public async Task<ChatMessageDTO> ResendFreeTextAsTemplateBy(string messageId, TemplateParameterDTO parameterCompany)
     {
         MessageVO message = await _messageBE.getMessageBy(messageId);
 
@@ -109,7 +114,7 @@ public class TemplateBE : WhatsAppBE
         ChatMessageDTO chatMessageDTO = await SendTemplateMessage(templateSend);
     
         return chatMessageDTO;
-    }
+    }*/
 
     /// <summary>
     /// Fetches every message template provisioned under the configured WhatsApp Business Account.
