@@ -115,7 +115,7 @@ public partial class WhatsAppTenantDetail
             else
             {
                 _waIdFound = true;
-                AutoFillFromContact(contact);
+                await AutoFillFromContact(contact);
             }
         }
         catch (Exception ex)
@@ -127,16 +127,16 @@ public partial class WhatsAppTenantDetail
     /// <summary>
     /// Auto-fills Contact and WhatsApp Business Account fields from an existing Contact record.
     /// </summary>
-    private void AutoFillFromContact(ContactVO contact)
+    private async Task AutoFillFromContact(ContactVO contact)
     {
         _whatsAppTenant.Contact ??= new ContactVO();
         _whatsAppTenant.Contact.Name = contact.Name;
         _whatsAppTenant.Contact.PhoneNumberId = contact.PhoneNumberId;
         _whatsAppTenant.Contact.WaId = contact.WaId;
 
-        // Resolve credentials from the contact's linked tenant (if any).
+        // Resolve credentials from the linked WhatsApp tenant (if any).
         _whatsAppTenant.WhatsAppCredentials ??= new WhatsAppCredentialsVO();
-        var linkedTenant = contact.WhatsAppTenant;
+        var linkedTenant = await _fdm.GetWhatsAppTenantByContact(contact);
         if (linkedTenant?.WhatsAppCredentials != null)
         {
             _whatsAppTenant.WhatsAppCredentials.WABusinessAccountId = linkedTenant.WhatsAppCredentials.WABusinessAccountId;

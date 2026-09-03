@@ -20,4 +20,10 @@ public class WhatsAppTenantFDM
     public async Task<IList<WhatsAppTenantVO>> GetAllInactiveWhatsAppTenants() => await _be.GetAllInactiveWhatsAppTenants();
 
     public async Task<ContactVO> GetContactBy(string waId) => await new ContactDAO().GetContactBy(waId.Trim());
+
+    /// <summary>
+    /// Retrieves the <see cref="WhatsAppTenantVO"/> linked to the given <see cref="ContactVO"/>,
+    /// including its nested <see cref="WhatsAppCredentialsVO"/>. At most one result is returned.
+    /// </summary>
+    public async Task<WhatsAppTenantVO> GetWhatsAppTenantByContact(ContactVO contact) => await new WhatsAppTenantDAO().GetWhatsAppTenantBy(contact);
 }
