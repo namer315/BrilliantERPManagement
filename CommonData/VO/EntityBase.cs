@@ -49,8 +49,8 @@ public class EntityBaseCodeWithIdMapping<T> : ClassMap<T> where T : EntityBaseWi
         Id(e => e.Id)
             .GeneratedBy.GuidComb();
 
-        Map(e => e.Code).Not.Nullable();
-        Map(e => e.Number).Not.Nullable();
+        Map(e => e.Code);
+        Map(e => e.Number);
 
         OptimisticLock.Version().DynamicUpdate();
     }
