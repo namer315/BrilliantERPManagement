@@ -127,6 +127,12 @@
                 <button type="submit" class="btn btn-primary">
                     @(TenantId == Guid.Empty ? "Create Tenant" : "Save Changes")
                 </button>
+                @if (CanCopyTenantToken)
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="CopyTenantToken" title="Copy the Brilliant WhatsApp endpoint URL and tenant token as JSON">
+                        Copy Token &amp; URL
+                    </button>
+                }
                 <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancel</button>
             </div>
         </EditForm>
