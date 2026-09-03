@@ -105,7 +105,7 @@ public partial class WhatsAppTenantDetail
 
         try
         {
-            var contact = await new ContactDAO().GetContactBy(waId.Trim());
+            ContactVO contact = await _fdm.GetContactBy(waId.Trim());
             if (contact == null)
             {
                 _waIdFound = false;

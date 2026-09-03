@@ -18,4 +18,6 @@ public class WhatsAppTenantFDM
     public async Task<IList<WhatsAppTenantVO>> GetAllActiveWhatsAppTenants() => await _be.GetAllActiveWhatsAppTenants();
 
     public async Task<IList<WhatsAppTenantVO>> GetAllInactiveWhatsAppTenants() => await _be.GetAllInactiveWhatsAppTenants();
+
+    public async Task<ContactVO> GetContactBy(string waId) => await new ContactDAO().GetContactBy(waId.Trim());
 }
