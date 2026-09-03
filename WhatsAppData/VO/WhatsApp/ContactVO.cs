@@ -12,7 +12,8 @@ public class ContactVO : EntityBaseWithCode
     public virtual string PhoneNumberId { get; set; }
     public virtual string Name { get; set; }
 
-    public virtual WhatsAppTenantVO WhatsAppTenant { get; set; }
+    //public virtual WhatsAppTenantVO WhatsAppTenant { get; set; }
+    public virtual IList<WhatsAppTenantVO> WhatsAppTenantList { get; set; }
 }
 
 public class ContactMap : EntityBaseCodeWithIdMapping<ContactVO>
@@ -25,7 +26,9 @@ public class ContactMap : EntityBaseCodeWithIdMapping<ContactVO>
         Map(x => x.PhoneNumberId).Nullable();
 
 
-        References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.None().Nullable();
+        //References(x => x.WhatsAppTenant, "WhatsAppTenant").Cascade.None().Nullable();
+
+        HasMany(x => x.WhatsAppTenantList).KeyColumn("Contact").Cascade.None().LazyLoad();
     }
 }
 

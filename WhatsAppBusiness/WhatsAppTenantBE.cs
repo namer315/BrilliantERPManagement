@@ -114,4 +114,14 @@ public class WhatsAppTenantBE
 
         return whatsAppTenant;
     }
+
+    internal async Task<TenantVO> GetTenantBy(ContactVO contact)
+    {
+        var count = await _dao.GetCountBy(contact);
+        TenantVO tenant = null;
+        if (count == 1)
+            tenant = await _dao.GetTenantBy(contact);
+
+        return tenant;
+    }
 }

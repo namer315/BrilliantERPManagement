@@ -66,7 +66,7 @@ public class MessageDAO : RepositoryBase
         // Extract only the TenantVO from the object array tuples
         return results.Select(r => (TenantVO)r[0]).ToList();
     }
-    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id , ChatHistorySH chatHistorySH)
+    public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid contactId , ChatHistorySH chatHistorySH)
     {
         string whereCondition = string.Empty;
         if (!string.IsNullOrEmpty(chatHistorySH.MessageId))
@@ -81,12 +81,12 @@ public class MessageDAO : RepositoryBase
             LEFT OUTER JOIN FETCH message.Receiver as receiver
             LEFT OUTER JOIN FETCH message.Tenant as tenent
         WHERE
-            (sender.Id = :id OR receiver.Id = :id)
-            AND (tenent IS NOT NULL AND tenent.Id = :tenentId)
+            (tenent IS NOT NULL AND tenent.Id = :tenentId)            
+            AND (sender.Id = :contactId OR receiver.Id = :contactId)
             {whereCondition}
         ORDER BY message.CreatedAt DESC"
         )
-        .SetParameter("id" , id)
+        .SetParameter("contactId" , contactId)
         .SetParameter("tenentId" , TenantManager.CurrentTenant.Id)
         .SetFirstResult(chatHistorySH.Offset)       // use model property
         .SetMaxResults(chatHistorySH.PageSize);     // use model property

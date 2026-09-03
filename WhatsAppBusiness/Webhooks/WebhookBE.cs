@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using WhatsAppBusiness.WhatsApp;
+using WhatsAppData.DAO;
 using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.Stream;
 using WhatsAppData.DTO.Webhooks;
@@ -21,6 +22,9 @@ public class WebhookBE
     private WhatsAppErrorBE _whatsAppErrorBE = new WhatsAppErrorBE();
     private WhatsAppPricingBE _whatsAppPricingBE = new WhatsAppPricingBE();
     private TemplateBE _templateBE = new TemplateBE();
+    private WhatsAppTenantBE whatsAppTenantBE = new WhatsAppTenantBE();
+
+    private ContactDAO _contactDAO = new ContactDAO();
 
     public async Task<bool> HandleWebhook(WebhookDTO webhook)
     {
@@ -178,7 +182,10 @@ public class WebhookBE
                                         //case null:
                                         //    break;
                                     }
-                                    MessageVO message = await _messageBE.GetNew(messageType , ChatMessageDTO.MessageDirections.Incoming , messageId: msg.Id);
+                                    string receiverWaId = change.Value.Metadata.DisplayPhoneNumber;
+                                    ContactVO receiver = await _contactBE.GetContactBy(receiverWaId);
+                                    TenantVO tenant = await whatsAppTenantBE.GetTenantBy(receiver);
+                                    MessageVO message = await _messageBE.GetNew(messageType , ChatMessageDTO.MessageDirections.Incoming , receiver, msg.Id , tenant);
 
                                     message.Button = button;
 
@@ -196,7 +203,7 @@ public class WebhookBE
 
                                     s = await _messageBE.Persist(message , true);
 
-                                    TenantVO tenant = await _messageBE.GetTenantbyContact(message.Sender);
+                                    //TenantVO tenant = await _messageBE.GetTenantbyContact(message.Sender);
                                     await DispatchIncomingMessageAsync(message , tenant);
                                 }
                             }

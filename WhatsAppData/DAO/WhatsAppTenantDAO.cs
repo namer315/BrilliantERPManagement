@@ -1,4 +1,5 @@
 using CommonData.DAO;
+using CommonData.VO;
 using NHibernate;
 using System.Collections;
 using WhatsAppData.VO.WhatsApp;
@@ -73,5 +74,46 @@ public class WhatsAppTenantDAO : RepositoryBase
         .SetMaxResults(1);
 
         return await q.UniqueResultAsync<WhatsAppTenantVO>();
+    }
+
+    public async Task<WhatsAppTenantVO> GetWhatsAppTenantBy(ContactVO contact)
+    {
+        IQuery q = Session.CreateQuery(@"
+            FROM WhatsAppTenantVO as whatsappTenant
+                LEFT JOIN whatsappTenant.Tenant as tenant
+                LEFT JOIN whatsappTenant.Contact as contact
+            WHERE contact.Id = :contactId
+        ")
+        .SetParameter("contactId" , contact.Id)
+        .SetMaxResults(1);
+
+        return await q.UniqueResultAsync<WhatsAppTenantVO>();
+    }
+    public async Task<TenantVO> GetTenantBy(ContactVO contact)
+    {
+        IQuery q = Session.CreateQuery(@"
+            SELECT tenant
+            FROM WhatsAppTenantVO as whatsappTenant
+                LEFT JOIN whatsappTenant.Tenant as tenant
+                LEFT JOIN whatsappTenant.Contact as contact
+            WHERE contact.Id = :contactId
+        ")
+        .SetParameter("contactId" , contact.Id)
+        .SetMaxResults(1);
+
+        return await q.UniqueResultAsync<TenantVO>();
+    }
+    public async Task<int> GetCountBy(ContactVO contact)
+    {
+        var count = await Session.CreateQuery(@"
+            SELECT count(whatsappTenant)
+            FROM WhatsAppTenantVO as whatsappTenant
+                LEFT JOIN whatsappTenant.Contact as contact
+            WHERE contact.Id = :contactId
+        ")
+            .SetParameter("contactId" , contact.Id)
+            .UniqueResultAsync<long>();
+
+        return (int)count;
     }
 }
