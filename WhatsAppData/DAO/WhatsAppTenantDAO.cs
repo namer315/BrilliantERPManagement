@@ -80,8 +80,9 @@ public class WhatsAppTenantDAO : RepositoryBase
     {
         IQuery q = Session.CreateQuery(@"
             FROM WhatsAppTenantVO as whatsappTenant
-                LEFT JOIN whatsappTenant.Tenant as tenant
-                LEFT JOIN whatsappTenant.Contact as contact
+                LEFT JOIN FETCH whatsappTenant.Tenant as tenant
+                LEFT JOIN FETCH whatsappTenant.Contact as contact
+                LEFT JOIN FETCH whatsappTenant.WhatsAppCredentials as credentials
             WHERE contact.Id = :contactId
         ")
         .SetParameter("contactId" , contact.Id)

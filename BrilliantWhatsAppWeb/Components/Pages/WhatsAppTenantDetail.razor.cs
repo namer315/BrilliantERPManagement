@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Threading;
 using WhatsAppBusiness;
 using WhatsAppData.DAO;
 using WhatsAppData.VO.WhatsApp;
@@ -37,6 +38,10 @@ public partial class WhatsAppTenantDetail
     // Read-only lookups that were auto-filled from the database
     private bool _waIdFound;
     private bool _businessAccountFound;
+
+    // Debounce cancellation for the WA ID auto-fetch, so typing a number doesn't
+    // trigger an out-of-order database lookup for an older/partial value.
+    private CancellationTokenSource _waIdSearchCts = new CancellationTokenSource();
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,7 +100,42 @@ public partial class WhatsAppTenantDetail
     }
 
     /// <summary>
-    /// Triggered when the user leaves the WhatsApp ID field.
+    /// Triggered while typing in the WhatsApp ID field. Debounces briefly before fetching,
+    /// so that once the user pauses it auto-fills the Contact and, when present, the linked
+    /// WhatsApp Business Account credentials from the database.
+    /// </summary>
+    private async Task OnWaIdInput(ChangeEventArgs e)
+    {
+        if (_isEditingExisting)
+            return;
+
+        var waId = e?.Value?.ToString();
+        _whatsAppTenant.Contact.WaId = waId;
+
+        // Cancel any in-flight/pending lookup triggered by a previous partial value.
+        _waIdSearchCts.Cancel();
+        _waIdSearchCts.Dispose();
+        var cts = _waIdSearchCts = new CancellationTokenSource();
+        var token = cts.Token;
+
+        try
+        {
+            // Debounce: wait for typing to pause before hitting the database.
+            await Task.Delay(500 , token);
+            await LookupAndApplyWaIdAsync(waId , token);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer keystroke superseded this lookup; ignore it.
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Error checking WhatsApp ID: {ex.Message}" , "error");
+        }
+    }
+
+    /// <summary>
+    /// Triggered when the user leaves the WhatsApp ID field (safety net after on-input fetch).
     /// If the WhatsApp ID exists in the database, auto-fill and lock the linked
     /// Contact and WhatsApp Business Account fields; otherwise unlock them for entry.
     /// </summary>
@@ -110,18 +150,7 @@ public partial class WhatsAppTenantDetail
 
         try
         {
-            ContactVO contact = await _fdm.GetContactBy(waId.Trim());
-            if (contact == null)
-            {
-                _waIdFound = false;
-                _businessAccountFound = false;
-                EnableNewContactFields();
-            }
-            else
-            {
-                _waIdFound = true;
-                await AutoFillFromContact(contact);
-            }
+            await LookupAndApplyWaIdAsync(waId , CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -130,9 +159,43 @@ public partial class WhatsAppTenantDetail
     }
 
     /// <summary>
-    /// Auto-fills Contact and WhatsApp Business Account fields from an existing Contact record.
+    /// Looks up the given WhatsApp number in the database. If it exists and links to a
+    /// WhatsApp tenant with credentials, auto-fills &amp; locks the Contact and WhatsApp
+    /// Business Account fields. If it does not exist, unlocks the fields for manual entry.
     /// </summary>
-    private async Task AutoFillFromContact(ContactVO contact)
+    private async Task LookupAndApplyWaIdAsync(string waId , CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(waId))
+        {
+            _waIdFound = false;
+            _businessAccountFound = false;
+            EnableNewContactFields();
+            return;
+        }
+
+        ContactVO contact = await _fdm.GetContactBy(waId.Trim());
+        token.ThrowIfCancellationRequested();
+
+        if (contact == null)
+        {
+            _waIdFound = false;
+            _businessAccountFound = false;
+            EnableNewContactFields();
+        }
+        else
+        {
+            _waIdFound = true;
+            await AutoFillFromContact(contact , token);
+        }
+    }
+
+    /// <summary>
+    /// Auto-fills Contact and WhatsApp Business Account fields from an existing Contact record,
+    /// fetching the linked credentials (Business Account ID + Access Token) when they exist.
+    /// If the contact is present but has no usable linked credentials, the Business Account
+    /// fields are unlocked so they can be entered manually.
+    /// </summary>
+    private async Task AutoFillFromContact(ContactVO contact , CancellationToken token)
     {
         _whatsAppTenant.Contact ??= new ContactVO();
         _whatsAppTenant.Contact.Name = contact.Name;
@@ -142,18 +205,32 @@ public partial class WhatsAppTenantDetail
         // Resolve credentials from the linked WhatsApp tenant (if any).
         _whatsAppTenant.WhatsAppCredentials ??= new WhatsAppCredentialsVO();
         var linkedTenant = await _fdm.GetWhatsAppTenantByContact(contact);
-        if (linkedTenant?.WhatsAppCredentials != null)
+        token.ThrowIfCancellationRequested();
+
+        var hasCredentials = linkedTenant?.WhatsAppCredentials != null &&
+            !string.IsNullOrEmpty(linkedTenant.WhatsAppCredentials.WABusinessAccountId);
+
+        if (hasCredentials)
         {
             _whatsAppTenant.WhatsAppCredentials.WABusinessAccountId = linkedTenant.WhatsAppCredentials.WABusinessAccountId;
             _whatsAppTenant.WhatsAppCredentials.WAAccessToken = linkedTenant.WhatsAppCredentials.WAAccessToken;
-            _businessAccountFound = !string.IsNullOrEmpty(linkedTenant.WhatsAppCredentials.WABusinessAccountId);
+            _businessAccountFound = true;
+            LockAllFields();
         }
         else
         {
+            // Contact exists but has no usable linked credentials yet - keep the contact
+            // read-only but allow the Business Account ID / Access Token / Phone to be entered.
             _businessAccountFound = false;
+            if (linkedTenant?.WhatsAppCredentials != null)
+            {
+                _whatsAppTenant.WhatsAppCredentials.WAAccessToken = linkedTenant.WhatsAppCredentials.WAAccessToken;
+            }
+            _canEditContactName = false;
+            _canEditPhoneNumberId = true;
+            _canEditBusinessAccountId = true;
+            _canEditAccessToken = true;
         }
-
-        LockAllFields();
     }
 
     /// <summary>

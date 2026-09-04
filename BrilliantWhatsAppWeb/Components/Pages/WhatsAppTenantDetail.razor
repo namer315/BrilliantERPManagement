@@ -71,7 +71,7 @@
                     </div> *@
                     <div class="form-group">
                         <label>WhatsApp ID *</label>
-                        <InputText @bind-Value="_whatsAppTenant.Contact.WaId" class="form-control" placeholder="Enter WhatsApp ID" disabled="@_isEditingExisting" @onblur="OnWaIdBlur" />
+                        <InputText @bind-Value="_whatsAppTenant.Contact.WaId" class="form-control" placeholder="Enter WhatsApp ID" disabled="@_isEditingExisting" @oninput="OnWaIdInput" @onblur="OnWaIdBlur" />
                         <ValidationMessage For="@(() => _whatsAppTenant.Contact.WaId)" />
                     </div>
                 </div>
