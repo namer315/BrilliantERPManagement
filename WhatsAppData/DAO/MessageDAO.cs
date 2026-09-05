@@ -225,4 +225,17 @@ public class MessageDAO : RepositoryBase
             .SetParameterList("contactIdList" , contactIdList);
         return await q.ListAsync<MessageVO>();
     }
+
+    public async Task<MessageVO> GetById(Guid id)
+    {
+        IQuery q = Session.CreateQuery(@"
+        FROM MessageVO as message
+        WHERE
+            message.Id = :id
+        ")
+            .SetParameter("id" , id)
+            .SetMaxResults(1);
+
+        return await q.UniqueResultAsync<MessageVO>();
+    }
 }

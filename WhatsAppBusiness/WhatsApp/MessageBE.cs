@@ -2,7 +2,9 @@
 using CommonData.VO;
 using System.Collections;
 using WhatsAppData.DAO;
+using WhatsAppData.DTO.Chat;
 using WhatsAppData.DTO.WhatsApp.FreeText;
+using WhatsAppData.Extensions;
 using WhatsAppData.Managers;
 using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
@@ -246,5 +248,44 @@ public class MessageBE
         }
 
         return messageList;
+    }
+
+    /*public async Task<ChatMessageDTO> GetMessageById(string messageId)
+    {
+        if (string.IsNullOrEmpty(messageId))
+            throw new ArgumentException("Message ID is required." , nameof(messageId));
+
+        MessageVO message = await new MessageDAO().GetMessageBy(messageId);
+
+        if (message is null)
+            throw new KeyNotFoundException($"No message found for ID '{messageId}'.");
+
+        ChatMessageDTO chatMessage = message.MapTo<ChatMessageDTO>();
+
+        var rawDataStatus = await new MessageStatusDAO().GetMessageStatusBy(new List<Guid> { chatMessage.Id });
+        (Guid Id , MessageStatusVO.WhatsAppMessageStatus Status) row = rawDataStatus.FirstOrDefault(s => s.Id == chatMessage.Id);
+        if (row.Id != Guid.Empty)
+            chatMessage.Status = row.Status;
+
+        return chatMessage;
+    }*/
+    public async Task<ChatMessageDTO> GetMessageById(Guid id)
+    {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Message ID is required." , nameof(id));
+
+        MessageVO message = await new MessageDAO().GetById(id);
+
+        if (message is null)
+            throw new KeyNotFoundException($"No message found for ID '{id}'.");
+
+        ChatMessageDTO chatMessage = message.MapTo<ChatMessageDTO>();
+
+        var rawDataStatus = await new MessageStatusDAO().GetMessageStatusBy(new List<Guid> { chatMessage.Id });
+        (Guid Id , MessageStatusVO.WhatsAppMessageStatus Status) row = rawDataStatus.FirstOrDefault(s => s.Id == chatMessage.Id);
+        if (row.Id != Guid.Empty)
+            chatMessage.Status = row.Status;
+
+        return chatMessage;
     }
 }
