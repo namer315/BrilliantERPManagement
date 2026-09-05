@@ -1,8 +1,10 @@
 ﻿using CommonData.Managers;
 using CommonData.VO;
+using System.Collections;
 using WhatsAppData.DAO;
 using WhatsAppData.DTO.WhatsApp.FreeText;
 using WhatsAppData.Managers;
+using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
 using static WhatsAppData.DTO.Chat.ChatMessageDTO;
 
@@ -38,7 +40,7 @@ public class MessageBE
             message.Receiver = contact;
         else
         {
-            if(WhatsAppTenantManager.IskeyExist)
+            if (WhatsAppTenantManager.IskeyExist)
                 message.Sender = WhatsAppTenantManager.CurrentContact;
             else
                 message.Sender = contact;
@@ -65,12 +67,12 @@ public class MessageBE
         {
             message.UpdatedAt = DateTime.UtcNow;
         }
-        if(message.MessageDirection == MessageDirections.Incoming && message.Sender is null)
+        if (message.MessageDirection == MessageDirections.Incoming && message.Sender is null)
             throw new ArgumentException("Incoming messages must have a Sender contact." , nameof(message));
 
         //if(message.MessageDirection == MessageDirections.Outgoing && message.Receiver is null)
         //    throw new ArgumentException("Outgoing messages must have a Receiver contact." , nameof(message));
-        if(message.MessageDirection == MessageDirections.Outgoing && message.Sender is null)
+        if (message.MessageDirection == MessageDirections.Outgoing && message.Sender is null)
             throw new ArgumentException("Outgoing messages must have a Sender contact." , nameof(message));
         if (message.MessageDirection == MessageDirections.Outgoing && message.Tenant is null)
             throw new ArgumentException("Outgoing messages must have a Tenant." , nameof(message));
@@ -176,5 +178,73 @@ public class MessageBE
         //    throw new InvalidOperationException($"Multiple tenants found for contact '{sender.Id}'.");
 
         //return tenantList.FirstOrDefault() ?? sender.Tenant;
+    }
+
+    internal async Task<IList<MessageVO>> GetMessageHistoryBy(Guid contactId , ChatHistorySH chatHistorySH)
+    {
+        IList rowData = await _dao.GetMessageHistoryBySelect(contactId , chatHistorySH);
+        IList<MessageVO> messageList = new List<MessageVO>();
+
+        foreach (object[] raw in rowData)
+        {
+            int index = 0;
+
+            MessageVO message = new MessageVO();
+            // --- message scalar fields ---
+            message.Id = (Guid)raw[index++];
+            message.MessageId = Convert.ToString(raw[index++]);
+            message.Content = Convert.ToString(raw[index++]);
+            message.Status = Convert.ToString(raw[index++]);
+            message.Timestamp = raw[index++] as long?;
+            message.Type = (MessageVO.WhatsAppMessageTypes)raw[index++];
+            message.MessageDirection = (MessageDirections)raw[index++];
+            message.CreatedAt = Convert.ToDateTime(raw[index++]);
+
+            // --- media ---
+            if(raw[index] is not null)
+            {
+                message.Media = new MessageMediaVO();
+                message.Media.Id = (Guid)raw[index++];
+                message.Media.FileName = Convert.ToString(raw[index++]);
+                message.Media.Type = (MessageMediaVO.MediaTypes)raw[index++];
+            }
+            else
+                index += 3;
+
+            // --- sender ---
+            if (raw[index] is not null)
+            {
+                message.Sender = new ContactVO();
+                message.Sender.Id = (Guid)raw[index++];
+                message.Sender.Name = Convert.ToString(raw[index++]);
+                message.Sender.WaId = Convert.ToString(raw[index++]);
+            }
+            else
+                index += 3;
+
+            // --- receiver ---
+            if (raw[index] is not null)
+            {
+                message.Receiver = new ContactVO();
+                message.Receiver.Id = (Guid)raw[index++];
+                message.Receiver.Name = Convert.ToString(raw[index++]);
+                message.Receiver.WaId = Convert.ToString(raw[index++]);
+            }
+            else
+                index += 3;
+
+            // --- tenant ---
+            if (raw[index] is not null)          // 18 tenent.Id
+            {
+                message.Tenant = new TenantVO();
+                message.Tenant.Id = (Guid)raw[index++];
+            }
+            //else
+            //    index += 1;
+
+            messageList.Add(message);
+        }
+
+        return messageList;
     }
 }

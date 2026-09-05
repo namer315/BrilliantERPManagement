@@ -32,7 +32,7 @@ public class ChatBE
         };
 
         // Fetch message history from your data source
-        IList<MessageVO> messageList = await new MessageDAO().GetMessageHistoryBy(contact.Id, chatHistorySH);
+        IList<MessageVO> messageList = await new MessageBE().GetMessageHistoryBy(contact.Id, chatHistorySH);
         if(string.IsNullOrEmpty(chatHistorySH.MessageId) && messageList is { Count:> 0 })
             messageList = messageList.OrderBy(x => x.CreatedAt).ToList();
 

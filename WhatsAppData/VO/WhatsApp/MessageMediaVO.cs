@@ -26,7 +26,7 @@ public class MessageMediaMap : EntityWithIdMapping<MessageMediaVO>
 {
     public MessageMediaMap()
     {
-        Map(x => x.MediaFile).Length(int.MaxValue).Not.Nullable();
+        Map(x => x.MediaFile).Length(int.MaxValue).Not.Nullable().LazyLoad();
         Map(x => x.FileName);
         Map(x => x.Type).Not.Nullable();
 

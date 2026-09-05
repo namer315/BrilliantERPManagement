@@ -1,7 +1,8 @@
-﻿using CommonData.DAO;
+using CommonData.DAO;
 using CommonData.Managers;
 using CommonData.VO;
 using NHibernate;
+using System.Collections;
 using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
 
@@ -96,31 +97,44 @@ public class MessageDAO : RepositoryBase
 
         return await q.ListAsync<MessageVO>();
     }
-
-    /*public async Task<IList<MessageVO>> GetMessageHistoryBy(Guid id , int pageNumber , int pageSize)
+    public async Task<IList> GetMessageHistoryBySelect(Guid contactId , ChatHistorySH chatHistorySH)
     {
-        if (pageNumber < 1)
-            pageNumber = 1;
-            //throw new ArgumentOutOfRangeException(nameof(pageNumber) , "Page number must be greater than 0.");
-        if (pageSize < 1)
-            pageSize = 30;
-            //throw new ArgumentOutOfRangeException(nameof(pageSize) , "Page size must be greater than 0.");
-
-        IQuery q = Session.CreateQuery(@"
+        string whereCondition = string.Empty;
+        if (!string.IsNullOrEmpty(chatHistorySH.MessageId))
+            whereCondition += @" AND message.CreatedAt < (
+                SELECT ref.CreatedAt
+                FROM MessageVO ref
+                WHERE ref.MessageId = :messageId
+            )";
+        IQuery q = Session.CreateQuery($@"
+        SELECT
+            message.Id,message.MessageId, message.Content, message.Status, message.Timestamp, 
+            message.Type, message.MessageDirection, message.CreatedAt,
+            media.Id, media.FileName, media.Type,
+            sender.Id, sender.Name, sender.WaId,
+            receiver.Id, receiver.Name, receiver.WaId,
+            tenent.Id
         FROM MessageVO as message
-            LEFT OUTER JOIN FETCH message.Sender as sender
-            LEFT OUTER JOIN FETCH message.Receiver as receiver
+            LEFT OUTER JOIN message.Media as media
+            LEFT OUTER JOIN message.Sender as sender
+            LEFT OUTER JOIN message.Receiver as receiver
+            LEFT OUTER JOIN message.Tenant as tenent
         WHERE
-            (sender.Id = :id OR receiver.Id = :id)
+            (tenent IS NOT NULL AND tenent.Id = :tenentId)            
+            AND (sender.Id = :contactId OR receiver.Id = :contactId)
+            {whereCondition}
         ORDER BY message.CreatedAt DESC"
         )
-        .SetParameter("id" , id)
-        .SetFirstResult((pageNumber - 1) * pageSize)   // offset
-        .SetMaxResults(pageSize);                      // limit
+        .SetParameter("contactId" , contactId)
+        .SetParameter("tenentId" , TenantManager.CurrentTenant.Id)
+        .SetFirstResult(chatHistorySH.Offset)
+        .SetMaxResults(chatHistorySH.PageSize);
 
-        return await q.ListAsync<MessageVO>();
-    }*/
+        if (!string.IsNullOrEmpty(chatHistorySH.MessageId))
+            q.SetParameter("messageId" , chatHistorySH.MessageId);
 
+        return await q.ListAsync();
+    }
 
     public async Task<IList<MessageVO>> GetMessageHistoryBy(string waId)
     {
