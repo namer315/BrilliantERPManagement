@@ -9,7 +9,20 @@ namespace BrilliantWhatsAppAPI.Endpoints.Messages;
 public class TemplateEP
 {
 }
+public class TemplateEPTextEP : Endpoint<TemplateSendDTO , ChatMessageDTO>
+{
+    private TemplateFDM _fdm = new TemplateFDM();
 
+    public override void Configure()
+    {
+        Post("Messages/Template/Text");
+        AllowAnonymous();
+    }
+    public async override Task<ChatMessageDTO> ExecuteAsync(TemplateSendDTO req , CancellationToken ct)
+    {
+        return await _fdm.SendTemplateMessage(req);
+    }
+}
 //public class ResendTemplateEP : Endpoint<TemplateParameterDTO, ChatMessageDTO>
 //{
 //    private readonly TemplateFDM _fdm = new TemplateFDM();
