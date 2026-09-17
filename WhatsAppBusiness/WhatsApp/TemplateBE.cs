@@ -4,6 +4,7 @@ using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppData.Managers;
 using WhatsAppData.VO.WhatsApp;
+using static WhatsAppData.VO.WhatsApp.MessageVO;
 
 namespace WhatsAppBusiness.WhatsApp;
 
@@ -22,7 +23,6 @@ public class TemplateBE : WhatsAppBE
             ? WhatsAppTenantManager.CurrentWhatsAppTenant
             : await WhatsAppTenantManager.GetWhatsAppTenantByTenant(tenant);
 
-        MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Template , ChatMessageDTO.MessageDirections.Outgoing , whatsAppTenant.Contact , tenant: tenant);
         //message.Receiver = await _contact.GetContactBy(templateSend.RecipientPhoneNumber);
         //message_templates?name=order_confirmed
         TemplatesResponseDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
@@ -30,12 +30,17 @@ public class TemplateBE : WhatsAppBE
         if(templatesResponseDTO.Data is not { Count:>0} || templatesResponseDTO.Data[0].Components is not { Count: > 0 })
             throw new InvalidOperationException( $"Template '{templateSend.TemplateName}' was not found or contains no components.");
 
+        MessageKind? kind = null;
+        if (Enum.TryParse(typeof(MessageKind) , templatesResponseDTO.Data[0].Category , true , out var result))
+            kind = (MessageKind)result;
+        MessageVO message = await _messageBE.GetNew(MessageVO.WhatsAppMessageTypes.Template , ChatMessageDTO.MessageDirections.Outgoing , kind , whatsAppTenant.Contact , tenant: tenant);
+
         //message.Content = templatesResponseDTO.Data[0].Components[0].Text;
-        message.Content = templatesResponseDTO.Data[0].Components.FirstOrDefault(x => x.Type.Equals("BODY"))?.Text ?? "";
+        message.Body = templatesResponseDTO.Data[0].Components.FirstOrDefault(x => x.Type.Equals("BODY"))?.Text ?? "";
         templateSend.LanguageCode = templatesResponseDTO.Data[0].Language;
         foreach (TemplateParameterDTO parameter in templateSend.ParameterList)
         {
-            message.Content = message.Content.Replace("{{" + parameter.Name + "}}" , parameter.Text);
+            message.Body = message.Body.Replace("{{" + parameter.Name + "}}" , parameter.Text);
         }
 
         string s = await _messageBE.Persist(message);
@@ -60,7 +65,7 @@ public class TemplateBE : WhatsAppBE
         chatMessageDTO.MessageId = message.MessageId;
         //chatMessageDTO.Timestamp = message.Timestamp;
         chatMessageDTO.MessageDirection = ChatMessageDTO.MessageDirections.Outgoing;
-        chatMessageDTO.Body = message.Content;
+        chatMessageDTO.Body = message.Body;
 
         chatMessageDTO.Contact = new WhatsAppData.DTO.Common.ContactDTO();
         chatMessageDTO.Contact.Id = message.Receiver.Id;
@@ -85,7 +90,7 @@ public class TemplateBE : WhatsAppBE
                 new TemplateParameterDTO()
                 {
                     Type = "text" ,
-                    Text = message.Content ,
+                    Text = message.Body ,
                     Name = "text"
                 }
             }

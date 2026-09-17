@@ -103,7 +103,7 @@ public class ChatBE
             return new ChatDTO
             {
                 Contact = chat.Contact ,
-                LastMessage = lastMessage?.Content ,
+                LastMessage = lastMessage?.Body ,
                 Timestamp = lastMessage?.Timestamp ,
                 MessageId = lastMessage?.MessageId
             };

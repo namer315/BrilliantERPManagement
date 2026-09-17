@@ -61,8 +61,8 @@ public class FreeTextBE : WhatsAppBE
 
     public async Task<ChatMessageDTO> SendServiceMessage(FreeTextDTO freeText)
     {
-        MessageVO message = await _message.GetNew(freeText.MessageType , ChatMessageDTO.MessageDirections.Outgoing);
-        message.Content = freeText.Body;
+        MessageVO message = await _message.GetNew(freeText.MessageType , ChatMessageDTO.MessageDirections.Outgoing, MessageVO.MessageKind.Service);
+        message.Body = freeText.Body;
 
         string payload = null;
         switch (freeText.MessageType)

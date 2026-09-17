@@ -108,7 +108,7 @@ public class MessageDAO : RepositoryBase
             )";
         IQuery q = Session.CreateQuery($@"
         SELECT
-            message.Id,message.MessageId, message.Content, message.Status, message.Timestamp, 
+            message.Id,message.MessageId, message.Body, message.Status, message.Timestamp, 
             message.Type, message.MessageDirection, message.CreatedAt,
             media.Id, media.FileName, media.Type,
             sender.Id, sender.Name, sender.WaId,

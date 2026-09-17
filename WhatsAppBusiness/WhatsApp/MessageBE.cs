@@ -9,6 +9,7 @@ using WhatsAppData.Managers;
 using WhatsAppData.Search.Chat;
 using WhatsAppData.VO.WhatsApp;
 using static WhatsAppData.DTO.Chat.ChatMessageDTO;
+using static WhatsAppData.VO.WhatsApp.MessageVO;
 
 namespace WhatsAppBusiness.WhatsApp;
 
@@ -29,11 +30,12 @@ public class MessageBE
         return message;
     }
 
-    internal async Task<MessageVO> GetNew(MessageVO.WhatsAppMessageTypes type , MessageDirections direction , ContactVO contact = null! , string messageId = null! , TenantVO tenant = null!)
+    internal async Task<MessageVO> GetNew(MessageVO.WhatsAppMessageTypes type , MessageDirections direction, MessageKind? Kind = null , ContactVO contact = null! , string messageId = null! , TenantVO tenant = null!)
     {
         MessageVO message = new MessageVO();
 
         message.MessageId = messageId;
+        message.Kind = Kind;
         message.Type = type;
 
         message.MessageDirection = direction;
@@ -195,7 +197,7 @@ public class MessageBE
             // --- message scalar fields ---
             message.Id = (Guid)raw[index++];
             message.MessageId = Convert.ToString(raw[index++]);
-            message.Content = Convert.ToString(raw[index++]);
+            message.Body = Convert.ToString(raw[index++]);
             message.Status = Convert.ToString(raw[index++]);
             message.Timestamp = raw[index++] as long?;
             message.Type = (MessageVO.WhatsAppMessageTypes)raw[index++];

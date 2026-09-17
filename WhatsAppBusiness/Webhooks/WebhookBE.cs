@@ -185,7 +185,7 @@ public class WebhookBE
                                     string receiverWaId = change.Value.Metadata.DisplayPhoneNumber;
                                     ContactVO receiver = await _contactBE.GetContactBy(receiverWaId);
                                     TenantVO tenant = await whatsAppTenantBE.GetTenantBy(receiver);
-                                    MessageVO message = await _messageBE.GetNew(messageType , ChatMessageDTO.MessageDirections.Incoming , receiver, msg.Id , tenant);
+                                    MessageVO message = await _messageBE.GetNew(messageType , ChatMessageDTO.MessageDirections.Incoming , null , receiver, msg.Id , tenant);
 
                                     message.Button = button;
 
@@ -197,7 +197,7 @@ public class WebhookBE
 
                                     if (msg.Text is not null)
                                     {
-                                        message.Content = msg.Text.Body;
+                                        message.Body = msg.Text.Body;
                                     }
                                     message.Timestamp = Convert.ToInt64(msg.Timestamp);
 
@@ -242,7 +242,7 @@ public class WebhookBE
             stream.Message = new ChatMessageDTO();
             stream.Message.Id = message.Id;
             stream.Message.MessageId = message.MessageId;
-            stream.Message.Body = message.Content;
+            stream.Message.Body = message.Body;
             stream.Message.Timestamp = message.Timestamp;
             stream.Message.MessageDirection = contactIsSender ? ChatMessageDTO.MessageDirections.Incoming : ChatMessageDTO.MessageDirections.Outgoing;
 

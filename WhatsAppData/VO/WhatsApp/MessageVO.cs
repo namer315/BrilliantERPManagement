@@ -1,4 +1,5 @@
 ﻿using CommonData.VO;
+using System.Text.Json.Serialization;
 using static WhatsAppData.DTO.Chat.ChatMessageDTO;
 
 namespace WhatsAppData.VO.WhatsApp;
@@ -6,11 +7,12 @@ namespace WhatsAppData.VO.WhatsApp;
 public class MessageVO : EntityBaseWithCode
 {
     public virtual string MessageId { get; set; }     // WhatsApp message ID
-    public virtual string Content { get; set; }       // Text or payload
+    public virtual string Body { get; set; }       // Text or payload
     public virtual DateTime ReceivedAt { get; set; }  // Timestamp
     public virtual string Status { get; set; }        // delivered, read, etc.
     public virtual long? Timestamp { get; set; } = null;       // raw webhook timestamp (Unix seconds)
 
+    public virtual MessageKind? Kind { get; set; }
     public virtual WhatsAppMessageTypes Type { get; set; }
 
     public virtual MessageDirections MessageDirection { get; set; }
@@ -46,6 +48,14 @@ public class MessageVO : EntityBaseWithCode
         System = 12,
         Button = 13,
     }
+    [JsonConverter(typeof(JsonStringEnumConverter<MessageKind>))]
+    public enum MessageKind
+    {
+        Marketing,      // promos, offers, welcome
+        Utility,        // order updates, payment
+        Authentication, // OTP codes
+        Service,
+    }
 
 }
 
@@ -55,7 +65,7 @@ public class MessageMap : EntityWithDatesMapping<MessageVO>
     public MessageMap()
     {
         Map(x => x.MessageId)/*.Not.Nullable()*/;
-        Map(x => x.Content).Length(int.MaxValue);//.Not.Nullable();
+        Map(x => x.Body).Length(int.MaxValue);//.Not.Nullable();
         //Map(x => x.ReceivedAt).Not.Nullable();
         Map(x => x.Status);
         Map(x => x.Timestamp).Nullable();

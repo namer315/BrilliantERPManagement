@@ -12,6 +12,7 @@ public class ChatMessageDTO : DTOBase
 {
     public string MessageId { get; set; }
 
+    public virtual MessageKind? Kind { get; set; }
     public WhatsAppMessageTypes Type { get; set; }
 
     [JsonIgnore]
@@ -49,7 +50,9 @@ public class ChatMessageProfile : Profile
             .ForMember(dest => dest.Id , opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.MessageId , opt => opt.MapFrom(src => src.MessageId))
             .ForMember(dest => dest.MessageDirection , opt => opt.MapFrom(src => src.MessageDirection))
-            .ForMember(dest => dest.Body , opt => opt.MapFrom(src => src.Content))
+            .ForMember(dest => dest.Body , opt => opt.MapFrom(src => src.Body))
+            .ForMember(dest => dest.Type , opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.Kind , opt => opt.MapFrom(src => src.Kind))
             .ForMember(dest => dest.Status , opt => opt.Ignore())
 
             .ForMember(dest => dest.Contact , opt => opt.MapFrom(src => src.Contact))
