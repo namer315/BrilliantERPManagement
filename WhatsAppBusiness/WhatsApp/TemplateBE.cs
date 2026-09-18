@@ -1,5 +1,6 @@
 ﻿using CommonData.VO;
 using WhatsAppData.DTO.Chat;
+using WhatsAppData.DTO.Template;
 using WhatsAppData.DTO.WhatsApp;
 using WhatsAppData.DTO.WhatsApp.Template;
 using WhatsAppData.Managers;
@@ -183,6 +184,16 @@ public class TemplateBE : WhatsAppBE
         TemplatesResponseWDTO templatesResponseDTO = await GetWABAAsync<TemplatesResponseWDTO>($"message_templates?{queryParameters}");
 
         return templatesResponseDTO;
+    }
+
+    public async Task<TemplatesDTO> GetTemplateList()
+    {
+        TemplatesResponseWDTO templatesResponse = await GetAllTemplatesAsync();
+
+        TemplatesDTO templates = new TemplatesDTO();
+        templates.TemplateList = templatesResponse.Data.Select(x => x.Name).Where(x => !x.Equals("hello_world")).ToList();
+
+        return templates;
     }
 }
 
