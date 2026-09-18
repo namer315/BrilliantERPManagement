@@ -6,7 +6,7 @@ namespace WhatsAppData.DTO.WhatsApp.Template;
 /// <summary>
 /// A button within a BUTTONS component.
 /// </summary>
-public class TemplateButtonDTO
+public class TemplateButtonWDTO
 {
     public string Type { get; set; } = string.Empty;
 

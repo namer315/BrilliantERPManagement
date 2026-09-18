@@ -6,14 +6,14 @@ namespace WhatsAppData.DTO.WhatsApp.Template;
 /// <summary>
 /// A single WhatsApp message template.
 /// </summary>
-public class MessageTemplateDTO
+public class MessageTemplateWDTO
 {
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("parameter_format")]
     public string ParameterFormat { get; set; } = string.Empty;
 
-    public IList<TemplateComponentDTO> Components { get; set; } = [];
+    public IList<TemplateComponentWDTO> Components { get; set; } = [];
 
     public string Language { get; set; } = string.Empty;
 

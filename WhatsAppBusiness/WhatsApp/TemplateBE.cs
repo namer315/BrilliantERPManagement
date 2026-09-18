@@ -25,7 +25,7 @@ public class TemplateBE : WhatsAppBE
 
         //message.Receiver = await _contact.GetContactBy(templateSend.RecipientPhoneNumber);
         //message_templates?name=order_confirmed
-        TemplatesResponseDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
+        TemplatesResponseWDTO templatesResponseDTO = await GetAllTemplatesAsync(templateName: templateSend.TemplateName);
 
         if(templatesResponseDTO.Data is not { Count:>0} || templatesResponseDTO.Data[0].Components is not { Count: > 0 })
             throw new InvalidOperationException( $"Template '{templateSend.TemplateName}' was not found or contains no components.");
@@ -150,7 +150,7 @@ public class TemplateBE : WhatsAppBE
     /// <exception cref="TaskCanceledException">
     /// Thrown when the request times out or the caller cancels via <paramref name="ct"/>.
     /// </exception>
-    public async Task<TemplatesResponseDTO> GetAllTemplatesAsync(
+    public async Task<TemplatesResponseWDTO> GetAllTemplatesAsync(
        string fields = "name,status,category,language,components" ,
        int limit = 50 ,
        string templateName = null,
@@ -180,7 +180,7 @@ public class TemplateBE : WhatsAppBE
             queryParameters += $"&name={Uri.EscapeDataString(templateName)}";
         }
 
-        TemplatesResponseDTO templatesResponseDTO = await GetWABAAsync<TemplatesResponseDTO>($"message_templates?{queryParameters}");
+        TemplatesResponseWDTO templatesResponseDTO = await GetWABAAsync<TemplatesResponseWDTO>($"message_templates?{queryParameters}");
 
         return templatesResponseDTO;
     }

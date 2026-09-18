@@ -9,7 +9,7 @@ public class TemplateFDM
 {
     private TemplateBE _be = new TemplateBE();
 
-    public async Task<TemplatesResponseDTO> GetTemplateList()
+    public async Task<TemplatesResponseWDTO> GetTemplateList()
     {
         return await _be.GetAllTemplatesAsync();
     }

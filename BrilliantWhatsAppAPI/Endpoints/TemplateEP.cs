@@ -4,7 +4,7 @@ using WhatsAppFDM.WhatsApp;
 
 namespace BrilliantWhatsAppAPI.Endpoints;
 
-public class TemplateListEP : EndpointWithoutRequest<TemplatesResponseDTO>
+public class TemplateListEP : EndpointWithoutRequest<TemplatesResponseWDTO>
 {
     private TemplateFDM _fdm = new TemplateFDM();
     public override void Configure()
@@ -13,7 +13,7 @@ public class TemplateListEP : EndpointWithoutRequest<TemplatesResponseDTO>
         AllowAnonymous();
     }
 
-    public async override Task<TemplatesResponseDTO> ExecuteAsync(CancellationToken ct)
+    public async override Task<TemplatesResponseWDTO> ExecuteAsync(CancellationToken ct)
     {
         return await _fdm.GetTemplateList();
     }
