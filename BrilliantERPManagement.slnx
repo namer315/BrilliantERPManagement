@@ -3,6 +3,12 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/BrilliantAIDBAgent/">
+    <Project Path="AIDBAgentBusiness/AIDBAgentBusiness.csproj" Id="cf7426be-c94b-4828-9e50-ab67eef27688" />
+    <Project Path="AIDBAgentData/AIDBAgentData.csproj" Id="6c2b0518-e272-4eeb-922c-21f25e49b641" />
+    <Project Path="AIDBAgentFDM/AIDBAgentFDM.csproj" Id="354e252d-e963-4eff-99db-3aa191fb18e0" />
+    <Project Path="BrilliantAIDBAgentAPI/BrilliantAIDBAgentAPI.csproj" Id="9fddd649-3eca-47e7-921c-fb538072f674" />
+  </Folder>
   <Folder Name="/Common/">
     <Project Path="CommonBusiness/CommonBusiness.csproj" Id="82b2afa6-bdc8-4a95-bd04-20fbcf87958e">
       <Platform Solution="*|x64" Project="x64" />
