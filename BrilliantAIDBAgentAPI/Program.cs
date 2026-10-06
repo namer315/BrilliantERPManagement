@@ -1,16 +1,35 @@
+using AIDBAgentBusiness;
+
 public partial class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
-        var app = builder.Build();
+        string apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY")
+            ?? throw new InvalidOperationException("Set the DEEPSEEK_API_KEY environment variable.");
+        AIBE aibe = new AIBE("https://api.deepseek.com" , apiKey , "deepseek-v4-flash");
 
-        app.MapGet("/" , () => "Hello World!");
+        Console.Write("Enter your prompt: ");
+        while (Console.ReadLine() is string prompt && !string.IsNullOrWhiteSpace(prompt))
+        {
+            try
+            {
+                var answer = await aibe.SendPromptAsync(prompt);//"Write a C# method to read a JSON file."
 
-        app.Run();
+                Console.WriteLine("AI says: " + answer);
+
+
+                Console.Write("Enter your prompt: ");
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+            //var builder = WebApplication.CreateBuilder(args);
+            //var app = builder.Build();
+
+            //app.MapGet("/" , () => "Hello World!");
+
+            //app.Run();
+        }
     }
-}
-BrilliantAIDBAgentAPI;
-WhatsAppBusiness;
-AIDBAgentBusiness;
-AIDBAgentData

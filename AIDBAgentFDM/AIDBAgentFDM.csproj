@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AIDBAgentBusiness\AIDBAgentBusiness.csproj" />
+    <ProjectReference Include="..\AIDBAgentData\AIDBAgentData.csproj" />
+  </ItemGroup>
+
 </Project>
