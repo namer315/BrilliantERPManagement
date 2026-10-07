@@ -90,26 +90,26 @@ public class Connection
     /// If the file doesn't exist, creates a new default Connection,
     /// saves it to config.json, and returns it.
     /// </summary>
-    public static Connection LoadOrCreateConfig(string? filePath = null)
+    public static T LoadOrCreateConfig<T>(string? filePath = null , T? defaultConnection = null) where T : Connection, new()
     {
         filePath ??= Path.Combine(AppContext.BaseDirectory, "config.json");
 
         if (File.Exists(filePath))
         {
             var json = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<Connection>(json,
+            return JsonSerializer.Deserialize<T>(json,
                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                   ?? new Connection();
+                   ?? new T();
         }
 
         // File doesn't exist — create a default model, save it, and return it
-        Connection defaultConnection = new Connection()
+        T connectionToSave = new T()
         {
             Server = Environment.MachineName ,
-            DataBaseName = "BrilliantWhatsApp" ,
+            DataBaseName = defaultConnection?.DataBaseName ?? string.Empty ,
         };
         File.WriteAllText(filePath,
-            JsonSerializer.Serialize(defaultConnection,
+            JsonSerializer.Serialize(connectionToSave,
                 new JsonSerializerOptions { WriteIndented = true }));
 
         throw new Exception(
@@ -118,14 +118,17 @@ public class Connection
                 "in config.json, then restart the application.");
         //return defaultConnection;
     }
-
+    public static Connection LoadOrCreateConfig(string? filePath = null , Connection? defaultConnection = null)
+    {
+        return LoadOrCreateConfig<Connection>(filePath , defaultConnection);
+    }
     /// <summary>
     /// Loads (or creates) the connection config from config.json, then
     /// connects to the database and applies any pending schema updates.
     /// </summary>
-    public static async Task DataBaseConnect()
+    public static async Task DataBaseConnect(Connection? defaultConnection = null)
     {
-        Connection connection = LoadOrCreateConfig();
+        Connection connection = LoadOrCreateConfig(defaultConnection: defaultConnection);
         connection.SessionConnect_Login();
         await connection.SessionConnect();
         await DataBaseUpdate(connection);

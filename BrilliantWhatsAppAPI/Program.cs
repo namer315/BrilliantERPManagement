@@ -55,7 +55,7 @@ public partial class Program
         builder.Services.AddSingleton<TenantCacheService>();
 
         //connect to the database before starting the application
-        await Connection.DataBaseConnect();
+        await Connection.DataBaseConnect(new Connection() { DataBaseName = "BrilliantWhatsApp" });
 
         var app = builder.Build();
 

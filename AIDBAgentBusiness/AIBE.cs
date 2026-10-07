@@ -1,12 +1,9 @@
 ﻿using CommonData.Services;
-using System;
-using System.Collections.Generic;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
 
 namespace AIDBAgentBusiness;
-
+    
 public class AIBE
 {
     private readonly HTTPService _HTTPService = new HTTPService();

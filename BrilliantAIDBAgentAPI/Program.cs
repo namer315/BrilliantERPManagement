@@ -1,12 +1,15 @@
 using AIDBAgentBusiness;
+using AIDBAgentData.Session;
 
 public partial class Program
 {
     private static async Task Main(string[] args)
     {
-        string apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY")
-            ?? throw new InvalidOperationException("Set the DEEPSEEK_API_KEY environment variable.");
-        AIBE aibe = new AIBE("https://api.deepseek.com" , apiKey , "deepseek-v4-flash");
+        //string apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY")
+        //    ?? throw new InvalidOperationException("Set the DEEPSEEK_API_KEY environment variable.");
+        //AIBE aibe = new AIBE("https://api.deepseek.com" , apiKey , "deepseek-v4-flash");
+        AIDBAgentConnection connection = AIDBAgentConnection.LoadOrCreateConfig<AIDBAgentConnection>();
+        AIBE aibe = new AIBE(connection.Url , connection.ApiKey , connection.Model);
 
         Console.Write("Enter your prompt: ");
         while (Console.ReadLine() is string prompt && !string.IsNullOrWhiteSpace(prompt))
