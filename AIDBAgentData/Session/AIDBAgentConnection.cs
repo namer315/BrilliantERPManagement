@@ -18,7 +18,7 @@ public class AIDBAgentConnection : Connection
     /// Optional model name.
     /// </summary>
     public string Model { get; set; } = string.Empty;
-    ///// <summary>API key for the DeepSeek API ().</summary>
-    //public const string ApiKey = "sk-e7b8ba1c4b2c4b7389a333f44c5d15d4";
+
+    //public string Provider { get; set; } = string.Empty; // OpenAI, DeepSeek, Anthropic...
 
 }
